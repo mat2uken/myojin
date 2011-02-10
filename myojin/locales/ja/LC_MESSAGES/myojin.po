@@ -1,0 +1,286 @@
+# myojin
+#
+msgid ""
+msgstr ""
+
+"Project-Id-Version: 0.1\n"
+"POT-Creation-Date: 2010-10-10 10:10+JST\n"
+"PO-Revision-Date: 2010-10-10 10:10+JST\n"
+"Last-Translator: myojin\n"
+"Language-Team: myojin\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+
+msgid "Listing %(resource_plural_name)s"
+msgstr "%(resource_plural_name)s一覧"
+
+msgid "Confirm deletion of %(item)s"
+msgstr "%(item)s 削除の確認"
+
+msgid "Are you sure you want to delete %(item)s?"
+msgstr "本当に%(item)sを削除しますか？"
+
+msgid "This action cannot be undone!"
+msgstr "この操作は取り消すことができません!"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid " Viewing %(item)s"
+msgstr "%(item)s 表示中"
+
+msgid "Edit %(item)s"
+msgstr "%(item)s を編集"
+
+msgid "filename"
+msgstr "ファイル名"
+
+msgid "uploader guest"
+msgstr "アップロードゲスト"
+
+msgid "mimetype"
+msgstr "MIME type"
+
+msgid "upload date"
+msgstr "アップロード日"
+
+msgid "name"
+msgstr "名前"
+
+msgid "Show all"
+msgstr "すべて表示"
+
+msgid "Delete"
+msgstr "削除"
+
+msgid "use password"
+msgstr "パスワードを設定しているか"
+
+msgid "users"
+msgstr "ユーザー"
+
+msgid "user"
+msgstr "ユーザー"
+
+msgid "Show"
+msgstr "表示"
+
+msgid "show"
+msgstr "<表示>"
+
+msgid "expiry date"
+msgstr "有効期限"
+
+msgid "systemnewses"
+msgstr "お知らせ"
+
+msgid "systemnews"
+msgstr "お知らせ"
+
+msgid "usertypes"
+msgstr "ユーザーコース"
+
+msgid "usertype"
+msgstr "ユーザーコース"
+
+msgid "sharedfolders"
+msgstr "共有フォルダー"
+
+msgid "sharedfolder"
+msgstr "共有フォルダー"
+
+msgid "otherfiles"
+msgstr "その他ファイル"
+
+msgid "otherfile"
+msgstr "その他ファイル"
+
+msgid "photos"
+msgstr "画像ファイル"
+
+msgid "photo"
+msgstr "画像ファイル"
+
+msgid "guests"
+msgstr "ゲスト"
+
+msgid "guest"
+msgstr "ゲスト"
+
+msgid "basefiles"
+msgstr "ファイル"
+
+msgid "basefile"
+msgstr "ファイル"
+
+msgid "Index"
+msgstr "一覧"
+
+msgid "Missing value"
+msgstr "無効な値"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "New %(resource_name)s"
+msgstr "%(resource_name)sを新規作成"
+
+msgid "faqcategories"
+msgstr "よくある質問カテゴリー"
+
+msgid "faqcategory"
+msgstr "よくある質問カテゴリー"
+
+msgid "faq category"
+msgstr "よくある質問カテゴリー"
+
+msgid "Faq category"
+msgstr "よくある質問カテゴリー"
+
+msgid "faqs"
+msgstr "よくある質問"
+
+msgid "faq"
+msgstr "よくある質問"
+
+msgid "deleted"
+msgstr "削除フラグ"
+
+msgid "hide"
+msgstr "×"
+
+msgid "order number"
+msgstr "表示順"
+
+msgid "text"
+msgstr "本文"
+
+msgid "create dt"
+msgstr "作成日時"
+
+msgid "Download CSV"
+msgstr "CSVファイルとしてダウンロード"
+
+msgid "Sorry, no more elements"
+msgstr "表示する要素はありません。"
+
+msgid "Remove"
+msgstr "削除"
+
+msgid "Add criteria"
+msgstr "条件の追加"
+
+msgid "Filter records"
+msgstr "上記条件で絞り込む"
+
+msgid "Showing page %(page_num)d out of %(num_pages)d. Total of %(count)d records."
+msgstr "%(page_num)d ページ / 全%(num_pages)d ページ（合計 %(count)d 件）"
+
+msgid "View object detail"
+msgstr "詳細を表示する"
+
+msgid "email"
+msgstr "メールアドレス"
+
+msgid "kana"
+msgstr "よみがな"
+
+msgid "is agreed"
+msgstr "規約に同意しているか？"
+
+msgid "modify dt"
+msgstr "変更日時"
+
+msgid "nickname"
+msgstr "ユーザーネーム"
+
+msgid "confirm_delete"
+msgstr "<削除>"
+
+msgid "edit"
+msgstr "<編集>"
+
+msgid "order by this column"
+msgstr "この要素でソートする"
+
+msgid "New"
+msgstr "新規作成"
+
+msgid "Go to page %(num)d"
+msgstr "%(num)d ページ目に移動"
+
+msgid " "
+msgstr " "
+
+msgid "title"
+msgstr "タイトル"
+
+msgid "password"
+msgstr "パスワード"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "new email"
+msgstr "メールアドレス変更候補"
+
+msgid "exit email"
+msgstr "退会時メールアドレス（待避用）"
+
+msgid "user type"
+msgstr "ユーザーコース"
+
+msgid "last upload dt"
+msgstr "最終アップロード日時"
+
+msgid "total upload size"
+msgstr "トータル使用容量"
+
+msgid "month upload size"
+msgstr "月間使用容量"
+
+msgid "is activated"
+msgstr "有効フラグ"
+
+msgid "is admin"
+msgstr "管理者フラグ"
+
+msgid "Submit"
+msgstr "保存"
+
+msgid "is not empty"
+msgstr "が空でない"
+
+msgid "is empty"
+msgstr "が空である"
+
+msgid "<"
+msgstr "＜"
+
+msgid ">"
+msgstr "＞"
+
+msgid "<="
+msgstr "＜＝"
+
+msgid ">="
+msgstr "＞＝"
+
+msgid "ends with"
+msgstr "で終わる"
+
+msgid "begins with"
+msgstr "から始まる"
+
+msgid "contains"
+msgstr "を含む"
+
+msgid "is"
+msgstr "である"
+
+msgid "is not"
+msgstr "でない"

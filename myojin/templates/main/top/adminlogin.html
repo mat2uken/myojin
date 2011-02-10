@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Myojin Admin Sign In</title>
+<style>
+body {
+    background-color: gray;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>Myojin管理者Sign In</h1>
+<form action="/adminlogin" method="post">
+<div>${form.email.label}: ${form.email}</div>
+<div>${form.password.label}: ${form.password}</div>
+<input type="submit" value="Sign In" />
+</form>
+
+%if 'POST' == request.method.upper():
+<p>Sign Inに失敗しました</p>
+%endif
+
+</body>
+</html>

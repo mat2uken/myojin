@@ -11,6 +11,10 @@ def init(app,globals=None):
     _globals = globals or dict()
 _globals = None
 
+def get_template(template_name):
+    tmpl = _lookup.get_template(template_name)
+    return tmpl
+    
 def init_lookup(directory, module_directory, globals=None):
     return TemplateLookup(directories=[directory], module_directory=module_directory,
                           input_encoding="utf-8",
@@ -24,11 +28,11 @@ def init_lookup(directory, module_directory, globals=None):
 ##     _lookup = TemplateLookup(directories=[directory], module_directory=module_directory,input_encoding="utf-8")
 
 def render(template_name, ctx,to_unicode=False):#, *args, **kws):
+    tmpl = get_template(template_name)
 ##     from flask import _request_ctx_stack
 ##     app = _request_ctx_stack.top.app
 ##     lookup2 = init_lookup(app.root_path + "/templates", app.root_path + "/tmp", globals=globals)
     
-    tmpl = _lookup.get_template(template_name)
     # TODO: cache tmpl
     render = tmpl.render if to_unicode else tmpl.render_unicode
     return render(request=request,session=session, **dict(

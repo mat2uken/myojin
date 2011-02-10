@@ -9,7 +9,7 @@ anonymous
 <br/>
 -h--<br/>${next.body()}<br/>
 -f--<br/>
-%for arg in [('main.top.admin',),('main.top.logout',),('main.top.users',)]:
+%for arg in [('main.top.admin',),('main.top.login',),('main.top.logout',),('main.top.users',)]:
 <a href="${url_for(*arg)}">${arg[0]}</a><br/>
 %endfor
 </body>

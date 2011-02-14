@@ -2,23 +2,20 @@ import httpagentparser
 import os
 import json
 import datetime
+from werkzeug import LocalStack, LocalProxy
+def get_current_user():
+    from ..models import User
+    return User.current_user()
+#global current_user
+current_user = LocalProxy(get_current_user)
+from .app import app as current_app
+current_app.current_user = current_user
+def normalize(text):
+    from unicodedata import normalize as n
+    return n("NFKC", text)
        
 def init():
-    from werkzeug import LocalStack, LocalProxy
-    def get_current_user():
-        from ..models import User
-        return User.current_user()
-        
-    global current_user
-    current_user = LocalProxy(get_current_user)
-    from .app import app as current_app
-    current_app.current_user = current_user
-    from unicodedata import normalize as n
-    def normalize_func(text):
-        return n("NFKC", text)
-    global normalize
-    normalize = normalize_func
-
+    
     global allow_ip_address
     allow_ip_address = None
 

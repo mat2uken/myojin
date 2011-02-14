@@ -1,5 +1,7 @@
 <html>
 <body>
+${current_user.nickname if current_user else "anonymous"}
+<hr/>
 login:
 %if current_user:
 ${current_user.nickname}

@@ -21,6 +21,7 @@ def index():
 @module.route('/users')
 def users():
     users = User.query.all()
+    unactivated_users = User.unactivated_query.all()
     print users
     user_links = "<br/>".join(
         '<a href="%s">%s</a>   <a href="%s">%s</a>  <a href="%s">%s</a>' % (

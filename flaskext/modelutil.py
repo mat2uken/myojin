@@ -1,13 +1,12 @@
 # coding: utf-8
+from __future__ import absolute_import
 from flaskext.funcutils import getattrs, setattrs
-from myojin import db
 from sqlalchemy import UniqueConstraint, Table
-from myojin import app
+from flask import current_app
 from functools import wraps
 from sqlalchemy.sql import Join
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import exc as orm_exc
-from myojin import current_user
 
 from flaskext.converters import BaseModelConverter
 from werkzeug.local import LocalProxy
@@ -24,10 +23,10 @@ class BaseModelType(type):
             return
         BaseModel.classlist.append(cls)
         class ModelConverter(BaseModelConverter):
-            HMAC_KEY = app.config['HMAC_KEY']
+            HMAC_KEY = current_app.config['HMAC_KEY']
             query_arg_name = "query"
             model = cls
-        app.url_map.converters[name] = ModelConverter
+        current_app.url_map.converters[name] = ModelConverter
 
         BaseModel.models += (cls, )
         
@@ -109,7 +108,7 @@ class QueryProperty(object):
         self.kws = kws
     def __get__(self, instance, owner):
         mapper = class_mapper(owner)
-        return self.query_cls(mapper, db.session.registry(), **self.kws).default_filter()
+        return self.query_cls(mapper, current_app.db.session.registry(), **self.kws).default_filter()
 
 
 from datetime import date, datetime
@@ -169,7 +168,7 @@ class BaseModel(object):
         q = cls.default_filter(query, table)
         if 'user_id' not in table.c:
             return q
-        return q.filter(table.c.user_id== getattr(current_user, 'id', ()))
+        return q.filter(table.c.user_id== getattr(curren_app.current_user, 'id', ()))
         
 ##     @classmethod
 ##     def join_with(cls, *args):
@@ -178,10 +177,10 @@ class BaseModel(object):
     query = QueryProperty(CustomQuery, default_filter_name='default_filter')
     userquery = QueryProperty(CustomQuery, default_filter_name='default_user_filter')
 
-    query_all = db.session.query_property()
+    query_all = current_app.db.session.query_property()
     
     def save(self):
-        db.session.add(self)
+        current_app.db.session.add(self)
         return self
 
     encode_salt = 47
@@ -248,7 +247,7 @@ class BaseModel(object):
             for mainattr, targetattrs in self.child_args.items():
                 gen_children(self, mainattr, targetattrs)
         self.set_expiry_date_children()
-        #db.session.add(self)
+        #current_app.db.session.add(self)
         
     def __repr__(self):
         ks = self.__repratts__ 

@@ -20,7 +20,9 @@ def main():
     db.session.flush()
     # ユーザーの作成
     print "create first_user..."
-    first_user = User(nickname=u"スーパーユーザー", email="mat2uken@cerevo.com", password='myojin').save()
+    first_user = User(nickname=u"スーパーユーザー", email="mat2uken@cerevo.com", password='myojin',
+                      memos = [Memo(text="abc"), Memo(text="AAAAA")]
+                      ).save()
     first_user.is_activated = True
     first_user.is_admin = True
     print "create second_user..."

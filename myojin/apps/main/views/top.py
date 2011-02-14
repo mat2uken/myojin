@@ -3,11 +3,13 @@
 import datetime
 from myojin import app
 from flaskext import submodule, utils as flaskext_utils
-
+from flaskext.rum import rum_response
+from myojin.core.decorators import admin_required, admin_ip_check, login_required
+from myojin import current_user
 from flask import request, session, make_response
 from flaskext.utils import redirect, redirect_to
 module = submodule.SubModule(__name__, url_prefix="")
-from ..models import User
+from ..models import User, Memo
 from flask import url_for
 
 # トップ画面。
@@ -90,10 +92,13 @@ def logout():
     User.logout()
     return redirect_to('main.top.index')
 
-
-
-from flaskext.rum import rum_response
-from myojin.core.decorators import admin_required, admin_ip_check
+@module.route('/home')
+@login_required()
+def userhome():
+    user = current_user
+    memos = Memo.userquery.all()
+    m = "<br/>".join(memo.text for memo in memos)
+    return user.nickname + '<br/>'+ m
 
 ## 管理画面。Rumを使用。
 @module.route('/admin', methods=('GET','POST'), decorators=(admin_required(),))

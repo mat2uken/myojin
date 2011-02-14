@@ -4,6 +4,7 @@ import flaskext
 from flaskext import script    # <- important for wsgi
 from flaskext import sessions  # <- important for wsgi
 from .core.app import app, debug
+
 def init():
     global db
     if app.config.get('DEBUG') and app.config.get('TESTING'):

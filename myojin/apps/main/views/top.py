@@ -3,8 +3,8 @@
 import datetime
 from flaskext import submodule, utils as flaskext_utils
 from flaskext.rum import rum_response
-from myojin.core.decorators import admin_required, admin_ip_check, login_required
-from myojin import current_user
+from ....core.decorators import admin_required, admin_ip_check, login_required
+from .... import current_user
 from flask import request, session, make_response
 from flaskext.utils import redirect, redirect_to
 module = submodule.SubModule(__name__, url_prefix="")

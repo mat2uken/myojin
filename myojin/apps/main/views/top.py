@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 import datetime
-from myojin import app
 from flaskext import submodule, utils as flaskext_utils
 from flaskext.rum import rum_response
 from myojin.core.decorators import admin_required, admin_ip_check, login_required

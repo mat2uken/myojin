@@ -50,8 +50,6 @@ class MyServer(script.Server):
         app = config_from_file(config)
         app.db.create_all()
 
-        from myojin.core.initlogging import initlogging
-        initlogging(app)
 
         kws['host'] = app.config.get('HTTP_HOST',None) or self.host
         kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
@@ -68,9 +66,6 @@ class MyServer(script.Server):
     def run(self,config, *args,**kws):
         app = config_from_file(config)
         app.db.create_all()
-
-        from myojin.core.initlogging import initlogging
-        initlogging(app)
 
         kws['host'] = app.config.get('HTTP_HOST',None) or self.host
         kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']

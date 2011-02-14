@@ -45,12 +45,12 @@ def initlogging(app):
     app.logger.debug("app.logger test DEBUG")
     app.logger.info("app.logger test INFO")
 
-from myojin import app
-from myojin.core.globals import current_user
+from .appn import app
+from .globals import current_user
 from flask import request
 
 if not app.config.get('DEBUG'):
-
+    initlogging(app)
     # setting before and after request functions
     REQUEST_START_LOGGING_FORMAT  = "[REQSTART][user=%s] %04s %s"
     REQUEST_END_LOGGING_FORMAT    = "[  REQEND][user=%s] %04s %s %s"

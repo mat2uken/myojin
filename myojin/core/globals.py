@@ -11,7 +11,8 @@ def init():
         
     global current_user
     current_user = LocalProxy(get_current_user)
-
+    from .app import app as current_app
+    current_app.current_user = current_user
     from unicodedata import normalize as n
     def normalize_func(text):
         return n("NFKC", text)

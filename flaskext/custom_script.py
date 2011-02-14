@@ -47,7 +47,6 @@ class MyShell(script.Shell):
 class MyServer(script.Server):
     def handle(self, *args, **kws):
         config = kws.pop('config', None)
-        print '*args, **kws',args, kws
         app = config_from_file(config)
         app.db.create_all()
 

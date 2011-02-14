@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-from ..base import BaseModel, QueryProperty, CustomQuery
+from flaskext.modelutil import BaseModel, QueryProperty, CustomQuery
 ## from .guest import *
 from flaskext.funcutils import getattrs, setattrs, keyword_only
 from myojin import db, app, debug

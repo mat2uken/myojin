@@ -1,3 +1,4 @@
+# encoding: utf-8
 from flask import Flask, Request#, Session
 import flask
 
@@ -149,6 +150,8 @@ class CustomFlask(Flask):
         return Flask.__call__(self,environ, start_response)
         
     def init_middleware(self):
+        from flaskext.applogging import initlogging
+        initlogging(self)
         session_opts = {
             #'session.type':'ext:memcached',
             #'session.type':'file',

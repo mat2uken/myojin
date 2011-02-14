@@ -27,6 +27,7 @@ def config_from_file(config=None, default='dev.cfg',app=None):
         using = user_config
     else:
         using = default
+    
     app.config.from_pyfile(using)
     app.init()
     app.init_middleware()

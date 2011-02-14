@@ -1,4 +1,4 @@
-from myojin import db, app
+from ..... import db, app
 
 from sqlalchemy import Table, Column
 from sqlalchemy.schema import Index

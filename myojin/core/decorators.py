@@ -49,7 +49,7 @@ def admin_ip_check():
             from .globals import allow_ip_address, reset_allow_ip_address
             ip_address = allow_ip_address
             if allow_ip_address is None:
-                from myojin.models import AllowIPAddress
+                from ..models import AllowIPAddress
                 allow = AllowIPAddress.query.first()
                 ip_address = [] if allow is None else allow.ip_address
                 reset_allow_ip_address(ip_address)
@@ -63,7 +63,7 @@ def admin_ip_check():
 
             if IP(request.environ['REMOTE_ADDR']).int() in ip_int_set:
                 return f(*args,**kws)
-            from myojin import app
+            from .. import app
             app.logger.debug('ip fail!!')
             app.logger.debug(request.environ['REMOTE_ADDR'])
             app.logger.debug(allow_ip_address)

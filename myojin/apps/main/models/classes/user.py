@@ -3,7 +3,7 @@
 from flaskext.modelutil import BaseModel, QueryProperty, CustomQuery
 ## from .guest import *
 from flaskext.funcutils import getattrs, setattrs, keyword_only
-from myojin import db, app, debug
+from ..... import db, app, debug
 from flaskext.auth import UserModelBase
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import contains_eager
@@ -27,7 +27,7 @@ ETERNAL = date(3000,1,1)
 def is_eternal(dt):
     return dt >= ETERNAL
     
-from myojin.apps.main.models import tables
+from .. import tables
 from sqlalchemy.sql import func,select,and_, exists
 from decimal import _Infinity
 

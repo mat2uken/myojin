@@ -9,9 +9,9 @@ class MaintenanceMiddleware(object):
     def __init__(self, app):
         self.app = app
     def __call__(self, environ, start_response):
-        from myojin.core.globals import maintenance_data
+        from .globals import maintenance_data
         path = environ['PATH_INFO']
-        from myojin import app
+        from .. import app
         if (maintenance_data is not None
             and 'mainte_date' in maintenance_data
             and maintenance_data['mainte_date'] < datetime.datetime.now()):

@@ -11,11 +11,6 @@ from sqlalchemy.sql.expression import desc, distinct
 import hashlib
 from datetime import datetime, date, timedelta
 
-class UserExit(BaseModel):
-    @keyword_only
-    def __init__(self, answer, user_id):
-        BaseModel.init_basemodel(**locals())
-
 def gen_initial_user_types():
     return dict(default=dict(
         use_basefile_expiry=True,
@@ -27,49 +22,6 @@ def gen_initial_user_types():
         isset_filelimit=False,
         ))
 
-class UserType(BaseModel):
-    __repratts__  = ('name',)
-
-    @keyword_only
-    def __init__(self, name, config):
-        BaseModel.init_basemodel(**locals())
-
-    @classmethod
-    def update_user_tpyes(cls):
-        for k, v in gen_initial_user_types().items():
-            user_type = UserType.query.filter_by(name=k).first()
-            if user_type:
-                user_type.config = v
-                db.session.add(user_type)
-        db.session.commit()
-
-    @classmethod
-    def init_user_types(cls):
-        db.session.add(UserType(name=u"default", config=gen_initial_user_types().get("default")))
-        db.session.flush()
-    @classmethod
-    def get_default(cls):
-        default = UserType.query.filter_by(name=u"default").first()
-        if not default:
-            UserType.init_user_types()
-            db.session.flush()
-        return UserType.query.filter_by(name=u"default").one()
-
-def config_property(name,on_change=lambda self, old, new:None):
-    def fget(self):
-        if name in self.config:
-            return self.config[name]
-        if self.user_type is None:
-            self.user_type = UserType.get_default()
-            db.session.add(self)
-            db.session.commit()
-        return self.user_type.config.get(name)
-    def fset(self, value):
-        oldvalue = fget(self)
-        self.config[name] = value
-        if oldvalue != value:
-            on_change(self, oldvalue, value)
-    return property(fget, fset)
 
 ETERNAL = date(3000,1,1)
 def is_eternal(dt):
@@ -89,14 +41,23 @@ def get_withdrawal_service_status():
 def set_not_activate_service_status():
     return ACCOUNT_STATUS[0][0]
 
+class Memo(BaseModel, UserModelBase):
+    @keyword_only
+    def __init__(self, user=None, text=""):
+        BaseModel.init_basemodel(
+            self=self,
+            user=user,
+            text=text
+            )
+
 class User(BaseModel, UserModelBase):
 
-    def set_joined_service_status(self):
-        self.account_status = get_joined_service_status()
-    def set_withdrawal_service_status(self):
-        self.account_status = get_withdrawal_service_status()
-    def set_not_activate_service_status(self):
-        self.account_status = set_not_activate_service_status()
+##     def set_joined_service_status(self):
+##         self.account_status = get_joined_service_status()
+##     def set_withdrawal_service_status(self):
+##         self.account_status = get_withdrawal_service_status()
+##     def set_not_activate_service_status(self):
+##         self.account_status = set_not_activate_service_status()
 
     def update_last_login_dt(self):
         self.last_login_dt = datetime.now()
@@ -109,236 +70,133 @@ class User(BaseModel, UserModelBase):
         super(User, self).login()
         self.after_login()
 
-    @property
-    def abc(self):
-        return "HEELO"
+##     @property
+##     def abc(self):
+##         return "HEELO"
     
-    @staticmethod
-    def reset_month_upload():
-        from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event
-        if date.today().day != 1:
-            return
-        db.session.execute(
-            user.update().values(month_upload_size=0))
-        db.session.commit()
+##     @staticmethod
+##     def reset_month_upload():
+##         from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event
+##         if date.today().day != 1:
+##             return
+##         db.session.execute(
+##             user.update().values(month_upload_size=0))
+##         db.session.commit()
 
-    def gen_basefile_expiry_date(self, basefile=None):
-        if self.use_basefile_expiry:
-            return ((basefile.upload_date or date.today() )if basefile else date.today()) + self.basefile_expiry_td
-        return ETERNAL
+##     def gen_basefile_expiry_date(self, basefile=None):
+##         if self.use_basefile_expiry:
+##             return ((basefile.upload_date or date.today() )if basefile else date.today()) + self.basefile_expiry_td
+##         return ETERNAL
         
-    def set_basefiles_expiry_date(self):
-        if self.use_basefile_expiry:
-            self.set_basefiles_expiry_date_with_delta(self.basefile_expiry_td)
-        else:
-            self.set_basefiles_expiry_date_with_ETERNAL()
+##     def set_basefiles_expiry_date(self):
+##         if self.use_basefile_expiry:
+##             self.set_basefiles_expiry_date_with_delta(self.basefile_expiry_td)
+##         else:
+##             self.set_basefiles_expiry_date_with_ETERNAL()
 
-    def set_basefiles_expiry_date_with_ETERNAL(self):
-        from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event, shared_guests_file, shared_guests_clients_file
-        from sqlalchemy.sql import literal_column, func, literal
-        from sqlalchemy.dialects.postgresql.base import INTERVAL
-        basefile_update = basefile.update().where(
-            and_(basefile.c.user_id == self.id, basefile.c.expiry_date >= date.today())
-            ).values(expiry_date=ETERNAL)
 
-        db.session.execute(basefile_update)
-        shared_file_update = shared_file.update().where(
-            and_(shared_file.c.user_id == self.id, shared_file.c.expiry_date >= date.today())
-            ).values(expiry_date=ETERNAL)
-        db.session.execute(shared_file_update)
+##     @staticmethod
+##     def delete_expired():
+##         from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event
+##         db.session.execute(
+##             tables.user.update().values(
+##                 modify_dt=user.c.modify_dt,
+##                 total_upload_size=(user.c.total_upload_size -
+##                                    func.coalesce(
+##                                    select(
+##                                        [func.sum(func.coalesce(basefile.c.size,0))],
+##                                        and_(
+##                                            basefile.c.user_id == user.c.id,
+##                                            basefile.c.expiry_date < date.today(),
+##                                            basefile.c.deleted == False)
+##                                        ).as_scalar()
+##                                        , 0)
+##                                    )
+##                 )
+##             )
+##         db.session.commit()
+##         for table in [basefile, tables.shared_event, tables.shared_file, tables.shared_guests_file,
+##                       tables.shared_guests_clients_file]:
+##             db.session.execute(
+##                 table.update().where(
+##                     and_(
+##                         table.c.expiry_date < date.today(), table.c.deleted==False)
+##                     ).values(deleted=True))
+##             db.session.commit()
+##     @staticmethod
+##     def delete_nofile_event():
+##         from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event
+##         file_exists = exists([shared_file.c.id],
+##                        and_(
+##                    shared_file.c.shared_event_id==shared_event.c.id,
+##                    shared_file.c.expiry_date >= date.today(),
+##                    shared_file.c.deleted==False
+##                    )
+##                    ).correlate(shared_event)
 
-        shared_guests_file_update = shared_guests_file.update().where(
-            and_(shared_guests_file.c.user_id == self.id,shared_guests_file.c.expiry_date >= date.today())
-            ).values(
-            expiry_date=ETERNAL)
-        db.session.execute(shared_guests_file_update)
+##         db.session.execute(
+##             shared_event.update().where(
+##                 and_(
+##                     shared_event.c.deleted==False, ~file_exists
+##                     )
+##                 ).values(deleted=True))
+##         db.session.commit()
 
-        shared_guests_clients_file_update = shared_guests_clients_file.update().where(
-            and_(shared_guests_clients_file.c.user_id == self.id,
-                 shared_guests_clients_file.c.expiry_date >= date.today())
-            ).values(expiry_date=ETERNAL)
-        db.session.execute(shared_guests_clients_file_update)
-        db.session.commit()
-    def set_basefiles_expiry_date_with_delta(self, tdelta):
-        from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event, shared_guests_file, shared_guests_clients_file
-        from sqlalchemy.sql import literal_column, func, literal
-        from sqlalchemy.dialects.postgresql.base import INTERVAL
-        basefile_update = basefile.update().where(
-            and_(basefile.c.user_id == self.id,
-                 basefile.c.expiry_date >= date.today())
-            ).values(expiry_date=basefile.c.upload_date + tdelta)
+##     @property
+##     def max_upload(self):
+##         if self.use_max_upload:
+##             return self.user_type.config['max_upload']
+##         return _Infinity
 
-        db.session.execute(basefile_update)
-        shared_file_update = shared_file.update().where(
-            and_(shared_file.c.user_id == self.id,
-                 shared_file.c.expiry_date >= date.today())
-            ).values(
-            expiry_date=select(
-                [tables.basefile.c.upload_date ],
-                and_(tables.basefile.c.id == tables.shared_file.c.basefile_id)
-                ).as_scalar() + tdelta)
-        db.session.execute(shared_file_update)
+##     @property
+##     def month_max_upload(self):
+##         if self.use_month_max_upload:
+##             return self.user_type.config['month_max_upload']
+##         return _Infinity
 
-        shared_guests_file_update = shared_guests_file.update().where(
-            and_(shared_guests_file.c.user_id == self.id,
-                 shared_guests_file.c.expiry_date >= date.today())
-            ).values(
-            expiry_date=select(
-                [tables.basefile.c.upload_date ],
-                and_(tables.basefile.c.id == tables.shared_file.c.basefile_id,
-                     tables.shared_guests_file.c.shared_file_id == tables.shared_file.c.id,
-                     ),
-                from_obj=[basefile, shared_file ],
-                ).as_scalar() + tdelta)
-        db.session.execute(shared_guests_file_update)
+##     @property
+##     def use_max_upload(self):
+##         return self.user_type.config.get('use_max_upload',False)
 
-        shared_guests_clients_file_update = shared_guests_clients_file.update().where(
-            and_(shared_guests_clients_file.c.user_id == self.id,
-                 shared_guests_clients_file.c.expiry_date >= date.today()
-                 )
-            ).values(
-            expiry_date=select(
-                [tables.basefile.c.upload_date],
-                and_(tables.basefile.c.id == tables.shared_guests_clients_file.c.basefile_id)
-                ).as_scalar() + tdelta)
-        db.session.execute(shared_guests_clients_file_update)
+##     @property
+##     def use_month_max_upload(self):
+##         return self.user_type.config.get('use_month_max_upload',False)
 
-    @staticmethod
-    def set_null_user():
-        shared_file_update = tables.shared_file.update().values(
-            user_id=select(
-                [tables.basefile.c.user_id],
-                and_(tables.basefile.c.id == tables.shared_file.c.basefile_id)
-                ).as_scalar()).where(
-                     tables.shared_file.c.user_id == None
-                )
-        db.session.execute(shared_file_update)
-        db.session.commit()
-        shared_guests_file_update = tables.shared_guests_file.update().values(
-            user_id=select(
-                [tables.shared_file.c.user_id],
-                and_(tables.shared_guests_file.c.shared_file_id == tables.shared_file.c.id),
-                ).as_scalar()).where(
-                     tables.shared_guests_file.c.user_id == None
-                )
-        
-        db.session.execute(shared_guests_file_update)
-        db.session.commit()
-
-        shared_guests_clients_file_update = tables.shared_guests_clients_file.update().values(
-            user_id=select(
-                [tables.basefile.c.user_id],
-                and_(tables.basefile.c.id == tables.shared_guests_clients_file.c.basefile_id)
-                ).as_scalar()).where(
-                     tables.shared_guests_clients_file.c.user_id == None
-                )
-
-        
-        db.session.execute(shared_guests_clients_file_update)
-        db.session.commit()
-
-    @staticmethod
-    def delete_expired():
-        from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event
-        db.session.execute(
-            tables.user.update().values(
-                modify_dt=user.c.modify_dt,
-                total_upload_size=(user.c.total_upload_size -
-                                   func.coalesce(
-                                   select(
-                                       [func.sum(func.coalesce(basefile.c.size,0))],
-                                       and_(
-                                           basefile.c.user_id == user.c.id,
-                                           basefile.c.expiry_date < date.today(),
-                                           basefile.c.deleted == False)
-                                       ).as_scalar()
-                                       , 0)
-                                   )
-                )
-            )
-        db.session.commit()
-        for table in [basefile, tables.shared_event, tables.shared_file, tables.shared_guests_file,
-                      tables.shared_guests_clients_file]:
-            db.session.execute(
-                table.update().where(
-                    and_(
-                        table.c.expiry_date < date.today(), table.c.deleted==False)
-                    ).values(deleted=True))
-            db.session.commit()
-    @staticmethod
-    def delete_nofile_event():
-        from myojin.apps.main.models.tables import user, basefile, shared_file, shared_event
-        file_exists = exists([shared_file.c.id],
-                       and_(
-                   shared_file.c.shared_event_id==shared_event.c.id,
-                   shared_file.c.expiry_date >= date.today(),
-                   shared_file.c.deleted==False
-                   )
-                   ).correlate(shared_event)
-
-        db.session.execute(
-            shared_event.update().where(
-                and_(
-                    shared_event.c.deleted==False, ~file_exists
-                    )
-                ).values(deleted=True))
-        db.session.commit()
-
-    @property
-    def max_upload(self):
-        if self.use_max_upload:
-            return self.user_type.config['max_upload']
-        return _Infinity
-
-    @property
-    def month_max_upload(self):
-        if self.use_month_max_upload:
-            return self.user_type.config['month_max_upload']
-        return _Infinity
-
-    @property
-    def use_max_upload(self):
-        return self.user_type.config.get('use_max_upload',False)
-
-    @property
-    def use_month_max_upload(self):
-        return self.user_type.config.get('use_month_max_upload',False)
-
-    def __new__(cls, *args, **kws): # important
-        return object.__new__(cls, *args, **kws)
+##     def __new__(cls, *args, **kws): # important
+##         return object.__new__(cls, *args, **kws)
     
-    def set_basefiles_expiry(self, filelimit):
-        self.use_basefile_expiry = 'UNLIMITED' != filelimit
+##     def set_basefiles_expiry(self, filelimit):
+##         self.use_basefile_expiry = 'UNLIMITED' != filelimit
 
-    def on_change_use_basefiles_expiry(self, old, new):
-        if app.config.get('SET_EXPIRY_WITH_SQL',False):
-            return self.set_basefiles_expiry_date()
-        from . import Basefile
-        if new:
-            for basefile in self.basefiles:
-                basefile.set_expiry_date()
-        else:
-            for basefile in Basefile.get_today_upload_files():
-                basefile.set_expiry_date(ETERNAL)
+##     def on_change_use_basefiles_expiry(self, old, new):
+##         if app.config.get('SET_EXPIRY_WITH_SQL',False):
+##             return self.set_basefiles_expiry_date()
+##         from . import Basefile
+##         if new:
+##             for basefile in self.basefiles:
+##                 basefile.set_expiry_date()
+##         else:
+##             for basefile in Basefile.get_today_upload_files():
+##                 basefile.set_expiry_date(ETERNAL)
 
-    def on_change_basefiles_expiry_td(self, old, new):
-        if app.config.get('SET_EXPIRY_WITH_SQL',False):
-            return self.set_basefiles_expiry_date()
-        for basefile in self.basefiles:
-            basefile.set_expiry_date()
+##     def on_change_basefiles_expiry_td(self, old, new):
+##         if app.config.get('SET_EXPIRY_WITH_SQL',False):
+##             return self.set_basefiles_expiry_date()
+##         for basefile in self.basefiles:
+##             basefile.set_expiry_date()
                 
-    use_basefile_expiry = config_property('use_basefile_expiry', on_change=on_change_use_basefiles_expiry)
-    basefile_expiry_td = config_property('basefile_expiry_td', on_change=on_change_basefiles_expiry_td)
+##     use_basefile_expiry = config_property('use_basefile_expiry', on_change=on_change_use_basefiles_expiry)
+##     basefile_expiry_td = config_property('basefile_expiry_td', on_change=on_change_basefiles_expiry_td)
 
-    isset_filelimit = config_property('isset_filelimit')
+##     isset_filelimit = config_property('isset_filelimit')
     
     @keyword_only
-    def __init__(self, email, nickname, password=None, is_activated=False, config=None):
+    def __init__(self, email, nickname, password=None, is_activated=False, config=None, memos=None):
         BaseModel.init_basemodel(
             self=self,
-            user_type=UserType.get_default(),
             config=config or dict(),
             email=email,
+            memos=memos or [],
             nickname=nickname,
             is_activated=is_activated,
             )
@@ -623,4 +481,4 @@ class User(BaseModel, UserModelBase):
         else:
             return sites.all()
 
-__all__ = ['User', 'UserType', 'UserExit', 'get_account_status_label']
+__all__ = ['User', 'Memo']

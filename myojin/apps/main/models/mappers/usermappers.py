@@ -1,21 +1,10 @@
 from .mapper_imports import *
 
 mapper(
-    UserExit, user_exit, extension=MyojinMapperExt(),
-    order_by=user_exit.c.id,
+    Memo, memo, extension=MyojinMapperExt(),
+    order_by=memo.c.id,
     properties=dict(
-        exit_user=relation(User,
-            primaryjoin=and_(
-                user.c.id==user_exit.c.user_id
-            )
-        )
-    )
-)
-
-mapper(
-    UserType, user_type, extension=MyojinMapperExt(),
-    order_by=user_type.c.id,
-    properties=dict(
+        user=relation(User),
         )
     )
 from sqlalchemy.orm import mapper, relationship, column_property
@@ -24,6 +13,9 @@ mapper(
     User, user, extension=MyojinMapperExt(),
     order_by=user.c.id,
     properties=dict(
+        memos=relation(Memo,primaryjoin=and_(
+            memo.c.user_id==user.c.id,~memo.c.deleted
+            )),
         ))
 
 

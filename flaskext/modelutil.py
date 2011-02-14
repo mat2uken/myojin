@@ -106,9 +106,10 @@ class QueryProperty(object):
     def __init__(self, query_cls, **kws):
         self.query_cls = query_cls
         self.kws = kws
+        self.db = current_app.db
     def __get__(self, instance, owner):
         mapper = class_mapper(owner)
-        return self.query_cls(mapper, current_app.db.session.registry(), **self.kws).default_filter()
+        return self.query_cls(mapper, self.db.session.registry(), **self.kws).default_filter()
 
 
 from datetime import date, datetime
@@ -168,7 +169,7 @@ class BaseModel(object):
         q = cls.default_filter(query, table)
         if 'user_id' not in table.c:
             return q
-        return q.filter(table.c.user_id== getattr(curren_app.current_user, 'id', ()))
+        return q.filter(table.c.user_id== getattr(current_app.current_user, 'id', ()))
         
 ##     @classmethod
 ##     def join_with(cls, *args):
@@ -178,9 +179,9 @@ class BaseModel(object):
     userquery = QueryProperty(CustomQuery, default_filter_name='default_user_filter')
 
     query_all = current_app.db.session.query_property()
-    
+    db = current_app.db
     def save(self):
-        current_app.db.session.add(self)
+        self.db.session.add(self)
         return self
 
     encode_salt = 47

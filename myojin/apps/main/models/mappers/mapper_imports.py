@@ -3,7 +3,6 @@ from sqlalchemy import select
 from sqlalchemy import and_,not_
 from ..tables import *
 from ..classes import *
-from myojin import current_user
 from sqlalchemy.ext.associationproxy import association_proxy
 from datetime import date, timedelta
 

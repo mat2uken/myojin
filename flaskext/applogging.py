@@ -54,7 +54,6 @@ def initlogging(app):
 
 
     from flask import request
-    print 'debug', app.config.get('DEBUG')
     if not app.config.get('DEBUG'):
 
         # setting before and after request functions

@@ -9,6 +9,7 @@ from flaskext.script import Command, Option
 from unittest import TestLoader, TestResult
 from importlib import import_module
 
+import copy
 import os
 import pwd
 from pprint import pprint
@@ -21,14 +22,31 @@ def config_from_file(config=None, default='dev.cfg',app=None):
         app = _request_ctx_stack.top.app
 
     user_config = "%s.%s" % (get_username(), default)
+
+# === old start
+#    if config:
+#        using = config
+#    elif os.path.exists(os.path.join(app.root_path,user_config)):
+#        using = user_config
+#    else:
+#        using = default
+#    app.config.from_pyfile(using)
+# === old end 
+# === new start
     if config:
         using = config
-    elif os.path.exists(os.path.join(app.root_path,user_config)):
-        using = user_config
     else:
         using = default
-    
     app.config.from_pyfile(using)
+    config_obj = copy.deepcopy(app.config)
+
+    if os.path.exists(os.path.join(app.root_path,user_config)):
+        app.config.from_pyfile(user_config)
+        user_config = app.config
+        config_obj.update(user_config)
+        app.config.from_object(config_obj)
+# === new end
+
     app.init()
     app.init_middleware()
     return app

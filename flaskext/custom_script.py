@@ -23,7 +23,6 @@ def config_from_file(config=None, default='dev.cfg',app=None):
 
     user_config = "%s.%s" % (get_username(), default)
 
-# === old start
 #    if config:
 #        using = config
 #    elif os.path.exists(os.path.join(app.root_path,user_config)):
@@ -31,8 +30,6 @@ def config_from_file(config=None, default='dev.cfg',app=None):
 #    else:
 #        using = default
 #    app.config.from_pyfile(using)
-# === old end 
-# === new start
     if config:
         using = config
     else:
@@ -45,7 +42,6 @@ def config_from_file(config=None, default='dev.cfg',app=None):
         user_config = app.config
         config_obj.update(user_config)
         app.config.from_object(config_obj)
-# === new end
 
     app.init()
     app.init_middleware()

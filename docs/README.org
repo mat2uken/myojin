@@ -20,6 +20,7 @@ myojin/
   flaskext/      # flaskの拡張ツール類
   static/        # 静的ファイル   デフォルトのURLは例えばhttp://hoge/static/hello.txt
   templates/     # テンプレートファイル
+  translations/  # 言語ファイル
   myojin/        # 本体
     dev.cfg
     test.dev.cfg
@@ -113,6 +114,7 @@ virtualenv==1.5.1
 wsgiref==0.1.2
 zope.interface==3.6.1
 zope.sqlalchemy==0.6.1
+Flask-Babel==0.6
 
 * 機能別
 ** 設定ファイル
@@ -202,3 +204,6 @@ Flask,werkzeugに準じます。
 有効期限が切れた場合は404を戻します。
 tokenkindは使用する関数別に名前を設定してください。
 サンプルアプリケーションを参考にしてください。
+
+** 国際化
+後々書きます

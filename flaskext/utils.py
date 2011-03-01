@@ -27,6 +27,19 @@ CC = 31
 from struct import pack,unpack
 from base64 import urlsafe_b64encode,urlsafe_b64decode
 import struct
+from datetime import datetime
+epoch = datetime(1970, 1, 1)
+def dt2int(dt):
+    td = dt - epoch
+    return int(td.total_seconds())
+
+def urlsafe_pack_ulong(n):
+    s = pack("L",n)
+    return urlsafe_b64encode(s)[:-2]
+
+def urlsafe_pack_ulonglong(n):
+    s = pack("Q",n)
+    return urlsafe_b64encode(s)[:-1]
 
 def encode_id(n, k=CC):
     c = n * k % 256

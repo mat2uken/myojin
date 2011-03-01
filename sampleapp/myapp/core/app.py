@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 
-from flaskext.sessions import CustomFlask
+from myojin.sessions import CustomFlask
 
 from  .. import __name__
 

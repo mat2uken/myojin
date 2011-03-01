@@ -1,4 +1,4 @@
-from flaskext.submodule import Module
+from myojin.submodule import Module
 
 module = Module(__name__, url_prefix="")
 from . import views

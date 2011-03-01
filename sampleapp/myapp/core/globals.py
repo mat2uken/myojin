@@ -43,6 +43,6 @@ def is_ie6(env):
 from .app import app as current_app
 init()
 del init
-from flaskext.submodule import url_for
+from myojin.submodule import url_for
 
 __all__ = ['current_user', 'normalize', 'is_ie6', 'current_app', 'allow_ip_address', 'maintenance_data']

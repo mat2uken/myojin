@@ -6,7 +6,7 @@ from dateutil import relativedelta
 from .. import app
 from ..models import *
 import os.path
-from flaskext.utils import drop_all_tables    
+from myojin.utils import drop_all_tables    
 def main():
     db.metadata.bind = db.engine
     db.metadata.drop_all()

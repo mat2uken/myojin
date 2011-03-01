@@ -1,12 +1,12 @@
 # encoding: utf-8
 
 import datetime
-from flaskext import submodule, utils as flaskext_utils
-from flaskext.rum import rum_response
+from myojin import submodule, utils as flaskext_utils
+from myojin.rum import rum_response
 from ....core.decorators import admin_required, admin_ip_check, login_required
-from .... import current_user
-from flask import request, session, make_response
-from flaskext.utils import redirect, redirect_to
+from .... import current_app
+from flask import request, session, make_response, app
+from myojin.utils import redirect, redirect_to
 module = submodule.SubModule(__name__, url_prefix="")
 from ..models import User, Memo
 from flask import url_for
@@ -95,7 +95,7 @@ def logout():
 @module.route('/home')
 @login_required()
 def userhome():
-    user = current_user
+    user = current_app.current_user
     memos = Memo.userquery.all()
     m = "<br/>".join(memo.text for memo in memos)
     return user.nickname + '<br/>'+ m

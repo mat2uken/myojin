@@ -3,7 +3,7 @@
 
 from flaskext.script import Manager
 
-from myojin import app
+from myapp import app
 from flaskext.custom_script import Manager
 manager = Manager(app)
     

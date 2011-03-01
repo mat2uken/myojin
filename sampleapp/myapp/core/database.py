@@ -39,7 +39,7 @@ db.session.registry.registry = local()
 db.session.extension = MySessionExtension()
 app.db = db
 def drop_all(self):
-    from flaskext.utils import drop_all_tables
+    from myojin.utils import drop_all_tables
     metadata = self
     return drop_all_tables(metadata, metadata.bind)
 

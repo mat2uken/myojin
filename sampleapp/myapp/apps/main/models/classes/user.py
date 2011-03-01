@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-from flaskext.modelutil import BaseModel, QueryProperty, CustomQuery
+from myojin.modelutil import BaseModel, QueryProperty, CustomQuery
 ## from .guest import *
-from flaskext.funcutils import getattrs, setattrs, keyword_only
+from myojin.funcutils import getattrs, setattrs, keyword_only
 from ..... import db, app, debug
-from flaskext.auth import UserModelBase
+from myojin.auth import UserModelBase
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc, distinct

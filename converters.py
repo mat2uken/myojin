@@ -43,7 +43,7 @@ current_app.url_map.converters['emptiable_path'] = EmptiablePath
 current_app.url_map.converters['dict'] = DictConverter
 
 from datetime import timedelta
-from flaskext.hashutils import urlsafe_hmac_digest, verify_urlsafe_hmac_digest
+from myojin.hashutils import urlsafe_hmac_digest, verify_urlsafe_hmac_digest
 
 from werkzeug.routing import Rule, Map, BaseConverter, ValidationError
 class BaseModelConverter(BaseConverter):

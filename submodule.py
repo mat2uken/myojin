@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, make_response, Response
-from flaskext.auth import UserModelBase
+from myojin.auth import UserModelBase
 
 class Identifier(str):
     def __getattr__(self, name):
@@ -171,7 +171,7 @@ class SubModule(object):
 
 
 def render_template(template_name, ctx, with_functions):
-    from flaskext.mako import render
+    from myojin.mako import render
     if template_name is None:
         template_name = request.endpoint.replace(".","/")+".html"
     elif template_name.startswith("/"):

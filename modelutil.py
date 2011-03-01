@@ -1,6 +1,6 @@
 # coding: utf-8
 from __future__ import absolute_import
-from flaskext.funcutils import getattrs, setattrs
+from myojin.funcutils import getattrs, setattrs
 from sqlalchemy import UniqueConstraint, Table
 from flask import current_app
 from functools import wraps
@@ -8,7 +8,7 @@ from sqlalchemy.sql import Join
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import exc as orm_exc
 
-from flaskext.converters import BaseModelConverter
+from myojin.converters import BaseModelConverter
 from werkzeug.local import LocalProxy
 
 from sqlalchemy.orm import class_mapper, object_session
@@ -65,7 +65,7 @@ def gen_children_inner(self, mainattr, child_class, targetattrs, to_parent_arg, 
 
 
 class NoneObject(): pass
-from flaskext.utils import encode_id, decode_id
+from myojin.utils import encode_id, decode_id
 
 from sqlalchemy import Table
 from sqlalchemy.sql import and_

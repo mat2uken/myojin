@@ -62,4 +62,10 @@ def json_dumps(s):
 def debug_space(s):
     assert isinstance(s, unicode)
     return unicode(s).replace(u' ',u'　')
-mako_utils = dict(newline=newline_filter, debug_space=debug_space,JSON=json_dumps)
+try:
+    from flaskext.babel import gettext # as _
+except ImportError, e:
+    def gettext(*args, **kws):
+        from flaskext.babel import gettext
+
+mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps)

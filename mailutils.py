@@ -7,6 +7,7 @@ from email.MIMEText import MIMEText
 from email.Encoders import encode_base64
 from email.Header import Header
 from email.Utils import formatdate
+from unicodedata import normalize
 
 from myojin.mako import render
 from flask.globals import current_app
@@ -29,9 +30,10 @@ class Mailer(object):
 
     def send(self, recipients=None, subject=None, body=None, sender_from=None, encoding='ISO-2022-JP'):
         if isinstance(body, list) or isinstance(body, tuple):
-            msg = MIMEText(''.join(body), 'plain', encoding)
-        else:
-            msg = MIMEText(body, 'plain', encoding)
+            body = ''.join(body)
+
+        body = normalize("NFKC", body)
+        msg = MIMEText(body.encode(encoding, errors='replace'), 'plain', encoding)
 
         if sender_from is None:
             sender_from = self.config['MAIL_SENDER_FROM']

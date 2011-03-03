@@ -4,6 +4,7 @@ from abc import ABCMeta
 ## class MyABC:
 
 ##         MyABC.register(tuple)
+
 from datetime import timedelta
 class date(object):
     __metaclass__ = ABCMeta
@@ -40,8 +41,9 @@ class Datetime(object):
     def utcfromtimestamp(cls, *args,**kws):
         import datetime
         return datetime._datetime.utcfromtimestamp(*args,**kws)
-    @staticmethod
-    def today():
+    @classmethod
+    def today(cls):
+        return cls.now()
         cls = date
         import datetime
         d = cls._today or datetime._date.today()

@@ -45,6 +45,8 @@ def config_from_file(config=None, default='dev.cfg',app=None):
 
     app.init()
     app.init_middleware()
+    if app.config.get("TESTING",False):
+        import myojin.datetimehack
     return app
 
 class MyShell(script.Shell):

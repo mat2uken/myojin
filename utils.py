@@ -5,6 +5,24 @@ from functools import wraps
 from flask import request, session, jsonify
 from json import loads
 from pprint import pprint
+from werkzeug.exceptions import HTTPException
+
+class HTTPExceptionWithResponse(HTTPException):
+    def __init__(self, response):
+        self._response = response
+        super(HTTPExceptionWithResponse, self).__init__()
+    @property
+    def code(self):
+        print self._response.status_code
+        return self._response.status_code
+    def get_response(self, environ):
+        return self._response
+    
+class RedirectToException(HTTPExceptionWithResponse):
+    def __init__(self, *args, **kws):
+        super(RedirectToException, self).__init__(
+            response=redirect_to(*args, **kws))
+
 def redirect_to(*args,**kws):
     code = kws.pop("code",302)
     return redirect(url_for(*args,**kws),code=code)

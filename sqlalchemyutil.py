@@ -34,10 +34,14 @@ class EnumStatus(types.TypeDecorator):
         self.name2int = dict((v,k) for k,v in enumerate(status_names))
 
     def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
         assert isinstance(value, basestring), repr(value)
         return self.name2int[value]
 
     def process_result_value(self, value, dialect):
+        if value is None:
+            return None
         assert isinstance(value, (int,long))
         return self.int2name[value]
 

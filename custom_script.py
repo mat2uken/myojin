@@ -109,6 +109,9 @@ class Test(Command):
 
     def run(self, config, startdir, pattern):
 
+        if not pattern.endswith('.py'):
+            pattern = 'test_%s.py' % pattern
+
         app = config_from_file(config,'test.cfg')
         if not startdir:
             startdir = app.root_path

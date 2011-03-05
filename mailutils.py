@@ -8,7 +8,7 @@ from email.Encoders import encode_base64
 from email.Header import Header
 from email.Utils import formatdate
 
-from flaskext.mako import render
+from myojin.mako import render
 from flask.globals import current_app
 
 class Mailer(object):

@@ -10,41 +10,46 @@ from unittest import TestLoader, TestResult
 from importlib import import_module
 
 import copy
-import os
+import os,sys
 import pwd
 from pprint import pprint
 def get_username():
     return pwd.getpwuid( os.getuid() )[ 0 ]
 
-def config_from_file(config=None, default='dev.cfg',app=None):
+def read_pyconfig(app, filename):
+    filename = os.path.join(app.root_path, filename)
     
-    base_config = dict()
+    if not os.path.exists(filename):
+        return dict()
+##     d = type(sys)('config')
+##     d.__file__ = filename
+    d = dict(__file__ = filename)
+    execfile(filename, d)
+    return d
+    
+def config_from_file(config=None, defaults=('dev.cfg',),app=None):
+    
+    username = get_username()
+    basenames = [basename for basename in (config ,) + tuple(defaults) if basename]
+    usernames = ["%s.%s" % (username, basename)  for basename in basenames]
+    filenames = usernames + basenames
+    from flask import _request_ctx_stack
+    app = _request_ctx_stack.top.app
+    configs = [read_pyconfig(app, filename) for filename in filenames ]
+    #pprint(list(reversed([kv for config in configs for kv in config.items() ])))
+    config = dict( reversed([kv for config in configs for kv in config.items() ]))
 
-    if not app:
-        from flask import _request_ctx_stack
-        app = _request_ctx_stack.top.app
-    else:
-        base_config.update(app.config)
+    config_obj =  type(sys)('config')
+    config_obj.__dict__.update(config)
 
-    user_config = "%s.%s" % (get_username(), default)
+    app.config.from_object(config_obj)
 
-    if config:
-        using = config
-    else:
-        using = default
-    app.config.from_pyfile(using)
-    config_obj = copy.deepcopy(app.config)
-    base_config.update(config_obj)
-
-    if os.path.exists(os.path.join(app.root_path,user_config)):
-        app.config.from_pyfile(user_config)
-        base_config.update(app.config)
-    app.config.from_object(base_config)
-
-    app.init()
-    app.init_middleware()
     if app.config.get("TESTING",False):
         import myojin.datetimehack
+        
+    app.init()
+    app.init_middleware()
+
     return app
 
 class MyShell(script.Shell):
@@ -112,8 +117,8 @@ class Test(Command):
         if not pattern.endswith('.py'):
             pattern = 'test_%s.py' % pattern
 
-        app = config_from_file(config)
-        app = config_from_file(config, default='test.cfg', app=app)
+        #app = config_from_file(config)
+        app = config_from_file(config, defaults=('test.cfg','dev.cfg'))
 
         if not startdir:
             startdir = app.root_path

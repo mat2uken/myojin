@@ -17,31 +17,29 @@ def get_username():
     return pwd.getpwuid( os.getuid() )[ 0 ]
 
 def config_from_file(config=None, default='dev.cfg',app=None):
+    
+    base_config = dict()
+
     if not app:
         from flask import _request_ctx_stack
         app = _request_ctx_stack.top.app
+    else:
+        base_config.update(app.config)
 
     user_config = "%s.%s" % (get_username(), default)
 
-#    if config:
-#        using = config
-#    elif os.path.exists(os.path.join(app.root_path,user_config)):
-#        using = user_config
-#    else:
-#        using = default
-#    app.config.from_pyfile(using)
     if config:
         using = config
     else:
         using = default
     app.config.from_pyfile(using)
     config_obj = copy.deepcopy(app.config)
+    base_config.update(config_obj)
 
     if os.path.exists(os.path.join(app.root_path,user_config)):
         app.config.from_pyfile(user_config)
-        user_config = app.config
-        config_obj.update(user_config)
-        app.config.from_object(config_obj)
+        base_config.update(app.config)
+    app.config.from_object(base_config)
 
     app.init()
     app.init_middleware()
@@ -111,7 +109,12 @@ class Test(Command):
 
     def run(self, config, startdir, pattern):
 
-        app = config_from_file(config,'test.cfg')
+        if not pattern.endswith('.py'):
+            pattern = 'test_%s.py' % pattern
+
+        app = config_from_file(config)
+        app = config_from_file(config, default='test.cfg', app=app)
+
         if not startdir:
             startdir = app.root_path
         import unittest

@@ -45,3 +45,21 @@ class EnumStatus(types.TypeDecorator):
         assert isinstance(value, (int,long))
         return self.int2name[value]
 
+from datetime import datetime, date
+class Month(types.TypeDecorator):
+    impl = types.Date
+    @staticmethod
+    def _first_of_month(value):
+        if value is None:
+            return None
+        elif isinstance(value, datetime):
+            value = value.date()
+        assert isinstance(value, date)
+        return value.replace(day=1)
+        
+    def process_bind_param(self, value, dialect):
+        return self._first_of_month(value)
+
+    def process_result_value(self, value, dialect):
+        return self._first_of_month(value)
+

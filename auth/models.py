@@ -58,7 +58,10 @@ class UserModelBase(object):
     @property
     def password_check_result(self):
         return getattr(self,'_password_check_result',False)
-    def login(self):
+    def login(self, *args, **kws):
+        from flask.globals import _request_ctx_stack, request, current_app
+        current_app.before_login(*args, **kws)
+        
         assert self.password_check_result
         user = self
         from flask import session

@@ -46,6 +46,14 @@ def config_from_file(config=None, defaults=('dev.cfg',),app=None):
 
     if app.config.get("TESTING",False):
         import myojin.datetimehack
+        from datetime import date, datetime
+        today = app.config.get("TODAY",None)
+        now = app.config.get("NOW",None)
+        if today:
+            date.set_today(today)
+        if now:
+            datetime.set_now(now)
+            
         
     app.init()
     app.init_middleware()

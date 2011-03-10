@@ -131,6 +131,30 @@ class CustomFlask(Flask):
     debug_out = Debug()
     request_class = CustomRequest
     session_store = session_store
+
+    before_login_handlers = ()
+    after_auth_check_handlers = ()
+    
+    def before_login_handler(self):
+        def decorator(f):
+            self.before_login_handlers += (f,)
+            return f
+        return decorator
+
+    def after_auth_check_handler(self):
+        def decorator(f):
+            self.after_auth_check_handlers += (f,)
+            return f
+        return decorator
+        
+    def after_auth_check(self, *args, **kws):
+        for h in self.after_auth_check_handlers:
+            h(*args, **kws)
+
+    def before_login(self, *args, **kws):
+        for h in self.before_login_handlers:
+            h(*args, **kws)
+    
     def __init__(self, *args, **kws):
         super(CustomFlask,self).__init__(*args, **kws)
         self.app = self

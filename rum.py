@@ -30,7 +30,7 @@ def call_msgfmt():
     return call(['msgfmt',get_filename('po'),'-o',get_filename('mo')])
 
 def get_filename(ext='po'):
-    dirs = (current_app.root_path, 'locales', 'ja', 'LC_MESSAGES')
+    dirs = (current_app.root_path, app.config.get('I18N_DIR_NAME', 'locales'), 'ja', 'LC_MESSAGES')
     f = '%s.%s'% (current_app.import_name,ext)
     return os.path.join(*dirs + (f,))
 
@@ -69,7 +69,7 @@ def get_translator_from_app():
     return gettext.translation(
             domain=domain,
             languages=['ja'],
-            localedir=os.path.join(app.root_path,'locales'),
+            localedir=os.path.join(app.root_path, app.config.get('I18N_DIR_NAME', 'locales')),
             fallback=True
             )
         
@@ -132,7 +132,7 @@ def load_app(models, url, translator, debug=False):
     app = CustomRumApp({
         'debug': debug,
         'templating': {'search_path': [BASE_DIR + '/templates/rum']},
-        'rum.translator':{'locales':["es"],},
+        'rum.translator':{app.config.get('I18N_DIR_NAME', 'locales'):["es"],},
         'rum.repositoryfactory': {
             'use': 'sqlalchemy',
             'models': models,

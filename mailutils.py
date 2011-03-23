@@ -28,11 +28,12 @@ class Mailer(object):
         default_config.update(app.config)
         self.config = default_config
 
-    def send(self, recipients=None, subject=None, body=None, sender_from=None, encoding='ISO-2022-JP'):
+    def send(self, recipients=None, subject=None, body=None, sender_from=None, encoding='ISO-2022-JP', with_normalize=False):
         if isinstance(body, list) or isinstance(body, tuple):
             body = ''.join(body)
 
-        body = normalize("NFKC", body)
+        if with_normalize:
+            body = normalize("NFKC", body)
         msg = MIMEText(body.encode(encoding, errors='replace'), 'plain', encoding)
 
         if sender_from is None:

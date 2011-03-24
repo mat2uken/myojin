@@ -26,7 +26,10 @@ def read_pyconfig(app, filename):
     d = dict(__file__ = filename)
     execfile(filename, d)
     return d
-    
+def use_datetime_hack():
+    import myojin.datetimehack
+    from datetime import date, datetime
+
 def config_from_file(config=None, defaults=('dev.cfg',),app=None):
     
     username = get_username()
@@ -45,8 +48,10 @@ def config_from_file(config=None, defaults=('dev.cfg',),app=None):
     app.config.from_object(config_obj)
 
     if app.config.get("TESTING",False):
-        import myojin.datetimehack
-        from datetime import date, datetime
+        use_datetime_hack()
+    
+    from datetime import date, datetime
+    if hasattr(date, "set_today"):
         today = app.config.get("TODAY",None)
         now = app.config.get("NOW",None)
         if today:
@@ -159,6 +164,7 @@ class RunScript(Test):
                    default="test*.py"),
             )
     def run(self, config, startdir, pattern):
+        use_datetime_hack()
         app = config_from_file(config)
         mod = import_module(app.import_name + ".scripts." + self.script_name)
         mod.main()

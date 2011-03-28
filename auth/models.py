@@ -60,7 +60,7 @@ class UserModelBase(object):
         return getattr(self,'_password_check_result',False)
     def login(self, *args, **kws):
         from flask.globals import _request_ctx_stack, request, current_app
-        current_app.before_login(*args, **kws)
+        ## current_app.before_login(*args, **kws)
         
         assert self.password_check_result
         user = self
@@ -79,8 +79,6 @@ class UserModelBase(object):
         if hasattr(session, "_user"):
             delattr(session,"_user")
         session[self.USER_ID_KEY] = user.id
-        current_app.after_login(*args, **kws)
-
 
     def change_password(self, old_raw_password, new_raw_password):
         if self.check_password(old_raw_password):

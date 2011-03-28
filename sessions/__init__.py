@@ -133,11 +133,18 @@ class CustomFlask(Flask):
     session_store = session_store
 
     before_login_handlers = ()
+    after_login_handlers = ()
     after_auth_check_handlers = ()
     
     def before_login_handler(self):
         def decorator(f):
             self.before_login_handlers += (f,)
+            return f
+        return decorator
+
+    def after_login_handler(self):
+        def decorator(f):
+            self.after_login_handlers += (f,)
             return f
         return decorator
 
@@ -153,6 +160,10 @@ class CustomFlask(Flask):
 
     def before_login(self, *args, **kws):
         for h in self.before_login_handlers:
+            h(*args, **kws)
+    
+    def after_login(self, *args, **kws):
+        for h in self.after_login_handlers:
             h(*args, **kws)
     
     def __init__(self, *args, **kws):

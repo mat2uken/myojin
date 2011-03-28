@@ -9,6 +9,7 @@ def init(app,globals=None):
     
     _lookup = init_lookup(app.root_path + "/templates", app.root_path + "/tmp", globals=globals)
     _globals = globals or dict()
+    _globals['DEBUG'] = app.config.get('DEBUG', False)
 _globals = None
 
 def get_template(template_name):

@@ -79,6 +79,8 @@ class UserModelBase(object):
         if hasattr(session, "_user"):
             delattr(session,"_user")
         session[self.USER_ID_KEY] = user.id
+        current_app.after_login(*args, **kws)
+
 
     def change_password(self, old_raw_password, new_raw_password):
         if self.check_password(old_raw_password):

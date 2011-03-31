@@ -148,12 +148,25 @@ class CustomFlask(Flask):
 ##             return f
 ##         return decorator
 
+    def create_url_adapter_(self, request):
+        app = self
+        environ = request.environ
+        server_name = (
+            app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+            ).split(":")[0]
+        return self.url_map.bind_to_environ(request.environ,
+            server_name=server_name)
+
     def after_auth_check_handler(self):
         def decorator(f):
             self.after_auth_check_handlers += (f,)
             return f
         return decorator
         
+    def add_url_rule(self, rule, endpoint=None, view_func=None, debug_only=False, **options):
+        if not debug_only or self.config.get("DEBUG"):
+            super(CustomFlask, self).add_url_rule(rule, endpoint, view_func, **options)
+            
     def after_auth_check(self, *args, **kws):
         for h in self.after_auth_check_handlers:
             h(*args, **kws)
@@ -165,12 +178,50 @@ class CustomFlask(Flask):
 ##     def after_login(self, *args, **kws):
 ##         for h in self.after_login_handlers:
 ##             h(*args, **kws)
-    
+    check_ssl_handler = ()
+    def check_ssl_handler(self):
+        def decorator(f):
+            self.registered_check_ssl_handler = f
+            return f
+        return decorator
+
+    def is_ssl_request(self):
+        if self.registered_check_ssl_handler:
+            return self.registered_check_ssl_handler()
+        return None
+        
     def __init__(self, *args, **kws):
         super(CustomFlask,self).__init__(*args, **kws)
         self.app = self
         from flask.globals import _request_ctx_stack
         _request_ctx_stack.push(self)
+        self.ssl_required_endpoints = set()
+
+        from werkzeug import LocalStack, LocalProxy
+        def get_current_user():
+            from myojin.auth import UserModelBase
+            return UserModelBase.current_user()
+        self.current_user = LocalProxy(get_current_user)
+        
+        @self.before_request
+        def check_request():
+            app = self
+            if not app.config.get('SSL_REQUIRED_REDIRECT'):
+                return
+            from flask import request, jsonify, session
+            from flask import Module, abort, redirect
+            environ = request.environ
+            if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
+                server_name = (
+                    app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+                    ).split(":")[0]
+
+                query_string = environ.get('QUERY_STRING', '')
+                query_splitter = "?" if query_string else ""
+                path_info = request.environ['PATH_INFO']
+                return redirect("https://%s%s%s%s" % (server_name, path_info, query_splitter, query_string))
+            return 
+        
     def wsgi_app(self, environ, start_response):
         self.debug_out.buf = StringIO()
         session = environ['beaker.session']

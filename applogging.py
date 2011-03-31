@@ -11,7 +11,7 @@ Message:
 """
 
 FILE_LOG_FORMAT = """%(levelname)s %(asctime)s %(pathname)s:%(lineno)s >>> %(message)s"""
-
+from flask import request
 def ignore_url():
     from flask import request
     requrl = request.url

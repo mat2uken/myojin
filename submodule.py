@@ -206,19 +206,21 @@ flask._url_for = flask.url_for
 from flask import request
 from urllib import urlencode
 def url_for(endpoint, _args=(), **values):
+    from flask import current_app
     if endpoint == ".":
         endpoint = request.endpoint
         if not _args:
             _args = request.args
 
-    is_https = False
-    from flask import current_app
+    is_https = endpoint in current_app.ssl_required_endpoints
     if '_https' in values and values['_https'] == True:
         is_https = True
         del values['_https']
-
+    if bool(is_https) != bool(current_app.is_ssl_request()):
+        values['_external'] = True
     result = flask._url_for(endpoint, **values)
-    if is_https and not current_app.config.get('DEBUG'):
+    print result, is_https, current_app.is_ssl_request()
+    if is_https and (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
         result = result.replace('http://', 'https://')
 
     if hasattr(_args, "lists"):

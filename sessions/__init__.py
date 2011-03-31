@@ -148,7 +148,7 @@ class CustomFlask(Flask):
 ##             return f
 ##         return decorator
 
-    def create_url_adapter(self, request):
+    def create_url_adapter_(self, request):
         app = self
         environ = request.environ
         server_name = (
@@ -163,6 +163,10 @@ class CustomFlask(Flask):
             return f
         return decorator
         
+    def add_url_rule(self, rule, endpoint=None, view_func=None, debug_only=False, **options):
+        if not debug_only or self.config.get("DEBUG"):
+            super(CustomFlask, self).add_url_rule(rule, endpoint, view_func, **options)
+            
     def after_auth_check(self, *args, **kws):
         for h in self.after_auth_check_handlers:
             h(*args, **kws)
@@ -192,6 +196,13 @@ class CustomFlask(Flask):
         from flask.globals import _request_ctx_stack
         _request_ctx_stack.push(self)
         self.ssl_required_endpoints = set()
+
+        from werkzeug import LocalStack, LocalProxy
+        def get_current_user():
+            from myojin.auth import UserModelBase
+            return UserModelBase.current_user()
+        self.current_user = LocalProxy(get_current_user)
+        
         @self.before_request
         def check_request():
             app = self

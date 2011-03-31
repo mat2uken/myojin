@@ -38,7 +38,9 @@ class Module(flask.Module):
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         super(Module,self).add_url_rule( rule, endpoint, view_func, **options)
         def setattr_view_func_to_conv(state):
-            assert '%s.%s' % (self.name, endpoint) == state.app.url_map._rules[-1].endpoint
+            if '%s.%s' % (self.name, endpoint) != state.app.url_map._rules[-1].endpoint:
+                return
+            #assert '%s.%s' % (self.name, endpoint) == state.app.url_map._rules[-1].endpoint
             for c in state.app.url_map._rules[-1]._converters.values():
                 c.view_func = view_func
 
@@ -107,8 +109,6 @@ class SubModule(object):
     
     def register_to(self, module):
         self.parent = module
-        for url in self.urls:
-            module.add_url_rule(**url)
         for url in self.urls:
             module.add_url_rule(**url)
         module.ssl_required_endpoints.extend(self.ssl_required_endpoints)
@@ -206,7 +206,11 @@ flask._url_for = flask.url_for
 from flask import request
 from urllib import urlencode
 def url_for(endpoint, _args=(), **values):
-    from flask import current_app
+    from flask import current_app, request
+    app = current_app
+    environ = request.environ
+    if "logout" in endpoint:
+        print app.config['SERVER_NAME'], environ.get('HTTP_HOST'), environ.get('SERVER_NAME')
     if endpoint == ".":
         endpoint = request.endpoint
         if not _args:
@@ -216,12 +220,23 @@ def url_for(endpoint, _args=(), **values):
     if '_https' in values and values['_https'] == True:
         is_https = True
         del values['_https']
-    if bool(is_https) != bool(current_app.is_ssl_request()):
+    if bool(is_https) != bool(current_app.is_ssl_request()) and endpoint != ".static":
         values['_external'] = True
     result = flask._url_for(endpoint, **values)
-    print result, is_https, current_app.is_ssl_request()
+    #print result, is_https, current_app.is_ssl_request()
     if is_https and (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
-        result = result.replace('http://', 'https://')
+        if result.startswith('http://'):
+            result = 'https://' + result[len('http://'):]
+            items = result.split("/",3)
+            items[2] = items[2].split(":")[0]
+            result = "/".join(items)
+    if current_app.is_ssl_request() and not is_https and result.startswith('http://'):
+        items = result.split("/",3)
+        items[2] = items[2].split(":")[0] + (
+            ":%s" % current_app.config['HTTP_PORT'] if int(current_app.config['HTTP_PORT']) != 80 else "")
+        result = "/".join(items)
+        
+        #result = result.replace('http://', 'https://')
 
     if hasattr(_args, "lists"):
         args = [(k,v) for k, vs in _args.lists for v in vs]

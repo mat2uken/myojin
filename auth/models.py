@@ -19,6 +19,14 @@ class UserModelBase(object):
     USER_ID_KEY = 'USER_ID'
     AnonymousUser = AnonymousUser
     @classmethod
+    def current_user_getter(cls, f):
+        cls.current_user_getter_func = staticmethod(f)
+    
+    @classmethod
+    def current_user(cls):
+        return cls.current_user_getter_func()
+        
+    @classmethod
     def logout(cls):
         session.flush()
         session._user = cls.AnonymousUser()
@@ -42,7 +50,7 @@ class UserModelBase(object):
         return user_id
 
     @classmethod
-    def current_user(cls):
+    def get_current_user(cls):
         User = cls
         if hasattr(session,'_user' ):
             return session._user

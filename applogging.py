@@ -13,6 +13,7 @@ Message:
 FILE_LOG_FORMAT = """%(levelname)s %(asctime)s %(pathname)s:%(lineno)s >>> %(message)s"""
 from flask import request
 def ignore_url():
+    from flask import request
     requrl = request.url
     if 'favicon' in requrl or 'imgsrc' in requrl or 'healthcheck' in requrl:
         return True

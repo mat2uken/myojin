@@ -89,8 +89,12 @@ class SubModule(object):
         self.ssl_required_endpoints = []
         self.url_prefix = url_prefix
         self.decorators = decorators
-    def route(self, rule, decorators=(), argform=None, ssl_required=False, **options):
+    def route(self, rule, decorators=(), argform=None, ssl_required=False, debug_only=False, **options):
         def decorator(f):
+            if debug_only:
+                from flask import current_app
+                if not current_app.config.get('DEBUG', False):
+                    return f
             decos = tuple(self.decorators) + tuple(decorators)
             if argform:
                 decos += (partial(argform_deco,argform), )

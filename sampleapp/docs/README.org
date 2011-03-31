@@ -1,0 +1,209 @@
+* 概要
+Flaskを中心に、SQLAlchemy、テンプレートエンジンにmakoを使用しています。
+Python 2.7を想定しています。
+SQLAlchemyは0.6.xを想定しています。
+0.7.xには現在対応していません。
+* サンプルアプリケーション
+python manage.py set_testdata
+でテスト用のデータを、
+python manage.py run
+でテスト用サーバが起動します。
+http://localhost:5000/
+を開くとリンクの一覧が表示されます。
+これを表示しているのは
+myojin.myojin.views.top.index()
+になります。
+
+* ディレクトリ構成
+myojin/
+  manage.py      # コマンド実行スクリプト
+  flaskext/      # flaskの拡張ツール類
+  static/        # 静的ファイル   デフォルトのURLは例えばhttp://hoge/static/hello.txt
+  templates/     # テンプレートファイル
+  translations/  # 言語ファイル
+  myojin/        # 本体
+    dev.cfg
+    test.dev.cfg
+    USERNAME.dev.cfg
+    core/          # flaskアプリ、データベース、テンプレートエンジン関係の生成、初期化など
+      app.py         # flaskアプリ生成
+      database.py    # SQLAlchemyのエンジン初期化
+      decorators.py  # ログイン必須などのdecorator
+      globals.py     # ここで__all__に追加したものがmyojin/myojin/__init__.pyにてmyojinモジュール名前空間に導入される
+      initlogging.py # ログ機能の初期化
+      mako.py        # テンプレートエンジンに使用しているmakoの初期化
+      middlewares.py # wsgiミドルウェアなど。今はメンテナンス画面表示用ミドルウェアのみ。
+    apps/          # アプリケーション本体
+      main/          # サンプルアプリケーション 
+        models/        # モデル定義
+          tables/        # テーブル定義
+          mappers/       # マッパー定義
+          classes/       # クラス定義
+	  base.py        # モデルクラスの基底クラス 
+        views/         # ビュー
+          top.py       # 
+	  
+* 依存モジュール
+rumalchemy
+httpagentparser
+ipy
+SQLAlchemy 0.6.x
+flask
+flask-script
+flask-sqlalchemy
+flask-wtf
+beaker
+mako
+tw.rum
+
+** pip freeze
+AddOns==0.7
+Babel==0.9.5
+Beaker==1.5.4
+BytecodeAssembler==0.6
+Cython==0.14
+DecoratorTools==1.8
+EggTranslations==1.2.1
+Extremes==1.1.1
+Flask==0.6.1
+Flask-SQLAlchemy==0.9.1
+Flask-Script==0.3.1
+Flask-WTF==0.5.2
+FormEncode==1.2.3dev
+Genshi==0.6
+IPy==0.72
+Jinja2==2.5.5
+Mako==0.3.6
+MarkupSafe==0.11
+## FIXME: could not find svn URL in dependency_links for this package:
+PEAK-Rules==0.5a1.dev-r2686
+Paste==1.7.5.1
+PasteDeploy==1.3.4
+PasteScript==1.7.3
+Routes==1.12.3
+## FIXME: could not find svn URL in dependency_links for this package:
+RumAlchemy==0.4dev-20110202
+SQLAlchemy==0.6.6
+SymbolType==1.0
+ToscaWidgets==0.9.11
+TurboJson==1.3.1
+WTForms==0.6.2
+WebFlash==0.1a9
+WebOb==1.0.1
+Werkzeug==0.6.2
+argparse==1.1
+configobj==4.7.2
+httpagentparser==0.8.2
+numpy==1.5.1
+prioritized-methods==0.2.1
+pyffmpeg==2.1beta
+python-dateutil==1.5
+repoze.tm2==1.0b1
+## FIXME: could not find svn URL in dependency_links for this package:
+rum==0.4dev-20110202
+rum-generic==0.3.0dev
+rum-policy==0.0.9dev
+rum.component==0.0.1dev
+simplejson==2.1.3
+transaction==1.1.1
+tw.dojo==0.9.9
+tw.forms==0.9.9
+## FIXME: could not find svn URL in dependency_links for this package:
+tw.rum==0.4dev-20110202
+virtualenv==1.5.1
+wsgiref==0.1.2
+zope.interface==3.6.1
+zope.sqlalchemy==0.6.1
+Flask-Babel==0.6
+
+* 機能別
+** 設定ファイル
+実行にはデフォルトで、
+user名.dev.cfg
+が使用されます。
+見つからなければdev.cfgが使用されます。
+テスト実行時はusername.test.cfgやtest.cfg
+が使用されます。
+基本的には、Flask
+** コマンド
+python manage.py {COMMAND}
+で該当コマンドが実行されます。
+python manage.py {COMMAND} -c hoge.cfg
+で指定した設定ファイルhoge.cfgが使用されます。
+*** run(runserver) テストサーバの起動
+*** shell (テスト用シェル)
+*** test (テストの実行)
+*** set_testdata (テスト用データのセット。一度全テーブルを削除してから再作成します。)
+set_testdataの中身は、 myojin/myojin/scripts/set_testdata.py内のmain関数です。
+同様に、myojin/myojin/scripts以下にdef main():.. を持つhoge.pyを追加すれば
+python manage.py hoge
+でhoge.mainが実行されます。
+
+** アプリケーションの追加
+mainと同様にmyojin/myojin/apps/以下にサブパッケージを作る。
+myojin/myojin/apps/hoge/__init__.py
+に、
+from flaskext.submodule import Module
+module = Module(__name__, url_prefix="/hoge")
+を追加。これでこのアプリケーションのURLは、/hoge...になる。
+myojin/myojin/__init__.pyの
+from .apps import main;app.register_module(main.module)
+と同等の行を追加。
+
+** モデル
+myojin/myojin/apps/main/models
+以下にテーブル、モデルクラス、マッパー定義を置きます。
+Model.query_allはすべて、
+Model.queryは、deleted==False、
+Model.userquery は、deleted==False and user==current_user
+の条件でfilterしたクエリーを戻します。
+設定ファイルは、
+SQLALCHEMY_DATABASE_URI = 'sqlite:///dev.db'
+の項を設定してください。
+その他機能などは、SQLAlchemy, Flask-SQLAlchemyに準じます。
+encoded_idで難読化したidを取得できます。難読化だけで暗号ではありません。
+Model.decode_idで復号化できます。
+
+** ビュー,コントローラ
+*** 追加
+main/__init__.py
+from . import views;views.top.module.register_to(module)
+との行と同様に追加
+module = Module(__name__, url_prefix="/hoge")
+views.top.module = submodule.SubModule(__name__, url_prefix="/fuga")
+views.top.module.register_to(module)
+views.top.module.route('/')(f)
+で/hoge/fuga/
+にマッチします。
+
+*** decorator
+**** @module.route('/login', methods=["GET"])
+Flaskの@app.routeに準じます
+**** @module.templated(templatename)
+makoのテンプレートを出力します。
+**** @login_required()
+ログインしていない場合、リダイレクトします。
+*** 認証
+Userクラスのクラスメソッドauthenticateからuserインスタンスを取得します。
+user = User.authenticate(email=email,password=password)
+取得したuserのチェックをしてから、loginメソッドを実行するとログインされます。
+user.login()
+
+*** セッション
+beakerを使用しています。
+configファイルのBEAKER_SETTINGSの項目が
+そのままbeaker sessionの初期化に使用されます。
+*** URL routing
+Flask,werkzeugに準じます。
+@module.route('/user/<User:user>')
+の書式で、モデルのencode_idがマッチするURLの定義になります。
+@module.route('/user/id/<User(attr=id):user>')
+でUser.idにマッチするURLが、
+@module.route('/user/id/<User(tokenkind=user_by_token, minutes=1):user>')
+で、有効期限付きでエンコードされたUser.idを内部にもつトークンを生成します。
+有効期限が切れた場合は404を戻します。
+tokenkindは使用する関数別に名前を設定してください。
+サンプルアプリケーションを参考にしてください。
+
+** 国際化
+後々書きます

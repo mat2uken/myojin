@@ -165,12 +165,25 @@ class CustomFlask(Flask):
 ##     def after_login(self, *args, **kws):
 ##         for h in self.after_login_handlers:
 ##             h(*args, **kws)
-    
+    check_ssl_handler = ()
+    def check_ssl_handler(self):
+        def decorator(f):
+            self.registered_check_ssl_handler = f
+            return f
+        return decorator
+
+    def is_ssl(self):
+        if self.registered_check_ssl_handler:
+            return self.registered_check_ssl_handler()
+        return None
+        
     def __init__(self, *args, **kws):
         super(CustomFlask,self).__init__(*args, **kws)
         self.app = self
         from flask.globals import _request_ctx_stack
         _request_ctx_stack.push(self)
+        self.ssl_required_endpoints = set()
+        
     def wsgi_app(self, environ, start_response):
         self.debug_out.buf = StringIO()
         session = environ['beaker.session']

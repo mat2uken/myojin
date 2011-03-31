@@ -31,7 +31,7 @@ class Module(flask.Module):
     def __init__(self, *args,**kws):
         super(Module, self).__init__(*args,**kws)
         self._record(self.add_state)
-        
+        self.ssl_required_endpoints = []
     def add_state(self, state):
         self._state = state
 
@@ -43,7 +43,12 @@ class Module(flask.Module):
                 c.view_func = view_func
 
         self._record(setattr_view_func_to_conv)
-
+        
+        @self._record
+        def append_ssl_required_endpoints(state):
+            state.app.ssl_required_endpoints.update(
+                '%s.%s' % (self.name, endpoint)
+                for endpoint in self.ssl_required_endpoints)
 
 from functools import wraps
 def argform_deco(argform, f):
@@ -79,9 +84,10 @@ class SubModule(object):
             name = import_name.rsplit('.', 1)[1]
         self.name = name
         self.urls = []
+        self.ssl_required_endpoints = []
         self.url_prefix = url_prefix
         self.decorators = decorators
-    def route(self, rule, decorators=(), argform=None, **options):
+    def route(self, rule, decorators=(), argform=None, ssl_required=False, **options):
         def decorator(f):
             decos = tuple(self.decorators) + tuple(decorators)
             if argform:
@@ -89,10 +95,13 @@ class SubModule(object):
             f = reduce(lambda f,d:d(f),
                        decos,
                        f)
+            endpoint = self.name + "." + f.__name__
             self.urls.append(dict(rule=self.url_prefix + rule,
-                                  endpoint=self.name + "." + f.__name__,
+                                  endpoint=endpoint,
                                   view_func=f,
                                   **options))
+            if ssl_required:
+                self.ssl_required_endpoints.append(endpoint)
             return f
         return decorator
     
@@ -100,6 +109,9 @@ class SubModule(object):
         self.parent = module
         for url in self.urls:
             module.add_url_rule(**url)
+        for url in self.urls:
+            module.add_url_rule(**url)
+        module.ssl_required_endpoints.extend(self.ssl_required_endpoints)
 
     def with_form(self, form):
         def decorator(f):

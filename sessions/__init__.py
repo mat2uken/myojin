@@ -148,6 +148,15 @@ class CustomFlask(Flask):
 ##             return f
 ##         return decorator
 
+    def create_url_adapter(self, request):
+        app = self
+        environ = request.environ
+        server_name = (
+            app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+            ).split(":")[0]
+        return self.url_map.bind_to_environ(request.environ,
+            server_name=server_name)
+
     def after_auth_check_handler(self):
         def decorator(f):
             self.after_auth_check_handlers += (f,)
@@ -172,7 +181,7 @@ class CustomFlask(Flask):
             return f
         return decorator
 
-    def is_ssl(self):
+    def is_ssl_request(self):
         if self.registered_check_ssl_handler:
             return self.registered_check_ssl_handler()
         return None
@@ -183,6 +192,24 @@ class CustomFlask(Flask):
         from flask.globals import _request_ctx_stack
         _request_ctx_stack.push(self)
         self.ssl_required_endpoints = set()
+        @self.before_request
+        def check_request():
+            app = self
+            if not app.config.get('SSL_REQUIRED_REDIRECT'):
+                return
+            from flask import request, jsonify, session
+            from flask import Module, abort, redirect
+            environ = request.environ
+            if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
+                server_name = (
+                    app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+                    ).split(":")[0]
+
+                query_string = environ.get('QUERY_STRING', '')
+                query_splitter = "?" if query_string else ""
+                path_info = request.environ['PATH_INFO']
+                return redirect("https://%s%s%s%s" % (server_name, path_info, query_splitter, query_string))
+            return 
         
     def wsgi_app(self, environ, start_response):
         self.debug_out.buf = StringIO()

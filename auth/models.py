@@ -137,3 +137,6 @@ class UserModelBase(object):
         if user and user.check_password(password):
             return user
         return None
+
+    def external_auth(self):
+        self._password_check_result = True

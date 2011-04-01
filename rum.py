@@ -30,7 +30,7 @@ def call_msgfmt():
     return call(['msgfmt',get_filename('po'),'-o',get_filename('mo')])
 
 def get_filename(ext='po'):
-    dirs = (current_app.root_path, app.config.get('I18N_DIR_NAME', 'locales'), 'ja', 'LC_MESSAGES')
+    dirs = (current_app.root_path, current_app.config.get('I18N_DIR_NAME', 'locales'), 'ja', 'LC_MESSAGES')
     f = '%s.%s'% (current_app.import_name,ext)
     return os.path.join(*dirs + (f,))
 
@@ -129,10 +129,11 @@ def get_rum_app(models, url, get_translator, debug=False):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def load_app(models, url, translator, debug=False):
+    print "LOAD_APP!!"
     app = CustomRumApp({
         'debug': debug,
         'templating': {'search_path': [BASE_DIR + '/templates/rum']},
-        'rum.translator':{app.config.get('I18N_DIR_NAME', 'locales'):["es"],},
+        'rum.translator':{current_app.config.get('I18N_DIR_NAME', 'locales'):["es"],},
         'rum.repositoryfactory': {
             'use': 'sqlalchemy',
             'models': models,
@@ -142,8 +143,49 @@ def load_app(models, url, translator, debug=False):
             'use': 'toscawidgets',
         }
     },finalize=True, translator=translator)
-    
+    app(dict(SCRIPT_NAME="admin",PATH_INFO="/basefiles",
+             HTTP_USER_AGENT="Mozilla/5.0　(Macintosh;　U;　Intel　Mac　OS　X　10_6_7;　en-US)　AppleWebKit/534.16　(KHTML,　like　Gecko)　Chrome/10.0.648.204　Safari/534.16",
+             REQUEST_METHOD="GET"),lambda *xs,**kws:[])
     return app
+
+## DUMMY_ENV = {'CONTENT_LENGTH': '',
+##  'CONTENT_TYPE': '',
+##  'HTTP_ACCEPT': 'application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+##  'HTTP_ACCEPT_CHARSET': 'Shift_JIS,utf-8;q=0.7,*;q=0.3',
+##  'HTTP_ACCEPT_ENCODING': 'gzip,deflate,sdch',
+##  'HTTP_ACCEPT_LANGUAGE': 'ja,en-US;q=0.8,en;q=0.6',
+##  'HTTP_CACHE_CONTROL': 'max-age=0',
+##  'HTTP_CONNECTION': 'close',
+##  'HTTP_COOKIE': 'ABC=ce865ed3ff2c501611ccd2dc187492b5144c2bb3be016a07737bbc0069b2252fa519cf87',
+##  'HTTP_HOST': '192.168.1.2:8880',
+##  'HTTP_USER_AGENT': 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.204 Safari/534.16',
+##  'HTTP_X_FORWARDED_FOR': '192.168.1.3',
+##  'HTTP_X_REAL_IP': '192.168.1.3',
+##  'PATH_INFO': '/basefiles',
+##  'QUERY_STRING': '',
+##  'REMOTE_ADDR': '127.0.0.1',
+##  'REMOTE_PORT': 48500,
+##  'REQUEST_METHOD': 'GET',
+##  'SCRIPT_NAME': '/admin/rum',
+##  'SERVER_NAME': '0.0.0.0',
+##  'SERVER_PORT': '5000',
+##  'SERVER_PROTOCOL': 'HTTP/1.0',
+##  'SERVER_SOFTWARE': 'Werkzeug/0.6.2',
+## # 'beaker.get_session': <bound method SessionMiddleware._get_session of <beaker.middleware.SessionMiddleware object at 0x9cdda8c>>,
+## # 'beaker.session': {'_accessed_time': 1301641413.688675, 'USER_ID': 1, '_csrf_token': 'e08cf763-5f4e-49fa-9630-4f674e374931', '_creation_time': 1301640390.983616},
+## # 'paste.registry': <paste.registry.Registry object at 0x9e4858c>,
+##  'repoze.tm.active': True,
+##  #'toscawidgets.framework': <tw.mods.base.HostFramework object at 0xa093e0c>,
+##  'toscawidgets.javascript.require_once': False,
+##  'toscawidgets.prefix': '/toscawidgets',
+## # 'werkzeug.request': <CustomRequest 'http://192.168.1.2:8880/admin/rum' [GET]>,
+## # 'wsgi.errors': <open file '<stderr>', mode 'w' at 0xb75d80d0>,
+## # 'wsgi.input': <socket._fileobject object at 0x9e185ec>,
+##  'wsgi.multiprocess': False,
+##  'wsgi.multithread': False,
+##  'wsgi.run_once': False,
+##  'wsgi.url_scheme': 'http',
+##  'wsgi.version': (1, 0)}
 
 #import csv
 #from cStringIO import StringIO

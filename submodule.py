@@ -236,8 +236,9 @@ def url_for(endpoint, _args=(), **values):
             result = "/".join(items)
     if current_app.is_ssl_request() and not is_https and result.startswith('http://'):
         items = result.split("/",3)
+        port = current_app.config.get("EXT_HTTP_PORT") or current_app.config['HTTP_PORT']
         items[2] = items[2].split(":")[0] + (
-            ":%s" % current_app.config['HTTP_PORT'] if int(current_app.config['HTTP_PORT']) != 80 else "")
+            ":%s" % port if int(port) != 80 else "")
         result = "/".join(items)
         
         #result = result.replace('http://', 'https://')

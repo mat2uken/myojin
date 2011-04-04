@@ -131,7 +131,7 @@ class CustomFlask(Flask):
     debug_out = Debug()
     request_class = CustomRequest
     session_store = session_store
-
+    registered_check_ssl_handler = None
 ##     before_login_handlers = ()
 ##     after_login_handlers = ()
     after_auth_check_handlers = ()

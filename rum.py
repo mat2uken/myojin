@@ -30,7 +30,7 @@ def call_msgfmt():
     return call(['msgfmt',get_filename('po'),'-o',get_filename('mo')])
 
 def get_filename(ext='po'):
-    dirs = (current_app.root_path, app.config.get('I18N_DIR_NAME', 'locales'), 'ja', 'LC_MESSAGES')
+    dirs = (current_app.root_path, current_app.config.get('I18N_DIR_NAME', 'locales'), 'ja', 'LC_MESSAGES')
     f = '%s.%s'% (current_app.import_name,ext)
     return os.path.join(*dirs + (f,))
 
@@ -129,10 +129,11 @@ def get_rum_app(models, url, get_translator, debug=False):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def load_app(models, url, translator, debug=False):
+    
     app = CustomRumApp({
         'debug': debug,
         'templating': {'search_path': [BASE_DIR + '/templates/rum']},
-        'rum.translator':{app.config.get('I18N_DIR_NAME', 'locales'):["es"],},
+        'rum.translator':{current_app.config.get('I18N_DIR_NAME', 'locales'):["es"],},
         'rum.repositoryfactory': {
             'use': 'sqlalchemy',
             'models': models,

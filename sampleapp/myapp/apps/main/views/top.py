@@ -108,8 +108,6 @@ def admin(path=""):
     return rum_response(path, models)
 
 
-
-
 from rum import fields
 ## 管理画面で表示するカラムを指定
 fields.FieldFactory.fields(User, (

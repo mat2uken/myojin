@@ -1,0 +1,16 @@
+body {
+    color: #333;
+}
+th {
+    vertical-align: top;
+    text-align: left;
+    font-weight: normal;
+}
+
+ul {
+    list-style-type: none;
+}
+
+.required th {
+    font-weight: bold;
+}

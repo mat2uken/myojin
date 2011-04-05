@@ -129,7 +129,6 @@ def get_rum_app(models, url, get_translator, debug=False):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def load_app(models, url, translator, debug=False):
-    print "LOAD_APP!!"
     app = CustomRumApp({
         'debug': debug,
         'templating': {'search_path': [BASE_DIR + '/templates/rum']},

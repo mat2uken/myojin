@@ -184,7 +184,7 @@ class CustomFlask(Flask):
             self.registered_check_ssl_handler = f
             return f
         return decorator
-
+    registered_check_ssl_handler = None
     def is_ssl_request(self):
         if self.registered_check_ssl_handler:
             return self.registered_check_ssl_handler()

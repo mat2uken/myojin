@@ -109,7 +109,7 @@ from flask import send_file, make_response
 @admin.route('/image/<id>', methods=['GET', 'POST'])
 def image(id):
     from cStringIO import StringIO
-    res = make_response(Image.query.get(id=id).image, )
+    res = make_response(Image.query.get(id=id).image or "abc", )
     res.mimetype = 'image/jpeg'
     return res
     

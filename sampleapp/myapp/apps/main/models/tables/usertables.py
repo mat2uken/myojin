@@ -1,15 +1,15 @@
 from .use_sqlalchemy import *
 
 memo = Table(
-    "memo_table", db.metadata,
+    "memo", db.metadata,
     Column('id', Integer, primary_key=True),
-    Column('user_id', Integer, ForeignKey('user_table.id')),
+    Column('user_id', Integer, ForeignKey('user.id')),
     Column('text', UnicodeText(), default="", nullable=False,),
     Column('deleted', Boolean(), default=False),
     )
 
 user = Table(
-    "user_table", db.metadata,
+    "user", db.metadata,
     Column('id', Integer, primary_key=True),
 #    Column('username', String(100), nullable=False, unique=True),
     Column('password', String(128), nullable=False),
@@ -34,4 +34,14 @@ user = Table(
     Column('account_status', Integer, default=0),
     Column('last_login_dt', DateTime()),
 
+    )
+
+image = Table(
+    "image", db.metadata,
+    Column('id', Integer, primary_key=True),
+    Column('name', UnicodeText()),
+    Column('slug', UnicodeText()),
+    Column('image', Binary),
+    Column('alt_text', UnicodeText()),
+    Column('deleted', Boolean(), default=False),
     )

@@ -30,5 +30,8 @@ def main():
     second_user.is_activated = True    
     print "create myojin_user(inactive)..."
     myojin_user = User(nickname="myojin", email="myojindev@cerevo.com",password='myojin').save()
+    for x in range(10):
+        image = Image(name="name%s" % x, alt_text="")
+        image.save()
     db.session.commit()
     return

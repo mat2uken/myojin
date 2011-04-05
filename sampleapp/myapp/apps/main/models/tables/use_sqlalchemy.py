@@ -3,6 +3,7 @@ from ..... import db, app
 from sqlalchemy import Table, Column
 from sqlalchemy.schema import Index
 from sqlalchemy.types import BigInteger, Integer, String, Unicode, UnicodeText, DateTime,Date, Boolean, PickleType, Text#, BIGINT
+from sqlalchemy.types import LargeBinary, Binary
 from sqlalchemy import ForeignKey
 from sqlalchemy import func, Sequence
 from sqlalchemy import ForeignKeyConstraint,UniqueConstraint

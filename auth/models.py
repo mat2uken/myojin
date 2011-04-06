@@ -140,3 +140,7 @@ class UserModelBase(object):
 
     def external_auth(self):
         self._password_check_result = True
+
+    def external_login(self, *args, **kwargs):
+        self.external_auth()
+        self.login(*args, **kwargs)

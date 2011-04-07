@@ -11,7 +11,7 @@ href="/static/jquery-ui/css/redmond/jquery-ui-1.8.11.custom.css"
     <link rel="stylesheet" type="text/css" media="screen" href="/static/jqgrid/css/ui.jqgrid.css" />
  <style>
 html, body {
-    margin: 0;
+    margin: 10px;
     padding: 0;
     font-size: 75%;
 }
@@ -28,7 +28,7 @@ html, body {
 $(function(){ 
   $("#list").jqGrid({
     url:'getrows',
-    datatype: 'xml',
+    datatype: 'json',
     mtype: 'GET',
     colNames:['Inv No','Date', 'Amount','Tax','Total','Notes'],
     colModel :[ 

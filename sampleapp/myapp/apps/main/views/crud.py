@@ -27,7 +27,39 @@ current_app.wsgi_app = make_middleware(current_app.wsgi_app, stack_registry=True
 def index():
     return dict(test_form=test_form)
     #return "hello"
-
+test_json = """
+{
+  "page": "1",
+  "records": "10",
+  "total": "2",
+  "rows": [
+      {
+          "id": 3,
+          "cell": [
+              3,
+              "cell 1",
+              "2010-09-29T19:05:32",
+              "2010-09-29T20:15:56",
+              "hurrf",
+              "0" 
+          ] 
+      },
+      {
+          "id": 1,
+          "cell": [
+              1,
+              "teaasdfasdf",
+              "2010-09-28T21:49:21",
+              "2010-09-28T21:49:21",
+              "aefasdfsadf",
+              "1" 
+          ] 
+      } 
+  ]
+  }
+  """
+  # "
 @module.route('/getrows')
 def getrows():
+    return test_json
     return "{}"

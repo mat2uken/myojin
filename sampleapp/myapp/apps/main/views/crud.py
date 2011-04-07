@@ -27,3 +27,7 @@ current_app.wsgi_app = make_middleware(current_app.wsgi_app, stack_registry=True
 def index():
     return dict(test_form=test_form)
     #return "hello"
+
+@module.route('/getrows')
+def getrows():
+    return "{}"

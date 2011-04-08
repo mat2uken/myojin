@@ -58,8 +58,35 @@ test_json = """
   ]
   }
   """
-  # "
+
+from . import forms
+from json import dumps
+import math
+from pprint import pprint 
 @module.route('/getrows')
-def getrows():
+@module.with_form(forms.JqGridForm)
+def getrows(form=None, search=False, rows=None, page=None, sidx=None, sord=None,filters=None):
+    print '====== start'
+    pprint(filters)
+    print '====== end'
+    start = (page - 1) * rows
+    end = start + rows
+    print locals()
+    rows_data = [
+        dict(id=x.id, cell=[x.id,x.user.nickname, x.text,"<h1>abc</h1>"])
+        for x in 
+        Memo.query[start:end]]
+    total = int(math.ceil(Memo.query.count() / float(rows)))
+    data = dict(
+        page=page,
+        total=total,
+        rows=rows_data,
+        records=len(rows_data))
+    return dumps(data)
     return test_json
     return "{}"
+
+
+"/crud/getrows?model=Wine&_search=false&nd=1302242119887&rows=10&page=1&sidx=provider&sord=asc"
+
+

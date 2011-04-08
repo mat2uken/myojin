@@ -164,7 +164,6 @@ class RunScript(Test):
                    default="test*.py"),
             )
     def run(self, config, startdir, pattern):
-        use_datetime_hack()
         app = config_from_file(config)
         mod = import_module(app.import_name + ".scripts." + self.script_name)
         mod.main()

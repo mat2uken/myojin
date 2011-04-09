@@ -21,8 +21,6 @@ def read_pyconfig(app, filename):
     
     if not os.path.exists(filename):
         return dict()
-##     d = type(sys)('config')
-##     d.__file__ = filename
     d = dict(__file__ = filename)
     execfile(filename, d)
     return d
@@ -39,7 +37,6 @@ def config_from_file(config=None, defaults=('dev.cfg',),app=None):
     from flask import _request_ctx_stack
     app = _request_ctx_stack.top.app
     configs = [read_pyconfig(app, filename) for filename in filenames ]
-    #pprint(list(reversed([kv for config in configs for kv in config.items() ])))
     config = dict( reversed([kv for config in configs for kv in config.items() ]))
 
     config_obj =  type(sys)('config')
@@ -58,7 +55,6 @@ def config_from_file(config=None, defaults=('dev.cfg',),app=None):
             date.set_today(today)
         if now:
             datetime.set_now(now)
-            
         
     app.init()
     app.init_middleware()
@@ -76,13 +72,15 @@ class MyShell(script.Shell):
     def run(self,config, *args, **kws):
         app = config_from_file(config)
         return super(MyShell,self).run(*args,**kws)
-    
+
 class MyServer(script.Server):
     def handle(self, *args, **kws):
         config = kws.pop('config', None)
         app = config_from_file(config)
         app.db.create_all()
 
+#        if app.config.get('USE_COMPILED_JS', False):
+#            self.compile_js(app)
 
         kws['host'] = app.config.get('HTTP_HOST',None) or self.host
         kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
@@ -96,13 +94,24 @@ class MyServer(script.Server):
                    default=None),
             ) + super(MyServer, self).get_options()
     
-    def run(self,config, *args,**kws):
-        app = config_from_file(config)
-        app.db.create_all()
-
-        kws['host'] = app.config.get('HTTP_HOST',None) or self.host
-        kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
-        return super(MyServer,self).run(*args,**kws)
+    def compile_js(self, app):
+        app_name = app.root_path.rsplit('/', 1)[1]
+        build_args = [
+            'python',
+            '${here}/../closure/library/closure/bin/build/closurebuilder.py',
+            '--root=${here}/../closure/library/third_party/closure/',
+            '--root=${here}/static/js/',
+            '--compiler_jar=${here}/../closure/compiler.jar',
+            '--output_mode=compiled',
+        ]
+        build_args += ['--namespace=' + ns for ns in app.config['JS_NAMESPACES']]
+        print build_args
+        from string import Template
+        from subprocess import check_output
+        result = check_output([Template(s).substitute(here=app.root_path) for s in build_args])
+        with open(os.path.join(app.root_path, 'static/js/%s.js' % app_name), 'w') as f:
+            f.write(result)
+        print 'compole finish'
 
 
 class Test(Command):

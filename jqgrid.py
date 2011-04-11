@@ -95,6 +95,7 @@ class ObjectField(JQGridField):
     
     def __init__(self,  *args, **kws):
         self.target_query = kws.pop('target_query')
+        self.stype = kws.pop('stype',None)
         super(ObjectField,self).__init__(*args, **kws)
         self.column_names, self.view_column_name = self.column_names[:-1], self.column_names[-1]
 
@@ -103,25 +104,23 @@ class ObjectField(JQGridField):
         return "%s(ID:%s)" % (getattr(x, self.view_column_name,""),x.id, )
 
     def get_col_model(self):
+        add_op = dict()
+        if self.stype == "select":
+            add_op = dict(
+                stype="select",
+                searchoptions=
+                dict(
+                    value=":ALL;" + ";".join("%s:%s" % (x.id, getattr(x,self.view_column_name)) for x in self.target_query.all())
+                    ))
+            
         
         return dict(
+            
             self.default_col_model_args,
             name=str(self.index),
             index=str(self.index),
             width=self.width,
-            stype="select",
-            #dataUrl="ABC",
-             searchoptions=
-             dict(
-                value=":ALL;" + ";".join("%s:%s" % (x.id, getattr(x,self.view_column_name)) for x in self.target_query.all())
-                )
-##                 value=OrderedDict([
-##                     ("","ALL"),
-##                     ("1",u"デフォルト"),
-##                     ("2",u"トライアル"),
-##                     ("3",u"スタンダード"),
-##                     ])
-##                 )
+            **add_op
             )
 from collections import OrderedDict
 

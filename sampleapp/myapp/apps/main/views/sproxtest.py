@@ -8,7 +8,6 @@ from ....core.decorators import admin_required, admin_ip_check, login_required
 from .... import current_app
 from flask import request, session, make_response, app, flash
 from myojin.utils import redirect, redirect_to
-module = submodule.SubModule(__name__, url_prefix="crud")
 from ..models import User, Memo
 from flask import url_for
 
@@ -67,6 +66,10 @@ class ImageList(TableBase):
 class ImageListFiller(TableFiller):
     __model__ = Image
 
+    def _do_get_provider_count_and_objs(*args, **kws):
+        xs = Image.query[-3:]
+        return len(xs), xs
+
     def __actions2__(self, obj):
         """Override this function to define how action links should be displayed for the given record."""
         primary_fields = self.__provider__.get_primary_fields(self.__entity__)
@@ -82,7 +85,11 @@ class ImageListFiller(TableFiller):
         return value
 
     def image(self, obj):
-        image = ', '.join(['<img width="100px" height="75px" src="image/'+str(obj.id)+'" alt="'+str(obj.alt_text)+'" />'])
+        image = (
+            '<img width="100px" height="75px" src="%s" alt="%s" />') % (
+            url_for("main.sproxtest.image", id=obj.id),
+            str(obj.alt_text)
+            )
         return image.join(('<div>', '</div>'))
 
 create_image_form = ImageForm(db_session)

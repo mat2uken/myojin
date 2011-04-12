@@ -1,7 +1,7 @@
 from functools import wraps
 
 def getattrs(obj, attrnames, default=None):
-    attrs = attrnames.split(".")
+    attrs = attrnames.split(".") if isinstance(attrnames, basestring) else attrnames
     return _getattrs(obj, attrs, default)
 
 def _getattrs(obj, attrs, default):

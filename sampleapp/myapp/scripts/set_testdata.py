@@ -34,4 +34,9 @@ def main():
         image = Image(name="name%s" % x, alt_text="")
         image.save()
     db.session.commit()
+
+    for user in [first_user, second_user, myojin_user]:
+        for x in range(7):
+            Memo(user=user,text="%s" % x ).save()
+    db.session.commit()
     return

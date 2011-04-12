@@ -79,9 +79,6 @@ class MyServer(script.Server):
         app = config_from_file(config)
         app.db.create_all()
 
-#        if app.config.get('USE_COMPILED_JS', False):
-#            self.compile_js(app)
-
         kws['host'] = app.config.get('HTTP_HOST',None) or self.host
         kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
 
@@ -94,26 +91,6 @@ class MyServer(script.Server):
                    default=None),
             ) + super(MyServer, self).get_options()
     
-    def compile_js(self, app):
-        app_name = app.root_path.rsplit('/', 1)[1]
-        build_args = [
-            'python',
-            '${here}/../closure/library/closure/bin/build/closurebuilder.py',
-            '--root=${here}/../closure/library/third_party/closure/',
-            '--root=${here}/static/js/',
-            '--compiler_jar=${here}/../closure/compiler.jar',
-            '--output_mode=compiled',
-        ]
-        build_args += ['--namespace=' + ns for ns in app.config['JS_NAMESPACES']]
-        print build_args
-        from string import Template
-        from subprocess import check_output
-        result = check_output([Template(s).substitute(here=app.root_path) for s in build_args])
-        with open(os.path.join(app.root_path, 'static/js/%s.js' % app_name), 'w') as f:
-            f.write(result)
-        print 'compole finish'
-
-
 class Test(Command):
     banner = ''
     description = 'Runs a Python shell inside Flask application context.'

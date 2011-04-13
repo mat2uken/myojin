@@ -21,8 +21,6 @@ def read_pyconfig(app, filename):
     
     if not os.path.exists(filename):
         return dict()
-##     d = type(sys)('config')
-##     d.__file__ = filename
     d = dict(__file__ = filename)
     execfile(filename, d)
     return d
@@ -39,7 +37,6 @@ def config_from_file(config=None, defaults=('dev.cfg',),app=None):
     from flask import _request_ctx_stack
     app = _request_ctx_stack.top.app
     configs = [read_pyconfig(app, filename) for filename in filenames ]
-    #pprint(list(reversed([kv for config in configs for kv in config.items() ])))
     config = dict( reversed([kv for config in configs for kv in config.items() ]))
 
     config_obj =  type(sys)('config')
@@ -58,7 +55,6 @@ def config_from_file(config=None, defaults=('dev.cfg',),app=None):
             date.set_today(today)
         if now:
             datetime.set_now(now)
-            
         
     app.init()
     app.init_middleware()
@@ -76,13 +72,12 @@ class MyShell(script.Shell):
     def run(self,config, *args, **kws):
         app = config_from_file(config)
         return super(MyShell,self).run(*args,**kws)
-    
+
 class MyServer(script.Server):
     def handle(self, *args, **kws):
         config = kws.pop('config', None)
         app = config_from_file(config)
         app.db.create_all()
-
 
         kws['host'] = app.config.get('HTTP_HOST',None) or self.host
         kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
@@ -96,15 +91,6 @@ class MyServer(script.Server):
                    default=None),
             ) + super(MyServer, self).get_options()
     
-    def run(self,config, *args,**kws):
-        app = config_from_file(config)
-        app.db.create_all()
-
-        kws['host'] = app.config.get('HTTP_HOST',None) or self.host
-        kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
-        return super(MyServer,self).run(*args,**kws)
-
-
 class Test(Command):
     banner = ''
     description = 'Runs a Python shell inside Flask application context.'

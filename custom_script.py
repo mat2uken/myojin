@@ -90,7 +90,11 @@ class MyServer(script.Server):
                    dest='config',
                    default=None),
             ) + super(MyServer, self).get_options()
-    
+
+    def run(self,config, *args, **kws):
+        app = config_from_file(config)
+        return super(MyServer,self).run(*args,**kws)
+
 class Test(Command):
     banner = ''
     description = 'Runs a Python shell inside Flask application context.'

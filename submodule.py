@@ -213,8 +213,8 @@ def url_for(endpoint, _args=(), **values):
     from flask import current_app, request
     app = current_app
     environ = request.environ
-    if "logout" in endpoint:
-        print app.config['SERVER_NAME'], environ.get('HTTP_HOST'), environ.get('SERVER_NAME')
+##     if "logout" in endpoint:
+##         print app.config['SERVER_NAME'], environ.get('HTTP_HOST'), environ.get('SERVER_NAME')
     if endpoint == ".":
         endpoint = request.endpoint
         if not _args:

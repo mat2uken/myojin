@@ -122,6 +122,36 @@ class ObjectField(JQGridField):
             width=self.width,
             **add_op
             )
+
+class SelectField(IntegerField):
+    
+    def __init__(self,  *args, **kws):
+        self.options = kws.pop('options')
+        self.to_col_data_dict = dict(self.options)
+        self.stype = "select"
+        super(SelectField,self).__init__(*args, **kws)
+
+    def to_col_data(self, x):
+        return self.to_col_data_dict.get(x,None)
+##         print x, self.view_column_name
+##         return "%s(ID:%s)" % (getattr(x, self.view_column_name,""),x.id, )
+
+    def get_col_model(self):
+        add_op = dict(
+            stype="select",
+            searchoptions=
+            dict(
+                value=":ALL;" + ";".join("%s:%s" % (value, name) for value, name in self.options)
+                ))
+        return dict(
+            
+            self.default_col_model_args,
+            name=str(self.index),
+            index=str(self.index),
+            width=self.width,
+            **add_op
+            )
+
 from collections import OrderedDict
 
 class JQGridForm(object):

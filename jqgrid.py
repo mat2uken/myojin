@@ -11,7 +11,16 @@ class JQGridIndexForm(custom_wtf.Form):
     sord = custom_wtf.TextField('')
     filters = custom_wtf.JsonField('')
 
+class JQGridEditForm(custom_wtf.Form):
+    id = custom_wtf.IntegerField('')
+    oper = custom_wtf.TextField('')
+
 class JQGridField(object):
+    def setattr(self, obj, value):
+        setattr(obj, self.column_name,  self.to_python(value))
+        #obj.account_status = self.to_python(value)
+        #print "setattr", obj, repr(self.column_name),  repr(self.to_python(value))
+        #import pdb;pdb.set_trace()
 
     def filter(self, query, data, **kws):
         return query.filter_by(**{
@@ -19,14 +28,15 @@ class JQGridField(object):
             })
     def to_python(self, data):
         return data
-    def __init__(self, column_names, disp_name, width=60):
+    def __init__(self, column_names, disp_name, width=60, editable=False):
         self.column_names = filter(None, column_names.split("."))
         self.disp_name=disp_name
         self.width = width
+        self.editable = editable
     @property
     def column_name(self):
         return self.column_names[0] if self.column_names else None
-        
+    edittype = "text"
     default_col_model_args = dict(
         sortable=True,
         editable=False,
@@ -38,6 +48,10 @@ class JQGridField(object):
             name=str(self.index),
             index=str(self.index),
             width=self.width,
+            editable=self.editable,
+            cellEdit=self.editable,
+            edittype=self.edittype,
+            editrules=dict(edithidden=True,),
             )
     def to_col_data(self, x):
         return x
@@ -74,8 +88,12 @@ class DatetimeField(JQGridField):
     default_col_model_args = dict(sortable=True,
                                   editable=False,
                                   search=False,)
+    def __init__(self,  *args, **kws):
+        self.strftime = kws.pop('strftime', "%y/%m/%d %H:%M")
+        super(DatetimeField,self).__init__(*args, **kws)
+        
     def to_col_data(self, x):
-        return x.strftime("%y/%m/%d %H:%M") if x else ""
+        return x.strftime(self.strftime) if x else ""
     
 class ObjectField(JQGridField):
     @property
@@ -92,15 +110,18 @@ class ObjectField(JQGridField):
         return query.filter_by(**{
             self.column_names[0]:self.target_query.get(id)
             })
+    @property
+    def target_query(self):
+        return self.target_query_func()
     
     def __init__(self,  *args, **kws):
-        self.target_query = kws.pop('target_query')
+        self.target_query_func = kws.pop('target_query')
         self.stype = kws.pop('stype',None)
         super(ObjectField,self).__init__(*args, **kws)
         self.column_names, self.view_column_name = self.column_names[:-1], self.column_names[-1]
 
     def to_col_data(self, x):
-        print x, self.view_column_name
+
         return "%s(ID:%s)" % (getattr(x, self.view_column_name,""),x.id, )
 
     def get_col_model(self):
@@ -115,8 +136,7 @@ class ObjectField(JQGridField):
             
         
         return dict(
-            
-            self.default_col_model_args,
+            super(ObjectField, self).get_col_model(),
             name=str(self.index),
             index=str(self.index),
             width=self.width,
@@ -124,28 +144,31 @@ class ObjectField(JQGridField):
             )
 
 class SelectField(IntegerField):
+        
+    def to_python(self, data):
+        return self.to_python_func(data)
     
     def __init__(self,  *args, **kws):
         self.options = kws.pop('options')
+        self.to_python_func = kws.pop('to_python', int_or)
         self.to_col_data_dict = dict(self.options)
         self.stype = "select"
         super(SelectField,self).__init__(*args, **kws)
+    edittype = "select"
 
     def to_col_data(self, x):
         return self.to_col_data_dict.get(x,None)
-##         print x, self.view_column_name
+
 ##         return "%s(ID:%s)" % (getattr(x, self.view_column_name,""),x.id, )
 
     def get_col_model(self):
+        value = ";".join("%s:%s" % (value, name) for value, name in self.options)
         add_op = dict(
             stype="select",
-            searchoptions=
-            dict(
-                value=":ALL;" + ";".join("%s:%s" % (value, name) for value, name in self.options)
-                ))
+            editoptions=dict(value=value),
+            searchoptions=dict(value=":ALL;" + value))
         return dict(
-            
-            self.default_col_model_args,
+            super(SelectField, self).get_col_model(),
             name=str(self.index),
             index=str(self.index),
             width=self.width,
@@ -154,9 +177,17 @@ class SelectField(IntegerField):
 
 from collections import OrderedDict
 
-class JQGridForm(object):
+class JQGrid(object):
+    def edit_row(self, id, form):
+        obj = self.query.get(id)
+        result = [self.fields[int(k)].setattr(obj, v) for k,v in form.items() if int_or(k)]
+        
+        return dict()
+    @property
+    def query(self):
+        return self.query_func()
     def __init__(self, model, query, fields):
-        self.query = query
+        self.query_func = query
         self.fields = fields
         self.model = model
         for i, x in enumerate(self.fields):
@@ -172,7 +203,7 @@ class JQGridForm(object):
     def get_init_data(self):
         return dict(
             colNames=self.get_col_names(),
-            colModel=self.get_col_model()
+            colModel=self.get_col_model(),
             )
     def get_json_data(self, *args, **kws):
         import json
@@ -186,10 +217,6 @@ class JQGridForm(object):
     def get_query(self, query, filters):
         if not filters:
             return query
-##         {u'groupOp': u'AND',
-##          u'rules': [{u'data': u'aaa', u'field': u'nickname', u'op': u'bw'},
-##                     {u'data': u'123', u'field': u'user_type', u'op': u'bw'}]}
-        pprint(filters['rules'])
         field_rules = [( self.fields[int(rule['field'])], rule) for rule in filters['rules']]
         return reduce(lambda q, (f, rule):f.filter(q, **rule), field_rules, query)
 
@@ -199,14 +226,12 @@ class JQGridForm(object):
         except ValueError:
             return query
         col = getattr(self.model, field.column_name)
-        print "col:",col
         from sqlalchemy import desc, asc
         return query.order_by(dict(desc=desc).get(sord, asc)(col))
-        #return query
+
     def get_data(self, query=None, search=False, rows=None, page=None, sidx=None, sord=None,filters=None):
         filtered_query = self.get_order(self.get_query(
             query or self.query, filters), sidx, sord)
-        print "page:", repr(page),type(page)
         start = (page - 1) * rows
         end = start + rows
         rows_data = [

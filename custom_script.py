@@ -79,11 +79,15 @@ class MyServer(script.Server):
         app = config_from_file(config)
         app.db.create_all()
 
-        kws['host'] = app.config.get('HTTP_HOST',None) or self.host
-        kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
+        self.host = kws['host'] = app.config.get('HTTP_HOST',None) or self.host
+        self.port = kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
+        print self.host, self.port
 
         return script.Server.handle(self, *args,**kws)
-    
+    def __init__(self, *args, **kws):
+        super(MyServer,self).__init__(*args,**kws)
+        self.port = None
+        self.host = None
     def get_options(self):
         return (
             Option('-c', '--config',
@@ -93,6 +97,18 @@ class MyServer(script.Server):
 
     def run(self,config, *args, **kws):
         app = config_from_file(config)
+        #kws['HTTP_HOST'] = app.config.get('HTTP_HOST',None) or kws.get('HTTP_HOST')
+        #kws['host'] = app.config.get('HTTP_HOST',None) or kws.get('HTTP_HOST')
+        
+        print 'kws-------------------------',kws,app.config.get('HTTP_HOST',None)
+        #kws['port'] = app.config.get('HTTP_PORT',None) or kwsget('HTTP_PORT',None)
+        return app.run(
+            host=kws.get('host') or app.config.get('HTTP_HOST',None),
+            port=kws.get('port') or app.config.get('HTTP_PORT',None),
+            debug=app.config.get('DEBUG',False),
+            use_debugger=app.config.get('DEBUG',False),
+            use_reloader=app.config.get('DEBUG',False),
+            )
         return super(MyServer,self).run(*args,**kws)
 
 class Test(Command):

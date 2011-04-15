@@ -79,17 +79,20 @@ def json2multidict(jsonstr):
 
     #aaa
 class SubModule(object):
-    def __init__(self, import_name, name=None, url_prefix="", decorators=()):
+    def __init__(self, import_name, name=None, url_prefix="", decorators=(),
+                 default_route_args=None):
         if name is None:
             assert '.' in import_name, 'name required if package name ' \
                 'does not point to a submodule'
             name = import_name.rsplit('.', 1)[1]
+        self.default_route_args = default_route_args or dict()
         self.name = name
         self.urls = []
         self.ssl_required_endpoints = []
         self.url_prefix = url_prefix
         self.decorators = decorators
     def route(self, rule, decorators=(), argform=None, ssl_required=False, debug_only=False, **options):
+        options = dict(self.default_route_args, **options)
         def decorator(f):
             if debug_only:
                 from flask import current_app
@@ -99,7 +102,8 @@ class SubModule(object):
             if argform:
                 decos += (partial(argform_deco,argform), )
             f = reduce(lambda f,d:d(f),
-                       decos,
+                       reversed(decos),
+                       #decos,
                        f)
             endpoint = self.name + "." + f.__name__
             self.urls.append(dict(rule=self.url_prefix + rule,

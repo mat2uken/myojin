@@ -121,7 +121,7 @@ class ObjectField(JQGridField):
         self.column_names, self.view_column_name = self.column_names[:-1], self.column_names[-1]
 
     def to_col_data(self, x):
-
+        return getattr(x, self.view_column_name,"")
         return "%s(ID:%s)" % (getattr(x, self.view_column_name,""),x.id, )
 
     def get_col_model(self):

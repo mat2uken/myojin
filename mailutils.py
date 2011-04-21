@@ -7,6 +7,7 @@ from email.MIMEText import MIMEText
 from email.Encoders import encode_base64
 from email.Header import Header
 from email.Utils import formatdate
+from email.header import decode_header
 from unicodedata import normalize
 
 from myojin.mako import render
@@ -79,3 +80,5 @@ def sendmail(recipients, template, ctx, sender_from=None):
     mailer = Mailer(current_app)
     return mailer.send(recipients=recipients, subject=subject, body=body, sender_from=sender_from)
 
+def header2unicode(subject):
+    return u"".join(unicode(s, encoding or "ascii") for s, encoding in decode_header(subject))

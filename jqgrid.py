@@ -22,7 +22,7 @@ class JQGridField(object):
         #print "setattr", obj, repr(self.column_name),  repr(self.to_python(value))
         #import pdb;pdb.set_trace()
 
-    def filter(self, query, data, **kws):
+    def filter(self, model, query, data, **kws):
         return query.filter_by(**{
             self.column_names[0]:self.to_python(data)
             })
@@ -83,24 +83,47 @@ class LinkField(JQGridField):
         editable=False,
         search=False,
         )
+from dateutil.relativedelta import relativedelta
         
 class DatetimeField(JQGridField):
     default_col_model_args = dict(sortable=True,
                                   editable=False,
-                                  search=False,)
+                                  search=True,)
     def __init__(self,  *args, **kws):
         self.strftime = kws.pop('strftime', "%y/%m/%d %H:%M")
         super(DatetimeField,self).__init__(*args, **kws)
         
     def to_col_data(self, x):
         return x.strftime(self.strftime) if x else ""
-    
+    ## def to_python(self, data):
+    ##     return int_or(data)
+
+    def filter(self, model, query, data, **kws):
+        from datetime import datetime, date
+        dt_str = data.strip().split("/")
+        if dt_str[0]:
+            year = int(dt_str[0]) + (2000 if len(dt_str[0]) == 2 else 0)
+        else:
+            year = date.today().year
+        month = int(dt_str[1]) if len(dt_str) > 1 else None
+        day = int(dt_str[2]) if len(dt_str) > 2 else None
+        col= getattr(model, self.column_name)
+        if year and month and day:
+            return query.filter(col == datetime(year, month, day))
+        elif year and month and not day:
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month, 1) + relativedelta(months=1, day=1)
+        elif year and not month and not day:
+            start_date = datetime(year, 1, 1)
+            end_date = datetime(year + 1, 1, 1)
+        return query.filter(col >= start_date).filter(col < end_date)
+
 class ObjectField(JQGridField):
     @property
     def column_name(self):
         return self.column_names[0] + "_id"
     
-    def filter(self, query, data, **kws):
+    def filter(self, model, query, data, **kws):
         if ":" in data:
             id = int(data.split(":").strip())
         else:
@@ -218,7 +241,7 @@ class JQGrid(object):
         if not filters:
             return query
         field_rules = [( self.fields[int(rule['field'])], rule) for rule in filters['rules']]
-        return reduce(lambda q, (f, rule):f.filter(q, **rule), field_rules, query)
+        return reduce(lambda q, (f, rule):f.filter(self.model, q, **rule), field_rules, query)
 
     def get_order(self, query, sidx, sord):
         try:

@@ -1,3 +1,4 @@
+# encoding: utf-8
 
 from flask import url_for, redirect
 from functools import wraps
@@ -103,6 +104,18 @@ def drop_all_tables(metadata, engine):
             else:
                 v.drop(checkfirst=True)
 
+def create_obj(model, argnames, data):
+    return [model(**dict(zip(argnames, cols))).save()
+                   for cols in data]
+
+
+def reset_tables():
+    from flask import current_app
+    db=current_app.db
+    db.metadata.bind = db.engine
+    db.metadata.drop_all()
+    db.metadata.create_all()
+    
 if __name__ == "__main__":
     print get_username()
     for x in range(1,10):

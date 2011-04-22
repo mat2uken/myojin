@@ -63,3 +63,31 @@ class Month(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         return self._first_of_month(value)
 
+from sqlalchemy import types
+
+class TypeMeta(type(types.TypeDecorator)):
+    def __hash__(self):
+        #print "HASH"
+        return hash(types.Binary)
+    def __eq__(self, other):
+        #print "EQ"
+        return other == types.Binary
+from pprint import pprint
+class FSBinary(types.TypeDecorator):
+    impl = types.Binary
+    __metaclass__ = TypeMeta
+    def __init__(self, *arg, **kws):
+        types.TypeDecorator.__init__(self, *arg, **kws)
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return value.file.read()
+
+    def process_result_value(self, value, dialect):
+        return value
+        if value is None:
+            return None
+        assert isinstance(value, (int,long))
+        return self.int2name[value]
+

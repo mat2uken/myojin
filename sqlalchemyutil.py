@@ -82,6 +82,10 @@ class FSBinary(types.TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
+        if isinstance(value, basestring):
+            return value
+        elif hasattr(value, "read"):
+            return value.read()
         return value.file.read()
 
     def process_result_value(self, value, dialect):

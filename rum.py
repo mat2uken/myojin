@@ -129,9 +129,12 @@ def get_rum_app(models, url, get_translator, debug=False):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def load_app(models, url, translator, debug=False):
+    rum_templates_dir = current_app.config.get("RUM_TEMPLATES_DIR")
+    if rum_templates_dir:
+        rum_templates_dir = os.path.join(current_app.root_path,  rum_templates_dir)
     app = CustomRumApp({
         'debug': debug,
-        'templating': {'search_path': [BASE_DIR + '/templates/rum']},
+        'templating': {'search_path': [rum_templates_dir or (BASE_DIR + '/templates/rum')]},
         'rum.translator':{current_app.config.get('I18N_DIR_NAME', 'locales'):["es"],},
         'rum.repositoryfactory': {
             'use': 'sqlalchemy',

@@ -1,5 +1,7 @@
 # encoding: utf-8
 from __future__ import absolute_import # import sqlalchemyが衝突するので
+from sqlalchemy.exc import IntegrityError
+
 mod_sqlalchemy_sql =  __import__('sqlalchemy.sql', {}, {}, [''])
 mod_sqlalchemy_expression = getattr(mod_sqlalchemy_sql, 'expression')
 between = getattr(mod_sqlalchemy_expression, 'between')
@@ -18,6 +20,25 @@ def get_sum_by_case(cases):
             ))
         )
     return ret
+
+
+def retry_flush(db, n_times):
+    def deco(f):
+        if db.engine.name == 'sqlite':
+            result = f()
+            db.session.flush()
+            return True
+        for x in range(n_times):
+            try:
+                with db.session.begin_nested():
+                    result = f()
+            except IntegrityError, e:
+                print "IntegrityError"
+                continue
+            else:
+                return True
+        return False
+    return deco
 
 def get_sum_by_case_query(cases, wheres):
     q = select(get_sum_by_case(cases)).where(and_(*wheres))

@@ -33,7 +33,7 @@ def retry_flush(db, n_times):
                 with db.session.begin_nested():
                     result = f()
             except IntegrityError, e:
-                print "IntegrityError"
+                #print "IntegrityError retry", x
                 continue
             else:
                 return True

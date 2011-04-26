@@ -1,4 +1,5 @@
-from flaskext.wtf import QuerySelectMultipleField
+from flaskext.wtf import QuerySelectMultipleField, QuerySelectField
+
 
 class CustomQuerySelectMultipleField(QuerySelectMultipleField):
     def __init__(self, column=None, get_key=None, order_by=None, query_with=None, *args,**kws):
@@ -59,6 +60,21 @@ class CustomQuerySelectMultipleField(QuerySelectMultipleField):
                 if v not in obj_list:
                     raise ValidationError('Not a valid choice')
 
+  
+class CustomQuerySelectField(QuerySelectField):
+    def __init__(self , column, **kws):
+        super(CustomQuerySelectField).__init__(self, **kws)
+        self.column = column
+
+    def _get_data(self):
+        if self._formdata is not None:
+            query = self.query or self.query_factory()
+            if isinstance(column, basestring):
+                obj = query.filter_by(**{column: self._formdata}).first()
+            else:
+                obj = query.filter(column==self._formdata).first()
+            self._set_data(obj)
+        return self._data
 
 # coding: utf-8
 from flaskext.wtf import Form, TextField, TextAreaField, QuerySelectField, QuerySelectMultipleField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField, SelectMultipleField, IntegerField

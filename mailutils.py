@@ -85,4 +85,7 @@ def sendmail(recipients, template, ctx, sender_from=None, sender_from_name=None)
     return mailer.send(recipients=recipients, subject=subject, body=body, sender_from=sender_from, sender_from_name=sender_from_name)
 
 def header2unicode(subject):
-    return u"".join(unicode(s, encoding or "ascii") for s, encoding in decode_header(subject))
+    if unicode == type(subject):
+        return normalize("NFKC", subject)
+    else:
+        return normalize("NFKC", u"".join(unicode(s, encoding or "ascii", 'ignore') for s, encoding in decode_header(subject)))

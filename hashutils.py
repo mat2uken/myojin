@@ -7,6 +7,15 @@ random.seed()
 b64chars = ("abcdefghijklmnopqrstuvwxyz" +
               "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
               "0123456789-_")
+a_chars = "abcdefghijklmnopqrstuvwxyz"
+A_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+d_chars = "0123456789"
+alphanum = a_chars + A_chars + d_chars
+b64chars = (a_chars +
+              A_chars +
+              d_chars + "-_")
+
+assert len(set(b64chars)) == 64
 
 def split_digits(target, base, num_of_digits):
     n = target
@@ -21,6 +30,9 @@ def random_digits(base, num_of_digits):
 
 def random_chars(chars, num):
     return "".join(chars[x] for x in random_digits(len(chars), num))
+
+def random_alphanum(num):
+    return random_chars(alphanum, num)    
 
 from functools import partial
 
@@ -60,6 +72,7 @@ def verify_urlsafe_hmac_digest(dt_digest, key, msg, expiry_timedelta):
     return test_digest == dt_digest and (datetime.now() < dt + expiry_timedelta )
 
 if __name__=="__main__":
+    print random_chars("abc", 3)
     kms=[("KEY", "ABCDEFG"), ("KeY", "ABCDEFG"), ("KEY", "ABCDEFGH"), ]
 ##     for key,msg in kms:
 ##         d = urlsafe_hmac_digest(key, msg)

@@ -231,6 +231,10 @@ def url_for(endpoint, _args=(), **values):
     if bool(is_https) != bool(current_app.is_ssl_request()) and endpoint != ".static":
         values['_external'] = True
     result = flask._url_for(endpoint, **values)
+
+    # localhost -> app.config["HTTP_HOST"]
+    result = result.replace('localhost', app.config["HTTP_HOST"])
+
     #print result, is_https, current_app.is_ssl_request()
     if is_https and (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
         if result.startswith('http://'):

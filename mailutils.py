@@ -29,7 +29,7 @@ class Mailer(object):
         default_config.update(app.config)
         self.config = default_config
 
-    def send(self, recipients=None, subject=None, body=None, sender_from=None, encoding='ISO-2022-JP', with_normalize=False):
+    def send(self, recipients=None, subject=None, body=None, sender_from=None, sender_from_name=None, encoding='ISO-2022-JP', with_normalize=False):
         if isinstance(body, list) or isinstance(body, tuple):
             body = ''.join(body)
 
@@ -39,7 +39,11 @@ class Mailer(object):
 
         if sender_from is None:
             sender_from = self.config['MAIL_SENDER_FROM']
-        msg['From'] = sender_from
+
+        if sender_from_name is not None:
+            msg['From'] = str(Header('%s' % sender_from_name, encoding)) + ' <%s>' % sender_from
+        else:
+            msg['From'] = sender_from
 
         if isinstance(recipients, list) or isinstance(recipients, tuple):
             msg['To'] = ','.join(recipients)
@@ -70,7 +74,7 @@ body:
 %s
 """
 
-def sendmail(recipients, template, ctx, sender_from=None):
+def sendmail(recipients, template, ctx, sender_from=None, sender_from_name=None):
     ##assert 'shared_guests_client' in ctx
     subject, body = render(template, ctx,to_unicode=True).split(u"\n",1)
     if not current_app.config.get("MAIL_SERVER", None):
@@ -78,7 +82,7 @@ def sendmail(recipients, template, ctx, sender_from=None):
         #print "mail send:", subject,body.split(u"\n",1)[0]
         return
     mailer = Mailer(current_app)
-    return mailer.send(recipients=recipients, subject=subject, body=body, sender_from=sender_from)
+    return mailer.send(recipients=recipients, subject=subject, body=body, sender_from=sender_from, sender_from_name=sender_from_name)
 
 def header2unicode(subject):
     return u"".join(unicode(s, encoding or "ascii") for s, encoding in decode_header(subject))

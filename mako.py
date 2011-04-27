@@ -41,19 +41,18 @@ def render(template_name, ctx,to_unicode=False):#, *args, **kws):
         _globals.items() + ctx.items()))
 from mako.filters import html_escape
 from markupsafe import escape, Markup
-def newline_filter(s):
+def newline_filter(s, escape=False):
     #assert isinstance(s, basestring)
     #assert isinstance(s, unicode)
     if isinstance(s, str):
         s = unicode(s)
     elif isinstance(s, unicode):
         pass
-    else:
+    else:   
         assert False
+    if escape:
+        s = cgi.escape(s, True)
     return Markup(unicode(s).replace(u'\n',u'<br/>\n'))
-##     return escape(s).replace('\n','<BR/>\n')
-##     return Markup(escape(s).replace('\n','<br/>\n'))
-##     return "<h1>HELLO</h1>"+html_escape(s).replace('\n','<br/>\n')
 
 from json import dumps
 def json_dumps(s):

@@ -31,12 +31,14 @@ def use_datetime_hack():
 def config_from_file(config=None, defaults=('dev.cfg',),app=None):
     
     username = get_username()
-    basenames = [basename for basename in (config ,) + tuple(defaults) if basename]
+    basenames = [basename for basename in tuple(defaults)]
     usernames = ["%s.%s" % (username, basename)  for basename in basenames]
-    filenames = usernames + basenames
+    filenames = [config ] + usernames + basenames
+    if config:
+        print "use config files:", filenames
     from flask import _request_ctx_stack
     app = _request_ctx_stack.top.app
-    configs = [read_pyconfig(app, filename) for filename in filenames ]
+    configs = [read_pyconfig(app, filename) for filename in filenames if filename]
     config = dict( reversed([kv for config in configs for kv in config.items() ]))
 
     config_obj =  type(sys)('config')

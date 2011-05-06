@@ -60,10 +60,10 @@ class CustomQuerySelectMultipleField(QuerySelectMultipleField):
                 if v not in obj_list:
                     raise ValidationError('Not a valid choice')
 
-  
+print QuerySelectField
 class CustomQuerySelectField(QuerySelectField):
     def __init__(self , column, **kws):
-        super(CustomQuerySelectField).__init__(self, **kws)
+        super(CustomQuerySelectField,self).__init__( **kws)
         self.column = column
 
     def _get_data(self):

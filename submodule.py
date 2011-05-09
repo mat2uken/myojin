@@ -126,15 +126,19 @@ class SubModule(object):
             @wraps(f)
             def decorated_func(*args, **kws):
 
-                if request.method == 'GET':
-                    formdata = request.args
-                elif request.content_type.startswith("application/json"):
-                    formdata = dict(data=request.stream.read())
-                else:
-                    if request.content_type.startswith("application/json"):
+                try:
+                    if request.method == 'GET':
+                        formdata = request.args
+                    elif request.content_type.startswith("application/json"):
                         formdata = dict(data=request.stream.read())
                     else:
-                        formdata = request.form
+                        if request.content_type.startswith("application/json"):
+                            formdata = dict(data=request.stream.read())
+                        else:
+                            formdata = request.form
+                except IOError as e:
+                    flask.abort(400)
+
                 if "data" in formdata:
                     formdata = json2multidict(formdata['data'])
                 info = form(formdata, csrf_enabled=False)

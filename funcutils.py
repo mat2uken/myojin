@@ -35,7 +35,7 @@ def keyword_only(f):
             return f(self,**kws)
         except:
             raise
-    decorated = getattr(f,'original', f)
+    #decorated = getattr(f,'original', f)
     return decorated
 from contextlib import contextmanager
 

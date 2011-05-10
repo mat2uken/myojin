@@ -81,10 +81,7 @@ def request_xhr(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.is_xhr:
-            ret = f(*args, **kwargs) or (dict(), True,)
-            ret_dict, result = ret if isinstance(ret, (tuple, list,)) else (ret, True,)
-            ret_dict['result'] = 'ok' if result else 'ng'
-            return jsonify(**ret_dict)
+            return f(*args, **kwargs)
         else: 
             return jsonify(result='ng', message='not allow to connect')
     return decorated
@@ -102,6 +99,17 @@ class SubModule(object):
         self.ssl_required_endpoints = []
         self.url_prefix = url_prefix
         self.decorators = decorators
+
+    def jsonify(self):
+        def decorator(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                ret = f(*args, **kwargs) or (dict(), True,)
+                ret_dict, result = ret if isinstance(ret, (tuple, list,)) else (ret, True,)
+                ret_dict['result'] = 'ok' if result else 'ng'
+                return jsonify(**ret_dict)
+            return decorated
+        return decorator
 
     def route(self, rule, decorators=(), argform=None, ssl_required=False, debug_only=False, xhr_required=False, **options):
         options = dict(self.default_route_args, **options)

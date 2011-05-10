@@ -81,9 +81,12 @@ def request_xhr(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.is_xhr:
-            return f(*args, **kwargs)
+            ret = f(*args, **kwargs) or (dict(), True,)
+            ret_dict, result = ret if isinstance(ret, (tuple, list,)) else (ret, True,)
+            ret_dict['result'] = 'ok' if result else 'ng'
+            return jsonify(**ret_dict)
         else: 
-            return jsonify(message='not allow to connect')
+            return jsonify(result='ng', message='not allow to connect')
     return decorated
 
 class SubModule(object):

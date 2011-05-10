@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import request, make_response, Response
+from flask import request, make_response, Response, jsonify
 from myojin.auth import UserModelBase
 
 class Identifier(str):
@@ -77,7 +77,15 @@ def json2multidict(jsonstr):
             m.setlist(k,v)
     return m
 
-    #aaa
+def request_xhr(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.is_xhr:
+            return f(*args, **kwargs)
+        else: 
+            return jsonify(message='not allow to connect')
+    return decorated
+
 class SubModule(object):
     def __init__(self, import_name, name=None, url_prefix="", decorators=(),
                  default_route_args=None):
@@ -91,7 +99,8 @@ class SubModule(object):
         self.ssl_required_endpoints = []
         self.url_prefix = url_prefix
         self.decorators = decorators
-    def route(self, rule, decorators=(), argform=None, ssl_required=False, debug_only=False, **options):
+
+    def route(self, rule, decorators=(), argform=None, ssl_required=False, debug_only=False, xhr_required=False, **options):
         options = dict(self.default_route_args, **options)
         def decorator(f):
             if debug_only:
@@ -99,6 +108,9 @@ class SubModule(object):
                 if not current_app.config.get('DEBUG', False):
                     return f
             decos = tuple(self.decorators) + tuple(decorators)
+            if xhr_required:
+                decos = tuple([request_xhr]) + decos
+
             if argform:
                 decos += (partial(argform_deco,argform), )
             f = reduce(lambda f,d:d(f),

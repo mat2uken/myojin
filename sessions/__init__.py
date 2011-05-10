@@ -127,6 +127,26 @@ class Session(werkzeug.contrib.sessions.Session):
 session_store = FilesystemSessionStore(session_class=Session)
 COOKIE_NAME = 'C'
 import os
+class SQLAlchemySessionMiddleware(object):
+    def __init__(self,app, flask_app):
+        self.app = app
+        self.flask_app = flask_app
+    def __call__(self, environ, start_response):
+        db = getattr(self.flask_app, "db", None)
+        if db and not db.session.is_active:
+            db.session.remove()
+        try:
+            result = self.app(environ, start_response)
+        except:
+            try:
+                if db:
+                    db.session.rollback()
+            except:
+                pass
+            raise
+        return result
+
+
 class CustomFlask(Flask):
     debug_out = Debug()
     request_class = CustomRequest
@@ -250,6 +270,7 @@ class CustomFlask(Flask):
             }
         session_opts.update(self.config.get('BEAKER_SETTINGS',dict()))
         self.wsgi_app = self.session_middleware = SessionMiddleware(self.wsgi_app, config=session_opts)
+        self.wsgi_app = SQLAlchemySessionMiddleware(self.wsgi_app, self)
         #self.middleware = SessionMiddleware(self.inner_call, config=session_opts)
         
 ##     def __init__(self, import_name, static_path=None):

@@ -100,10 +100,13 @@ class SubModule(object):
         self.url_prefix = url_prefix
         self.decorators = decorators
 
-    def jsonify(self):
+    def jsonify(self, methods=None):
         def decorator(f):
             @wraps(f)
             def decorated(*args, **kwargs):
+                if methods is not None and isinstance(methods, (list, tuple)):
+                    if request.method.upper() not in methods:
+                        return f(*args, **kwargs)
                 ret = f(*args, **kwargs) or (dict(), True,)
                 ret_dict, result = ret if isinstance(ret, (tuple, list,)) else (ret, True,)
                 ret_dict['result'] = 'ok' if result else 'ng'

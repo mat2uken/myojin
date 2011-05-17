@@ -92,8 +92,10 @@ def set_is_smartpphone(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         def is_smartphone():
-            lower_ua = request.environ['HTTP_USER_AGENT'].lower()
-            return mobile_re.match(lower_ua) is not None
+            ua = request.environ.get('HTTP_USER_AGENT', None)
+            if ua is not None:
+                request.ua = ua
+                return mobile_re.match(ua.lower()) is not None
         request.is_ua_smart = is_smartphone()
         return f(*args, **kwargs)
     return decorated

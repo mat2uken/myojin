@@ -68,10 +68,8 @@ except ImportError, e:
     def gettext(*args, **kws):
         from flaskext.babel import gettext
 
-import re
-mobile_re = re.compile('.*(ipad|iphone|android).*')
-def is_smartphone():
-    lower_ua = request.environ['HTTP_USER_AGENT'].lower()
-    return mobile_re.match(lower_ua) is not None
+def replace_smart_path(path):
+    s = path.rsplit(".", 1)
+    return s[0] + ".smart." + s[1]
 
-mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps, is_smartphone=is_smartphone)
+mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps, replace_smart_path=replace_smart_path)

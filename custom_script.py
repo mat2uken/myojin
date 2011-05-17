@@ -170,11 +170,17 @@ class RunScript(Test):
             Option('-p', '--pattern',
                    dest='pattern',
                    default="test*.py"),
+            Option('-a', '--args',
+                   dest='args',
+                   default=None),
             )
-    def run(self, config, startdir, pattern):
+    def run(self, config, startdir, pattern, args):
         app = config_from_file(config)
         mod = import_module(app.import_name + ".scripts." + self.script_name)
-        mod.main()
+        if args is None:
+            mod.main()
+        else:
+            mod.main(args)
     
 class Manager(script.Manager):
     def __init__(self, *args,**kws):

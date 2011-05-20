@@ -11,6 +11,7 @@ a_chars = "abcdefghijklmnopqrstuvwxyz"
 A_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 d_chars = "0123456789"
 alphanum = a_chars + A_chars + d_chars
+uppernum = A_chars + d_chars
 b64chars = (a_chars +
               A_chars +
               d_chars + "-_")
@@ -31,6 +32,9 @@ def random_digits(base, num_of_digits):
 def random_chars(chars, num):
     return "".join(chars[x] for x in random_digits(len(chars), num))
 
+def random_uppernum(num):
+    return random_chars(uppernum, num)    
+    
 def random_alphanum(num):
     return random_chars(alphanum, num)    
 

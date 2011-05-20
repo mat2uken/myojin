@@ -70,6 +70,10 @@ class IntegerField(JQGridField):
     def to_python(self, data):
         return int_or(data)
 
+class BooleanField(JQGridField):
+    def to_python(self, data):
+        return data.lower().strip() in ("true", "1")
+
 class LinkField(JQGridField):
     def __init__(self,  *args, **kws):
         self.href_func = kws.pop('href')

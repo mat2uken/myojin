@@ -28,9 +28,9 @@ class JQGridField(object):
             })
     def to_python(self, data):
         return data
-    def __init__(self, column_names, disp_name, width=60, editable=False):
+    def __init__(self, column_names, disp_name=None, width=60, editable=False):
+        self.disp_name = disp_name or column_names
         self.column_names = filter(None, column_names.split("."))
-        self.disp_name=disp_name
         self.width = width
         self.editable = editable
     @property
@@ -70,6 +70,10 @@ class IntegerField(JQGridField):
     def to_python(self, data):
         return int_or(data)
 
+class BooleanField(JQGridField):
+    def to_python(self, data):
+        return data.lower().strip() in ("true", "1")
+
 class LinkField(JQGridField):
     def __init__(self,  *args, **kws):
         self.href_func = kws.pop('href')
@@ -89,8 +93,10 @@ class DatetimeField(JQGridField):
     default_col_model_args = dict(sortable=True,
                                   editable=False,
                                   search=True,)
+    default_strftime = "%y/%m/%d %H:%M"
+     
     def __init__(self,  *args, **kws):
-        self.strftime = kws.pop('strftime', "%y/%m/%d %H:%M")
+        self.strftime = kws.pop('strftime', self.default_strftime)
         super(DatetimeField,self).__init__(*args, **kws)
         
     def to_col_data(self, x):
@@ -117,6 +123,9 @@ class DatetimeField(JQGridField):
             start_date = datetime(year, 1, 1)
             end_date = datetime(year + 1, 1, 1)
         return query.filter(col >= start_date).filter(col < end_date)
+
+class DateField(DatetimeField):
+    default_strftime = "%y/%m/%d"
 
 class ObjectField(JQGridField):
     @property

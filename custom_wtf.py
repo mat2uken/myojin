@@ -111,3 +111,27 @@ class JqSearchField(JqBooleanField):
         lambda self:"_search",
         lambda self, value: None
         )
+
+
+
+from wtforms.validators import ValidationError
+class QueryTextField(TextField):
+#raise ValidationError('Not a valid choice')
+    def __init__(self, *args, **kws):
+        to_obj  = kws.pop("to_obj", None)
+        self.error_message  = kws.pop("error_message", None)
+        TextField.__init__(self, *args, **kws)
+        self.to_obj = to_obj
+        
+    def pre_validate(self, form):
+        if self.data is None and getattr(self,"_formdata", None):
+            raise ValidationError(self.error_message)
+        
+    def process_formdata(self, valuelist):
+        self.allow_blank = True
+        self._formdata = valuelist[0].strip() if valuelist else None
+        if self._formdata is not None:
+
+            self.data = self.to_obj(self._formdata)
+    def _value(self):
+        return getattr(self,"_formdata", None) or u""

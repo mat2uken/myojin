@@ -26,7 +26,11 @@ class RedirectToException(HTTPExceptionWithResponse):
 
 def redirect_to(*args,**kws):
     code = kws.pop("code",302)
-    return redirect(url_for(*args,**kws),code=code)
+    anchor = kws.pop('_anchor', None)
+    to = url_for(*args,**kws)
+    if anchor is not None:
+        to += ('#' + anchor)
+    return redirect(to, code=code)
 
 def receive_json():
     def decorator(f):

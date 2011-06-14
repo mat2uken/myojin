@@ -68,4 +68,8 @@ except ImportError, e:
     def gettext(*args, **kws):
         from flaskext.babel import gettext
 
-mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps)
+def replace_smart_path(path):
+    s = path.rsplit(".", 1)
+    return s[0] + ".smart." + s[1]
+
+mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps, replace_smart_path=replace_smart_path)

@@ -278,8 +278,7 @@ class BaseModel(object):
     def get_by(cls, q=None, **kwargs):
         q = q or cls.query
         for k, v in kwargs.items():
-            if v is not None:
-                q = q.filter(getattr(cls, k)==v)
+            q = q.filter(getattr(cls, k)==v)
         return q
         
 def _to_str(x):

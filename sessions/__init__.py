@@ -38,6 +38,10 @@ class CustomRequest(Request):
         super(CustomRequest,self).__init__(environ)
         if 'beaker.session' in environ:
             self.session = environ['beaker.session']
+    @property
+    def is_get(self):
+        return self.method.upper() == 'GET'
+
 from datetime import datetime, timedelta
 import random
 import time

@@ -122,9 +122,16 @@ class SubModule(object):
                     if request.method.upper() not in methods:
                         return f(*args, **kwargs)
                 ret = f(*args, **kwargs) or (dict(), True,)
-                ret_dict, result = ret if isinstance(ret, (tuple, list,)) else (ret, True,)
-                ret_dict['result'] = 'ok' if result else 'ng'
-                return jsonify(**ret_dict)
+                from werkzeug import BaseResponse
+                if isinstance(ret, BaseResponse):
+                    return ret
+                else:
+                    if isinstance(ret, (tuple, list,)):
+                        ret_dict, result = ret
+                    else:
+                        ret_dict, result = ret, True
+                    ret_dict['result'] = 'ok' if result else 'ng'
+                    return jsonify(**ret_dict)
             return decorated
         return decorator
 

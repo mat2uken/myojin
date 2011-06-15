@@ -154,7 +154,20 @@ class SubModule(object):
                 self.ssl_required_endpoints.append(endpoint)
             return f
         return decorator
-    
+
+    def redirect_to(self, condition, to, anchor=None):
+        def decorator(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                if condition():
+                    _anchor = anchor or f.__name__
+                    from myojin.utils import redirect_to
+                    return redirect_to(to, _anchor=_anchor)
+                else:
+                    return f(*args, **kwargs)
+            return decorated
+        return decorator
+
     def register_to(self, module):
         self.parent = module
         for url in self.urls:

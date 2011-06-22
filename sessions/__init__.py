@@ -45,6 +45,10 @@ class CustomRequest(Request):
         return self.method.upper() == 'GET'
 
     @property
+    def is_post(self):
+        return self.method.upper() == 'POST'
+
+    @property
     def is_smart(self):
         ret = getattr(self, '_is_smart', None)
         if ret is None:

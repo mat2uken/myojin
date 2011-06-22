@@ -21,7 +21,7 @@ class Mailer(object):
             'MAIL_PASSWORD': None,
             'MAIL_SERVER': 'localhost',
             'MAIL_PORT': 25,
-            'MAIL_SENDER_FROM': 'info@filejet.jp',
+            'MAIL_SENDER_FROM': 'info@hoge.com',
             'MAIL_USE_TLS': False,
             'MAIL_USE_SSL': False,
         }

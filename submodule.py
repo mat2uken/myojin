@@ -86,20 +86,6 @@ def request_xhr(f):
             return jsonify(result='ng', message='not allow to connect')
     return decorated
 
-import re
-mobile_re = re.compile('.*(ipad|iphone|android).*')
-def set_is_smartpphone(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        def is_smartphone():
-            ua = request.environ.get('HTTP_USER_AGENT', None)
-            if ua is not None:
-                request.ua = ua
-                return mobile_re.match(ua.lower()) is not None
-        request.is_ua_smart = is_smartphone()
-        return f(*args, **kwargs)
-    return decorated
-
 class SubModule(object):
     def __init__(self, import_name, name=None, url_prefix="", decorators=(),
                  default_route_args=None):
@@ -142,7 +128,7 @@ class SubModule(object):
                 from flask import current_app
                 if not current_app.config.get('DEBUG', False):
                     return f
-            decos = tuple([set_is_smartpphone]) + tuple(self.decorators) + tuple(decorators)
+            decos = tuple(self.decorators) + tuple(decorators)
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 

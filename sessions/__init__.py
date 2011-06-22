@@ -33,6 +33,8 @@ class Debug(threading.local):
         if kws:
             pprint(kws, self.buf)
 
+import re
+mobile_re = re.compile('.*(ipad|iphone|android).*')
 class CustomRequest(Request):
     def __init__(self, environ):
         super(CustomRequest,self).__init__(environ)
@@ -41,6 +43,40 @@ class CustomRequest(Request):
     @property
     def is_get(self):
         return self.method.upper() == 'GET'
+
+    @property
+    def is_smart(self):
+        ret = getattr(self, '_is_smart', None)
+        if ret is None:
+            def _is_smart_():
+                ua = self.environ.get('HTTP_USER_AGENT', None)
+                if ua is not None:
+                    self.ua = ua
+                    return mobile_re.match(ua.lower()) is not None
+            self._is_smart = _is_smart_()
+            ret = self._is_smart
+        return ret
+
+    def _is_find_ua(self, string):
+        ret = getattr(self, string, None)
+        if ret is None:
+            ua = self.environ.get('HTTP_USER_AGENT', None)
+            self.ua = ua
+            ret = False if ua is None else ua.lower().find(string) > -1
+            setattr(self, '_is_' + string, ret)
+        return ret
+
+    @property
+    def is_android(self):
+        return self._is_find_ua('android')
+
+    @property
+    def is_iphone(self):
+        return self._is_find_ua('iphone')
+
+    @property
+    def is_ipad(self):
+        return self._is_find_ua('ipad')
 
 from datetime import datetime, timedelta
 import random

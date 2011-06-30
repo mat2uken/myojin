@@ -74,7 +74,12 @@ def json2multidict(jsonstr):
     m = MultiDict()
     for k,v in jsondata.items():
         if v is not None:
-            m.setlist(k,v)
+            if isinstance(v, str):
+                m[k] = v
+            elif isinstance(v, (list, tuple)):
+                m.setlist(k,v)
+            else:
+                assert False
     return m
 
 def request_xhr(f):

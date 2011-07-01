@@ -83,7 +83,6 @@ class MyServer(script.Server):
 
         self.host = kws['host'] = app.config.get('HTTP_HOST',None) or self.host
         self.port = kws['port'] = app.config.get('HTTP_PORT',None) if kws['port'] == self.port else kws['port']
-        print self.host, self.port
 
         return script.Server.handle(self, *args,**kws)
     def __init__(self, *args, **kws):
@@ -102,7 +101,6 @@ class MyServer(script.Server):
         #kws['HTTP_HOST'] = app.config.get('HTTP_HOST',None) or kws.get('HTTP_HOST')
         #kws['host'] = app.config.get('HTTP_HOST',None) or kws.get('HTTP_HOST')
         
-        print 'kws-------------------------',kws,app.config.get('HTTP_HOST',None)
         #kws['port'] = app.config.get('HTTP_PORT',None) or kwsget('HTTP_PORT',None)
         return app.run(
             host=kws.get('host') or app.config.get('HTTP_HOST',None),

@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 SMTP_LOG_FORMAT = """
 Message type:       %(levelname)s
 Location:           %(pathname)s:%(lineno)d
@@ -21,15 +22,13 @@ def ignore_url():
         return False
 import sys
 def initlogging(app):
-    print >>sys.stderr, "init logging..."
-
     import logging, logging.handlers
 
-    ## TODO
-    app.logger.setLevel(logging.DEBUG)
+    app.logger.setLevel(app.config.get('LOGGING_LEVEL', logging.DEBUG))
 
-    if not app.config['DEBUG']:
-        app.logger.handlers = []
+    # DEBUG flag is not True set several handler for production.
+    if not app.config.get('DEBUG', True):
+        del app.logger.handlers[:]
 
         import socket
         hostname = socket.gethostname()
@@ -47,20 +46,10 @@ def initlogging(app):
         h.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
         app.logger.addHandler(h)
 
-    print >>sys.stderr, "app.logger.effective_level: %s" % (logging.getLevelName(app.logger.getEffectiveLevel()))
-    print >>sys.stderr, "app.logger.handlers: %s" % (app.logger.handlers)
-
-    app.logger.debug("app.logger test DEBUG")
-    app.logger.info("app.logger test INFO")
-
-
-    from flask import request
-    if not app.config.get('DEBUG'):
-
+        from flask import request
         # setting before and after request functions
         REQUEST_START_LOGGING_FORMAT  = "[REQSTART][user=%s] %04s %s"
         REQUEST_END_LOGGING_FORMAT    = "[  REQEND][user=%s] %04s %s %s"
-
 
         current_user = app.current_user
 
@@ -93,13 +82,12 @@ def initlogging(app):
 
             return response
 
-#if app.config['DEBUG']:
-#    @app.after_request
-#    def no_cache(response):
-#        response.headers['Pragma'] = 'no-cache'
-#        response.headers['Cache-Control'] = 'no-cache'
-#        response.headers['Expires'] = '-1'
+    if app.config.get('DEBUG', False):
+        app.logger.debug('logging startup test: level=>DEBUG')
+        app.logger.info( 'logging startup test: level=>INFO')
+        app.logger.warn( 'logging startup test: level=>WARN')
 
-#        app.logger.debug(response.headers)
+    print >>sys.stderr, "app.logger.effective_level: %s" % (logging.getLevelName(app.logger.getEffectiveLevel()))
+    print >>sys.stderr, "app.logger.handlers: %s" % (app.logger.handlers)
+    print >>sys.stderr, "app.logger initialized."
 
-#        return response

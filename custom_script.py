@@ -196,7 +196,7 @@ class Manager(script.Manager):
         for script_name in listdir(os.path.join(app.root_path, 'scripts')):
             if script_name.endswith(".py") and not "__init__" in script_name:
                 name = script_name.split(".")[0]
-                self.add_command(name, RunScript(name))
+                self.add_command(name, RunScript(name, description=""))
         self.add_command("runserver", MyServer())
         self.add_command("run", MyServer())
         self.add_command("shell", MyShell())

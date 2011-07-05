@@ -113,7 +113,7 @@ class MyServer(script.Server):
 
 class Test(Command):
     banner = ''
-    description = 'Runs a Python shell inside Flask application context.'
+    description = 'Runs a UnitTest inside Flask application context.'
     
     def __init__(self):
         pass
@@ -152,8 +152,15 @@ class Test(Command):
         sys.exit()
 
 class RunScript(Test):
-    def __init__(self, script_name='set_testdata'):
+
+    def __init__(self, script_name='set_testdata', description=None):
         self.script_name = script_name
+        self._description = description
+
+    @property
+    def description(self):
+        return self._description or "No description"
+
     def get_options(self):
         from flask import _request_ctx_stack
         app = _request_ctx_stack.top.app
@@ -187,13 +194,14 @@ class Manager(script.Manager):
         app = _request_ctx_stack.top.app
         from os import listdir
         for script_name in listdir(os.path.join(app.root_path, 'scripts')):
-            if script_name.endswith(".py"):
+            if script_name.endswith(".py") and not "__init__" in script_name:
                 name = script_name.split(".")[0]
                 self.add_command(name, RunScript(name))
         self.add_command("runserver", MyServer())
         self.add_command("run", MyServer())
         self.add_command("shell", MyShell())
         self.add_command("test", Test())
+
 if __name__=="__main__":
     import ntra
     

@@ -36,6 +36,8 @@ def render(template_name, ctx,to_unicode=False):#, *args, **kws):
     
     # TODO: cache tmpl
     render = tmpl.render if to_unicode else tmpl.render_unicode
+    from pprint import pprint
+    #pprint(_globals)
     return render(request=request,session=session, **dict(
         mako_utils.items() +
         _globals.items() + ctx.items()))
@@ -67,5 +69,10 @@ try:
 except ImportError, e:
     def gettext(*args, **kws):
         from flaskext.babel import gettext
-
-mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps)
+def comma_num_filter(n):
+    if isinstance(n, basestring):
+        n = int(n)
+    return "{:,d}".format(n)
+mako_utils = dict(_=gettext, newline=newline_filter,
+                  comma=comma_num_filter,
+                  debug_space=debug_space,JSON=json_dumps)

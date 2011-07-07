@@ -95,8 +95,8 @@ class UserModelBase(object):
         import random
         from flask.globals import current_app
         algo = 'sha1'
-        salt = current.app.config.get("SALT")
-        if current.app.config.get("salt") is None:
+        salt = current_app.config.get("SALT")
+        if salt is None:
             salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
 
         hsh = get_hexdigest(algo, salt, raw_password)

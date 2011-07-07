@@ -72,4 +72,9 @@ def replace_smart_path(path):
     s = path.rsplit(".", 1)
     return s[0] + ".smart." + s[1]
 
-mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps, replace_smart_path=replace_smart_path)
+def comma_num_filter(n):
+    if isinstance(n, basestring):
+        n = int(n)
+    return "{:,d}".format(n)
+        
+mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps, replace_smart_path=replace_smart_path, comma=comma_num_filter)

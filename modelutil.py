@@ -280,7 +280,15 @@ class BaseModel(object):
         for k, v in kwargs.items():
             q = q.filter(getattr(cls, k)==v)
         return q
-        
+
+    def cached_getter(self, prop):
+        obj = getattr(self, '_' + prop, None)
+        if obj is None:
+            obj = getattr(self, prop, None)
+            setattr(self, '_' + prop, None)
+        return obj
+
+
 def _to_str(x):
     if isinstance(x,(tuple, list)):
         return u"[%s]" % u", ".join((repr(str(y)) for y in x ))

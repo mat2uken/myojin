@@ -28,14 +28,17 @@ def use_datetime_hack():
     import myojin.datetimehack
     from datetime import date, datetime
 
-def config_from_file(config=None, defaults=('dev.cfg',),app=None):
+def config_from_file(config=None, defaults=('dev.cfg',),app=None,use_username_config=True):
     
     username = get_username()
     basenames = [basename for basename in tuple(defaults)]
     usernames = ["%s.%s" % (username, basename)  for basename in basenames]
-    filenames = [config ] + usernames + basenames
-    if config:
-        print "use config files:", filenames
+    if use_username_config:
+        filenames = [config] + usernames + basenames
+    else:
+        filenames = [config] + basenames
+
+    print >>sys.stderr, "use config files:", filenames
 
     if app is None:
         from flask import _request_ctx_stack

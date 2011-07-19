@@ -21,6 +21,7 @@ def ignore_url(ignore_urls):
         if s in rurl: return True
     return False
 
+import os
 import sys
 def initlogging(app):
     import logging, logging.handlers
@@ -34,7 +35,7 @@ def initlogging(app):
         exc_mailto = app.config.get('EXCEPTION_MAILTO')
         if exc_mailto is not None:
             mh = logging.handlers.SMTPHandler(app.config['MAIL_SERVER'], 'info@cerevo.com', exc_mailto, 
-                                              'FileJet Application Failed on %s' % hostname)
+                                              'Application(%s) Failed on %s' % (os.path.basename(app.root_path), hostname,))
 
             mh.setFormatter(logging.Formatter(SMTP_LOG_FORMAT))
             mh.setLevel(logging.ERROR)

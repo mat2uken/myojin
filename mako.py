@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from mako.lookup import TemplateLookup
 _lookup = None
-from flask import request, session
+from flask import request, session, url_for
 
 def init(app,globals=None):
     global _globals, _lookup
@@ -10,6 +10,7 @@ def init(app,globals=None):
     _lookup = init_lookup(app.root_path + "/templates", app.root_path + "/tmp", globals=globals)
     _globals = globals or dict()
     _globals['DEBUG'] = app.config.get('DEBUG', False)
+    _globals['url_for'] = url_for
 _globals = None
 
 def get_template(template_name):
@@ -39,6 +40,7 @@ def render(template_name, ctx,to_unicode=False):#, *args, **kws):
     return render(request=request,session=session, **dict(
         mako_utils.items() +
         _globals.items() + ctx.items()))
+
 from mako.filters import html_escape
 from markupsafe import escape, Markup
 def newline_filter(s, escape=False):

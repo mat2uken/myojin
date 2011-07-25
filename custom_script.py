@@ -29,10 +29,10 @@ def use_datetime_hack():
 
 def config_from_file(config=None, defaults=('base.cfg',),app=None,use_username_config=True):
     
-    username = get_username()
     basenames = [basename for basename in tuple(defaults)]
-    usernames = ["%s.%s" % (username, basename)  for basename in basenames]
     if use_username_config:
+        username = get_username()
+        usernames = ["%s.%s" % (username, basename)  for basename in basenames]
         filenames = [config] + usernames + basenames
     else:
         filenames = [config] + basenames

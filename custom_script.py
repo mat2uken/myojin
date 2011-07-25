@@ -8,7 +8,6 @@ from flaskext import script
 from flaskext.script import Command, Option
 from unittest import TestLoader, TestResult
 from importlib import import_module
-
 import copy
 import os,sys
 import pwd
@@ -28,7 +27,7 @@ def use_datetime_hack():
     import myojin.datetimehack
     from datetime import date, datetime
 
-def config_from_file(config=None, defaults=('dev.cfg',),app=None,use_username_config=True):
+def config_from_file(config=None, defaults=('base.cfg',),app=None,use_username_config=True):
     
     username = get_username()
     basenames = [basename for basename in tuple(defaults)]
@@ -143,7 +142,7 @@ class Test(Command):
             pattern = 'test_%s.py' % pattern
 
         #app = config_from_file(config)
-        app = config_from_file(config, defaults=('test.cfg','dev.cfg'))
+        app = config_from_file(config, defaults=('test.cfg','base.cfg'))
 
         if not startdir:
             startdir = app.root_path

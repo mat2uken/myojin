@@ -78,5 +78,20 @@ def comma_num_filter(n):
     if isinstance(n, basestring):
         n = int(n)
     return "{:,d}".format(n)
+
+def get_locale():
+    try:
+        from flaskext import babel
+        return babel.get_locale()
+    except:
+        return None
         
-mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps, replace_smart_path=replace_smart_path, comma=comma_num_filter)
+mako_utils = dict(
+    _=gettext,
+    newline=newline_filter,
+    debug_space=debug_space,
+    JSON=json_dumps,
+    replace_smart_path=replace_smart_path,
+    comma=comma_num_filter,
+    get_locale=get_locale
+)

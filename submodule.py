@@ -74,6 +74,8 @@ def json2multidict(jsonstr):
     m = MultiDict()
     for k,v in jsondata.items():
         if v is not None:
+            if isinstance(v, unicode):
+                v = v.encode('utf-8')
             if isinstance(v, (str, int, float,)):
                 m[k] = v
             else:

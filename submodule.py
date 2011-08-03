@@ -221,7 +221,10 @@ class SubModule(object):
                     self.set_cookies(ctx, with_cookies)
                     return ctx
                 else:
-                    template_name = template
+                    if isinstance(template, (tuple, list)):
+                        template_name = template[1 if request.is_smart else 0]
+                    else:
+                        template_name = template
                 html_string = render_template(template_name, ctx, with_functions)
                 response = make_response(html_string)
                 self.set_cookies(response, with_cookies)

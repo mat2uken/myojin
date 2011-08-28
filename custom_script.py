@@ -172,7 +172,8 @@ class RunFCGI(Test):
     def run(self, config, args):
         app = config_from_file(config)
         from flup.server.fcgi import WSGIServer
-        WSGIServer(app, bindAddress='fcgi.sock').run()
+        sock = app.config["FCGI_SOCKET"]
+        WSGIServer(app, bindAddress=sock).run()
                 
 
 class RunScript(Test):

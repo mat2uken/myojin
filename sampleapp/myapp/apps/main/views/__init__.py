@@ -1,2 +1,2 @@
 #from . import root
-from . import top, crud, sproxtest
+from . import top, crud

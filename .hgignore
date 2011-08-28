@@ -22,7 +22,9 @@ workueue/*_worker.sh
 *.orig
 *.old
 myscripts/
-tmp/
+/tmp/*
+
+ducato/static/tmp/*
 \#*\#
 .\#*
 vpython

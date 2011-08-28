@@ -156,6 +156,25 @@ class Test(Command):
         import sys
         sys.exit()
 
+class RunFCGI(Test):
+    def get_options(self):
+        from flask import _request_ctx_stack
+        app = _request_ctx_stack.top.app
+        #mod = import_module(app.import_name + ".scripts." + self.script_name)
+        return (
+            Option('-c', '--config',
+                   dest='config',
+                   default=None),
+            Option('-a', '--args',
+                   dest='args',
+                   default=None),
+            )
+    def run(self, config, args):
+        app = config_from_file(config)
+        from flup.server.fcgi import WSGIServer
+        WSGIServer(app, bindAddress='fcgi.sock').run()
+                
+
 class RunScript(Test):
 
     def __init__(self, script_name='set_testdata', description=None):
@@ -191,7 +210,7 @@ class RunScript(Test):
             mod.main()
         else:
             mod.main(args)
-    
+
 class Manager(script.Manager):
     def __init__(self, *args,**kws):
         super(Manager, self).__init__(*args,**kws)
@@ -204,6 +223,7 @@ class Manager(script.Manager):
                 self.add_command(name, RunScript(name, description=""))
         self.add_command("runserver", MyServer())
         self.add_command("run", MyServer())
+        self.add_command("fcgi", RunFCGI())
         self.add_command("shell", MyShell())
         self.add_command("test", Test())
 

@@ -170,10 +170,14 @@ class RunFCGI(Test):
                    default=None),
             )
     def run(self, config, args):
+        from werkzeug.debug import DebuggedApplication
+        
         app = config_from_file(config)
-        from flup.server.fcgi import WSGIServer
         sock = app.config["FCGI_SOCKET"]
-        WSGIServer(app, bindAddress=sock).run()
+        if app.config.get("DEBUG"):
+            app = DebuggedApplication(app, evalex=True)
+        from flup.server.fcgi import WSGIServer
+        return WSGIServer(app, bindAddress=sock).run()
                 
 
 class RunScript(Test):

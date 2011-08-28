@@ -219,7 +219,7 @@ class CustomFlask(Flask):
             app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
             ).split(":")[0]
         return self.url_map.bind_to_environ(request.environ,
-            server_name=server_name)
+                                            server_name=server_name)
 
     def after_auth_check_handler(self):
         def decorator(f):
@@ -292,6 +292,8 @@ class CustomFlask(Flask):
         #environ['abc'] = "AAA"
         self.debug_out.pprint(session)
         self.debug_out.pprint(environ)
+        if self.config.get('SCRIPT_NAME') is not None:
+            environ["SCRIPT_NAME"] = self.config.get('SCRIPT_NAME')
         result = Flask.wsgi_app(self, environ, start_response)
         self.debug_out.buf = None
         return result

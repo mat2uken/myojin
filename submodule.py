@@ -199,12 +199,12 @@ class SubModule(object):
 ##                for k,v in info.data.items():
 ##                    print 'form:',k,v
                 return f(form=info, *args,
-                         **dict(kws, **{
-                             k:(getattr(info, k) if hasattr(v,"stream") else v)
+                         **dict(kws, **dict(
+                             (k,(getattr(info, k) if hasattr(v,"stream") else v))
                              for k,v in info.data.items() if
                              k != "csrf" and
                              (hasattr(v,"stream") or v)
-                             }))
+                             )))
             return decorated_func
         return decorator
 

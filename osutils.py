@@ -7,7 +7,7 @@ def run_and_seteuid_with_name(func, name):
 def _run_and_seteuid(func, uid):
     ruid = os.geteuid()
     try:
-        os.seteuid(uid)
         func()
+        os.seteuid(uid)
     finally:
         os.seteuid(ruid)

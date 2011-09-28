@@ -70,10 +70,6 @@ except ImportError, e:
     def gettext(*args, **kws):
         from flaskext.babel import gettext
 
-def replace_smart_path(path):
-    s = path.rsplit(".", 1)
-    return s[0] + ".smart." + s[1]
-
 def comma_num_filter(n):
     if isinstance(n, basestring):
         n = int(n)
@@ -91,7 +87,6 @@ mako_utils = dict(
     newline=newline_filter,
     debug_space=debug_space,
     JSON=json_dumps,
-    replace_smart_path=replace_smart_path,
     comma=comma_num_filter,
     get_locale=get_locale
 )

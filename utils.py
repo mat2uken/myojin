@@ -1,6 +1,7 @@
 # encoding: utf-8
 
-from flask import url_for, redirect
+from flask import url_for
+from flask import redirect as flask_redirect
 from functools import wraps
 
 from flask import request, session, jsonify
@@ -28,9 +29,25 @@ def redirect_to(*args,**kws):
     code = kws.pop("code",302)
     anchor = kws.pop('_anchor', None)
     to = url_for(*args,**kws)
+
     if anchor is not None:
         to += ('#' + anchor)
+
     return redirect(to, code=code)
+
+def redirect(*args, **kws):
+    code = kws.pop("code",302)
+    try:
+        to = args[0] or kws.pop("to", "/")
+    except IndexError as e:
+        to = "/"
+
+    from flask import current_app, request
+    if current_app.is_ssl_request() and not to.startswith('https'):
+        to = "https://%s%s" % (request.host, to)
+
+    print to
+    return flask_redirect(to, code=code)
 
 def receive_json():
     def decorator(f):

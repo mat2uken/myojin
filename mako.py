@@ -29,7 +29,7 @@ def init_lookup(directory, module_directory, globals=None):
 ##     _globals = globals or dict()
 ##     _lookup = TemplateLookup(directories=[directory], module_directory=module_directory,input_encoding="utf-8")
 
-def render(template_name, ctx,to_unicode=False):#, *args, **kws):
+def render(template_name, ctx=dict(), to_unicode=False):#, *args, **kws):
     tmpl = get_template(template_name)
 ##     from flask import _request_ctx_stack
 ##     app = _request_ctx_stack.top.app

@@ -1,3 +1,4 @@
+import traceback
 from functools import wraps
 from flask import request, make_response, Response, jsonify
 from myojin.auth import UserModelBase
@@ -214,7 +215,12 @@ class SubModule(object):
         def decorator(f):
             @wraps(f)
             def decorated_func(*args, **kws):
-                ctx = f(*args, **kws)
+                try:
+                    ctx = f(*args, **kws)
+                except:
+                    from flask import current_app as app
+                    app.logger.debug(traceback.format_exc())
+                    flask.abort(500)
                 if isinstance(ctx,dict) and ctx.get("template"):
                     template_name = ctx['template']
                 elif isinstance(ctx, Response):
@@ -265,7 +271,7 @@ def render_template(template_name, ctx, with_functions):
             ctx.update(fn())
     if not isinstance(ctx,dict):
         return ctx
-    return render(template_name, ctx)
+    return render(template_name, ctx=ctx)
     
 import flask
 flask._url_for = flask.url_for

@@ -282,31 +282,31 @@ def url_for(endpoint, _args=(), **values):
         if not _args:
             _args = request.args
 
-    is_https = endpoint in current_app.ssl_required_endpoints
+    is_https_request = bool(current_app.is_ssl_request())
+    is_https_required = bool(endpoint in current_app.ssl_required_endpoints)
     if '_https' in values and values['_https'] == True:
         is_https = True
         del values['_https']
-    if bool(is_https) != bool(current_app.is_ssl_request()) and endpoint != ".static":
-        values['_external'] = True
+#    if is_https_request != is_https_required and endpoint != ".static":
+#        values['_external'] = True
     result = flask._url_for(endpoint, **values)
 
     # localhost -> app.config["HTTP_HOST"]
     result = result.replace('localhost', app.config["HTTP_HOST"])
 
-    #print result, is_https, current_app.is_ssl_request()
-    if is_https and (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
+    if (is_https_request or is_https_required) and \
+       (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
         if result.startswith('http://'):
             result = 'https://' + result[len('http://'):]
             items = result.split("/",3)
             items[2] = items[2].split(":")[0]
             result = "/".join(items)
-    if current_app.is_ssl_request() and not is_https and result.startswith('http://'):
+    if is_https_request and not is_https_required and result.startswith('http://'):
         items = result.split("/",3)
         port = current_app.config.get("EXT_HTTP_PORT") or current_app.config['HTTP_PORT']
         items[2] = items[2].split(":")[0] + (
             ":%s" % port if int(port) != 80 else "")
         result = "/".join(items)
-        
         #result = result.replace('http://', 'https://')
 
     if hasattr(_args, "lists"):

@@ -277,7 +277,7 @@ class CustomFlask(Flask):
             environ = request.environ
             if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
                 server_name = (
-                    app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+                    app.config.get('SSL_HOST', None) or app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
                     ).split(":")[0]
 
                 query_string = environ.get('QUERY_STRING', '')

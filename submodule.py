@@ -138,17 +138,17 @@ class SubModule(object):
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 
-            endpoint = self.name + "." + f.__name__
-            if ssl_required:
-                self.ssl_required_endpoints.append(endpoint)
-                decos += (self.ssl_redirect,)
-
             if argform:
                 decos += (partial(argform_deco,argform), )
             f = reduce(lambda f,d:d(f),
                        reversed(decos),
                        #decos,
                        f)
+
+            endpoint = self.name + "." + f.__name__
+            if ssl_required:
+                self.ssl_required_endpoints.append(endpoint)
+##                decos += (self.ssl_redirect,)
 
             self.urls.append(dict(rule=self.url_prefix + rule,
                                   endpoint=endpoint,
@@ -157,17 +157,17 @@ class SubModule(object):
             return f
         return decorator
 
-    def ssl_redirect(self, f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            from flask import current_app, request
-            endpoint = self.name + "." + f.__name__
-            if (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')) and \
-               (endpoint in self.ssl_required_endpoints and not current_app.is_ssl_request()):
-                from myojin.utils import redirect
-                return redirect(request.url.replace("http:", "https:"), code=302)
-            return f(*args, **kwargs)
-        return decorated
+##    def ssl_redirect(self, f):
+##        @wraps(f)
+##        def decorated(*args, **kwargs):
+##            from flask import current_app, request
+##            endpoint = self.name + "." + f.__name__
+##            if (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')) and \
+##               (endpoint in self.ssl_required_endpoints and not current_app.is_ssl_request()):
+##                from myojin.utils import redirect
+##                return redirect(request.url.replace("http:", "https:"), code=302)
+##            return f(*args, **kwargs)
+##        return decorated
 
     def redirect_to(self, condition, to, anchor=None):
         def decorator(f):

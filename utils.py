@@ -42,11 +42,16 @@ def redirect(*args, **kws):
     except IndexError as e:
         to = "/"
 
+    from werkzeug import exceptions
     from flask import current_app, request
     if current_app.is_ssl_request() and not to.startswith('https'):
-        to = "https://%s%s" % (request.host, to)
+        try:
+            endpoint = current_app.url_map.bind(request.host, to).match()[0]
+            if endpoint in current_app.ssl_required_endpoints:
+                to = "https://%s%s" % (request.host, to)
+        except exceptions.NotFound as e:
+            pass
 
-    print to
     return flask_redirect(to, code=code)
 
 def receive_json():

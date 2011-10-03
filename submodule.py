@@ -138,18 +138,18 @@ class SubModule(object):
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 
-            if argform:
-                decos += (partial(argform_deco,argform), )
-            f = reduce(lambda f,d:d(f),
-                       reversed(decos),
-                       #decos,
-                       f)
-
             endpoint = self.name + "." + f.__name__
             if ssl_required:
                 self.ssl_required_endpoints.append(endpoint)
 ##                decos += (self.ssl_redirect,)
 
+            if argform:
+                decos += (partial(argform_deco,argform), )
+
+            f = reduce(lambda f,d:d(f),
+                       reversed(decos),
+                       #decos,
+                       f)
             self.urls.append(dict(rule=self.url_prefix + rule,
                                   endpoint=endpoint,
                                   view_func=f,
@@ -317,13 +317,15 @@ def url_for(endpoint, _args=(), **values):
     # localhost -> app.config["HTTP_HOST"]
     result = result.replace('localhost', app.config["HTTP_HOST"])
 
-    if (is_https_request or is_https_required) and \
+#    if (is_https_request or is_https_required) and \
+    if (is_https_required) and \
        (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
         if result.startswith('http://'):
             result = 'https://' + result[len('http://'):]
             items = result.split("/",3)
             items[2] = items[2].split(":")[0]
             result = "/".join(items)
+
     if is_https_request and not is_https_required and result.startswith('http://'):
         items = result.split("/",3)
         port = current_app.config.get("EXT_HTTP_PORT") or current_app.config['HTTP_PORT']

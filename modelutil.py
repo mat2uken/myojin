@@ -282,10 +282,11 @@ class BaseModel(object):
         return q
 
     def cached_getter(self, prop):
-        obj = getattr(self, '_' + prop, None)
+        cachekey = '_' + prop
+        obj = getattr(self, cachekey, None)
         if obj is None:
             obj = getattr(self, prop, None)
-            setattr(self, '_' + prop, None)
+            setattr(self, cachekey, obj)
         return obj
 
 

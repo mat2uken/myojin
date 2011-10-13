@@ -49,16 +49,16 @@ class CustomRequest(Request):
         return self.method.upper() == 'POST'
 
     @property
-    def is_smart(self):
-        ret = getattr(self, '_is_smart', None)
+    def is_mobile(self):
+        ret = getattr(self, '_is_mobile', None)
         if ret is None:
-            def _is_smart_():
+            def _is_mobile_():
                 ua = self.environ.get('HTTP_USER_AGENT', None)
                 if ua is not None:
                     self.ua = ua
                     return mobile_re.match(ua.lower()) is not None
-            self._is_smart = _is_smart_()
-            ret = self._is_smart
+            self._is_mobile = _is_mobile_()
+            ret = self._is_mobile
         return ret
 
     def _is_find_ua(self, string):

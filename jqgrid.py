@@ -137,7 +137,7 @@ class ObjectField(JQGridField):
             id = int(data.split(":").strip())
         else:
             if int_or(data) is None:
-                return self.query
+                return query
             id = int_or(data)
         return query.filter_by(**{
             self.column_names[0]:self.target_query.get(id)
@@ -195,7 +195,6 @@ class SelectField(IntegerField):
         return self.to_col_data_dict.get(x,None)
 
 ##         return "%s(ID:%s)" % (getattr(x, self.view_column_name,""),x.id, )
-
     def get_col_model(self):
         value = ";".join("%s:%s" % (value, name) for value, name in self.options)
         add_op = dict(
@@ -209,6 +208,31 @@ class SelectField(IntegerField):
             width=self.width,
             **add_op
             )
+
+
+class ObjectSelectField(ObjectField):
+    edittype = "select"
+    
+#    get_col_model = SelectField.get_col_model
+    def get_col_model(self):
+        value = ";".join("%s:%s" % (value, name) for value, name in self.options)
+        add_op = dict(
+            stype="select",
+            editoptions=dict(value=value),
+            searchoptions=dict(value=":ALL;" + value))
+        return dict(
+            super(ObjectSelectField,self).get_col_model(),
+            #super(SelectField, self).get_col_model(),
+            name=str(self.index),
+            index=str(self.index),
+            width=self.width,
+            **add_op
+            )
+    
+    @property
+    def options(self):
+        return [(x.id, getattr(x,self.view_column_name)
+                               ) for x in self.target_query.all()]
 
 from collections import OrderedDict
 

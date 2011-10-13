@@ -182,7 +182,10 @@ class SelectField(IntegerField):
     
     def __init__(self,  *args, **kws):
         self.options = kws.pop('options')
-        self.to_python_func = kws.pop('to_python', int_or)
+        if isinstance(self.options[1][0], int):
+            self.to_python_func = kws.pop('to_python', int_or)
+        else:
+            self.to_python_func = kws.pop('to_python', lambda x:x)
         self.to_col_data_dict = dict(self.options)
         self.stype = "select"
         super(SelectField,self).__init__(*args, **kws)

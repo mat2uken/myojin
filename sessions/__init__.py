@@ -48,8 +48,7 @@ class CustomRequest(Request):
     def is_post(self):
         return self.method.upper() == 'POST'
 
-    @property
-    def is_mobile(self):
+    def judge_mobile(self):
         ret = getattr(self, '_is_mobile', None)
         if ret is None:
             def _is_mobile_():
@@ -60,6 +59,7 @@ class CustomRequest(Request):
             self._is_mobile = _is_mobile_()
             ret = self._is_mobile
         return ret
+    is_mobile = property(judge_mobile, None)
 
     def _is_find_ua(self, string):
         ret = getattr(self, string, None)

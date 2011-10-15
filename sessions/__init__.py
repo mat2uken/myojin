@@ -62,12 +62,13 @@ class CustomRequest(Request):
     is_mobile = property(judge_mobile, None)
 
     def _is_find_ua(self, string):
-        ret = getattr(self, string, None)
+        key = '_is_' + string
+        ret = getattr(self, key, None)
         if ret is None:
             ua = self.environ.get('HTTP_USER_AGENT', None)
             self.ua = ua
             ret = False if ua is None else ua.lower().find(string) > -1
-            setattr(self, '_is_' + string, ret)
+            setattr(self, key, ret)
         return ret
 
     @property

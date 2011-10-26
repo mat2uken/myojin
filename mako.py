@@ -2,13 +2,15 @@
 from __future__ import absolute_import
 from mako.lookup import TemplateLookup
 _lookup = None
-from flask import request, session
+from flask import request, session, url_for
 
 def init(app,globals=None):
     global _globals, _lookup
     
     _lookup = init_lookup(app.root_path + "/templates", app.root_path + "/tmp", globals=globals)
     _globals = globals or dict()
+    _globals['DEBUG'] = app.config.get('DEBUG', False)
+    _globals['url_for'] = url_for
 _globals = None
 
 def get_template(template_name):
@@ -27,7 +29,7 @@ def init_lookup(directory, module_directory, globals=None):
 ##     _globals = globals or dict()
 ##     _lookup = TemplateLookup(directories=[directory], module_directory=module_directory,input_encoding="utf-8")
 
-def render(template_name, ctx,to_unicode=False):#, *args, **kws):
+def render(template_name, ctx=dict(), to_unicode=False):#, *args, **kws):
     tmpl = get_template(template_name)
 ##     from flask import _request_ctx_stack
 ##     app = _request_ctx_stack.top.app
@@ -38,21 +40,21 @@ def render(template_name, ctx,to_unicode=False):#, *args, **kws):
     return render(request=request,session=session, **dict(
         mako_utils.items() +
         _globals.items() + ctx.items()))
+
 from mako.filters import html_escape
 from markupsafe import escape, Markup
-def newline_filter(s):
+def newline_filter(s, escape=False):
     #assert isinstance(s, basestring)
     #assert isinstance(s, unicode)
     if isinstance(s, str):
         s = unicode(s)
     elif isinstance(s, unicode):
         pass
-    else:
+    else:   
         assert False
+    if escape:
+        s = cgi.escape(s, True)
     return Markup(unicode(s).replace(u'\n',u'<br/>\n'))
-##     return escape(s).replace('\n','<BR/>\n')
-##     return Markup(escape(s).replace('\n','<br/>\n'))
-##     return "<h1>HELLO</h1>"+html_escape(s).replace('\n','<br/>\n')
 
 from json import dumps
 def json_dumps(s):
@@ -68,4 +70,23 @@ except ImportError, e:
     def gettext(*args, **kws):
         from flaskext.babel import gettext
 
-mako_utils = dict(_=gettext, newline=newline_filter, debug_space=debug_space,JSON=json_dumps)
+def comma_num_filter(n):
+    if isinstance(n, basestring):
+        n = int(n)
+    return "{:,d}".format(n)
+
+def get_locale():
+    try:
+        from flaskext import babel
+        return babel.get_locale()
+    except:
+        return None
+        
+mako_utils = dict(
+    _=gettext,
+    newline=newline_filter,
+    debug_space=debug_space,
+    JSON=json_dumps,
+    comma=comma_num_filter,
+    get_locale=get_locale
+)

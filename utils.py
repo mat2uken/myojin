@@ -1,13 +1,58 @@
+# encoding: utf-8
 
-from flask import url_for, redirect
+from flask import url_for
+from flask import redirect as flask_redirect
 from functools import wraps
 
 from flask import request, session, jsonify
 from json import loads
 from pprint import pprint
+from werkzeug.exceptions import HTTPException
+
+class HTTPExceptionWithResponse(HTTPException):
+    def __init__(self, response):
+        self._response = response
+        super(HTTPExceptionWithResponse, self).__init__()
+    @property
+    def code(self):
+        print self._response.status_code
+        return self._response.status_code
+    def get_response(self, environ):
+        return self._response
+    
+class RedirectToException(HTTPExceptionWithResponse):
+    def __init__(self, *args, **kws):
+        super(RedirectToException, self).__init__(
+            response=redirect_to(*args, **kws))
+
 def redirect_to(*args,**kws):
     code = kws.pop("code",302)
-    return redirect(url_for(*args,**kws),code=code)
+    anchor = kws.pop('_anchor', None)
+    to = url_for(*args,**kws)
+
+    if anchor is not None:
+        to += ('#' + anchor)
+
+    return redirect(to, code=code)
+
+def redirect(*args, **kws):
+    code = kws.pop("code",302)
+    try:
+        to = args[0] or kws.pop("to", "/")
+    except IndexError as e:
+        to = "/"
+
+    from werkzeug import exceptions
+    from flask import current_app, request
+    if current_app.is_ssl_request() and not to.startswith('https'):
+        try:
+            endpoint = current_app.url_map.bind(request.host, to).match()[0]
+            if endpoint in current_app.ssl_required_endpoints:
+                to = "https://%s%s" % (request.host, to)
+        except exceptions.NotFound as e:
+            pass
+
+    return flask_redirect(to, code=code)
 
 def receive_json():
     def decorator(f):
@@ -85,6 +130,18 @@ def drop_all_tables(metadata, engine):
             else:
                 v.drop(checkfirst=True)
 
+def create_obj(model, argnames, data):
+    return [model(**dict(zip(argnames, cols))).save()
+                   for cols in data]
+
+
+def reset_tables():
+    from flask import current_app
+    db=current_app.db
+    db.metadata.bind = db.engine
+    db.metadata.drop_all()
+    db.metadata.create_all()
+    
 if __name__ == "__main__":
     print get_username()
     for x in range(1,10):

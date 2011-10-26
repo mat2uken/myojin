@@ -40,5 +40,7 @@ def check_password(raw_password, enc_password):
     Returns a boolean of whether the raw_password was correct. Handles
     encryption formats behind the scenes.
     """
+    if UNUSABLE_PASSWORD == enc_password:
+        return False
     algo, salt, hsh = enc_password.split('$')
     return hsh == get_hexdigest(algo, salt, raw_password)

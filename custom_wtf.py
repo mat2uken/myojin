@@ -1,4 +1,5 @@
-from flaskext.wtf import QuerySelectMultipleField
+from flaskext.wtf import QuerySelectMultipleField, QuerySelectField
+
 
 class CustomQuerySelectMultipleField(QuerySelectMultipleField):
     def __init__(self, column=None, get_key=None, order_by=None, query_with=None, *args,**kws):
@@ -58,3 +59,78 @@ class CustomQuerySelectMultipleField(QuerySelectMultipleField):
             for v in self.data:
                 if v not in obj_list:
                     raise ValidationError('Not a valid choice')
+
+class CustomQuerySelectField(QuerySelectField):
+    def __init__(self , column, **kws):
+        super(CustomQuerySelectField,self).__init__( **kws)
+        self.column = column
+
+    def _get_data(self):
+        if self._formdata is not None:
+            query = self.query or self.query_factory()
+            if isinstance(column, basestring):
+                obj = query.filter_by(**{column: self._formdata}).first()
+            else:
+                obj = query.filter(column==self._formdata).first()
+            self._set_data(obj)
+        return self._data
+
+# coding: utf-8
+from flaskext.wtf import Form, TextField, TextAreaField, QuerySelectField, QuerySelectMultipleField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField, SelectMultipleField, IntegerField
+
+#def getrows(form=None, _search=False, rows=None, page=None, sidx=None, sord=None):
+def coerce_bool(s):
+    print "s:",s
+    return True
+
+def p(s):
+    print "P:", s
+class JqBooleanField(TextField):
+    def process_formdata(self, valuelist):
+        print "valuelist:", valuelist
+        if valuelist:
+            try:
+                self.data = "true" == valuelist[0]
+                #self.data = int(valuelist[0])
+            except ValueError:
+                raise ValueError(self.gettext(u'Not a valid integer value'))
+
+class JsonField(TextField):
+    def process_formdata(self, valuelist):
+        if valuelist:
+            try:
+                import json
+                self.data = json.loads(valuelist[0])
+                #self.data = int(valuelist[0])
+            except ValueError:
+                raise ValueError(self.gettext(u'Not a valid integer value'))
+
+class JqSearchField(JqBooleanField):
+    name = property(
+        lambda self:"_search",
+        lambda self, value: None
+        )
+
+
+
+from wtforms.validators import ValidationError
+class QueryTextField(TextField):
+#raise ValidationError('Not a valid choice')
+    def __init__(self, *args, **kws):
+        to_obj  = kws.pop("to_obj", None)
+        self.error_message  = kws.pop("error_message", None)
+        TextField.__init__(self, *args, **kws)
+        self.to_obj = to_obj
+        
+    def pre_validate(self, form):
+        if self.data is None and getattr(self,"_formdata", None):
+            raise ValidationError(self.error_message)
+        
+    def process_formdata(self, valuelist):
+        self.allow_blank = True
+        self._formdata = valuelist[0].strip() if valuelist else None
+        if self._formdata is not None:
+
+            self.data = self.to_obj(self._formdata)
+    def _value(self):
+        return getattr(self,"_formdata", None) or u""

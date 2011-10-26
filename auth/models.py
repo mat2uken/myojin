@@ -1,4 +1,3 @@
-
 import datetime
 from .tools import *
 import flask
@@ -18,6 +17,14 @@ class AnonymousUser(object):
 class UserModelBase(object):
     USER_ID_KEY = 'USER_ID'
     AnonymousUser = AnonymousUser
+    @classmethod
+    def current_user_getter(cls, f):
+        cls.current_user_getter_func = staticmethod(f)
+    
+    @classmethod
+    def current_user(cls):
+        return cls.current_user_getter_func()
+        
     @classmethod
     def logout(cls):
         session.flush()
@@ -42,7 +49,7 @@ class UserModelBase(object):
         return user_id
 
     @classmethod
-    def current_user(cls):
+    def get_current_user(cls):
         User = cls
         if hasattr(session,'_user' ):
             return session._user
@@ -58,7 +65,10 @@ class UserModelBase(object):
     @property
     def password_check_result(self):
         return getattr(self,'_password_check_result',False)
-    def login(self):
+    def login(self, *args, **kws):
+        from flask.globals import _request_ctx_stack, request, current_app
+        ## current_app.before_login(*args, **kws)
+        
         assert self.password_check_result
         user = self
         from flask import session
@@ -83,9 +93,12 @@ class UserModelBase(object):
             return True
     def gen_hash_password(self, raw_password):
         import random
+        from flask.globals import current_app
         algo = 'sha1'
-        #salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
-        salt = 'a76ab'
+        salt = current_app.config.get("SALT")
+        if salt is None:
+            salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
+
         hsh = get_hexdigest(algo, salt, raw_password)
         return '%s$%s$%s' % (algo, salt, hsh)
         
@@ -126,3 +139,10 @@ class UserModelBase(object):
         if user and user.check_password(password):
             return user
         return None
+
+    def external_auth(self):
+        self._password_check_result = True
+
+    def external_login(self, *args, **kwargs):
+        self.external_auth()
+        self.login(*args, **kwargs)

@@ -33,11 +33,56 @@ class Debug(threading.local):
         if kws:
             pprint(kws, self.buf)
 
+import re
+mobile_re = re.compile('.*(ipad|iphone|android).*')
 class CustomRequest(Request):
     def __init__(self, environ):
         super(CustomRequest,self).__init__(environ)
         if 'beaker.session' in environ:
             self.session = environ['beaker.session']
+    @property
+    def is_get(self):
+        return self.method.upper() == 'GET'
+
+    @property
+    def is_post(self):
+        return self.method.upper() == 'POST'
+
+    def judge_mobile(self):
+        ret = getattr(self, '_is_mobile', None)
+        if ret is None:
+            def _is_mobile_():
+                ua = self.environ.get('HTTP_USER_AGENT', None)
+                if ua is not None:
+                    self.ua = ua
+                    return mobile_re.match(ua.lower()) is not None
+            self._is_mobile = _is_mobile_()
+            ret = self._is_mobile
+        return ret
+    is_mobile = property(judge_mobile, None)
+
+    def _is_find_ua(self, string):
+        key = '_is_' + string
+        ret = getattr(self, key, None)
+        if ret is None:
+            ua = self.environ.get('HTTP_USER_AGENT', None)
+            self.ua = ua
+            ret = False if ua is None else ua.lower().find(string) > -1
+            setattr(self, key, ret)
+        return ret
+
+    @property
+    def is_android(self):
+        return self._is_find_ua('android')
+
+    @property
+    def is_iphone(self):
+        return self._is_find_ua('iphone')
+
+    @property
+    def is_ipad(self):
+        return self._is_find_ua('ipad')
+
 from datetime import datetime, timedelta
 import random
 import time
@@ -127,21 +172,129 @@ class Session(werkzeug.contrib.sessions.Session):
 session_store = FilesystemSessionStore(session_class=Session)
 COOKIE_NAME = 'C'
 import os
+class SQLAlchemySessionMiddleware(object):
+    def __init__(self,app, flask_app):
+        self.app = app
+        self.flask_app = flask_app
+    def __call__(self, environ, start_response):
+        db = getattr(self.flask_app, "db", None)
+        if db and not db.session.is_active:
+            db.session.remove()
+        try:
+            result = self.app(environ, start_response)
+        except:
+            try:
+                if db:
+                    db.session.rollback()
+            except:
+                pass
+            raise
+        return result
+
+
 class CustomFlask(Flask):
     debug_out = Debug()
     request_class = CustomRequest
     session_store = session_store
+    registered_check_ssl_handler = None
+##     before_login_handlers = ()
+##     after_login_handlers = ()
+    after_auth_check_handlers = ()
+    
+##     def before_login_handler(self):
+##         def decorator(f):
+##             self.before_login_handlers += (f,)
+##             return f
+##         return decorator
+
+##     def after_login_handler(self):
+##         def decorator(f):
+##             self.after_login_handlers += (f,)
+##             return f
+##         return decorator
+
+    def create_url_adapter_(self, request):
+        app = self
+        environ = request.environ
+        server_name = (
+            app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+            ).split(":")[0]
+        return self.url_map.bind_to_environ(request.environ,
+                                            server_name=server_name)
+
+    def after_auth_check_handler(self):
+        def decorator(f):
+            self.after_auth_check_handlers += (f,)
+            return f
+        return decorator
+        
+    def add_url_rule(self, rule, endpoint=None, view_func=None, debug_only=False, **options):
+        if not debug_only or self.config.get("DEBUG"):
+            super(CustomFlask, self).add_url_rule(rule, endpoint, view_func, **options)
+            
+    def after_auth_check(self, *args, **kws):
+        for h in self.after_auth_check_handlers:
+            h(*args, **kws)
+
+##     def before_login(self, *args, **kws):
+##         for h in self.before_login_handlers:
+##             h(*args, **kws)
+    
+##     def after_login(self, *args, **kws):
+##         for h in self.after_login_handlers:
+##             h(*args, **kws)
+    check_ssl_handler = ()
+    def check_ssl_handler(self):
+        def decorator(f):
+            self.registered_check_ssl_handler = f
+            return f
+        return decorator
+    registered_check_ssl_handler = None
+    def is_ssl_request(self):
+        if self.registered_check_ssl_handler:
+            return self.registered_check_ssl_handler()
+        return None
+        
     def __init__(self, *args, **kws):
         super(CustomFlask,self).__init__(*args, **kws)
         self.app = self
         from flask.globals import _request_ctx_stack
         _request_ctx_stack.push(self)
+        self.ssl_required_endpoints = set()
+
+        from werkzeug import LocalStack, LocalProxy
+        def get_current_user():
+            from myojin.auth import UserModelBase
+            return UserModelBase.current_user()
+        self.current_user = LocalProxy(get_current_user)
+        
+        @self.before_request
+        def check_request():
+            app = self
+            if not app.config.get('SSL_REQUIRED_REDIRECT'):
+                return
+            from flask import request, jsonify, session
+            from flask import Module, abort, redirect
+            environ = request.environ
+            if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
+                server_name = (
+                    app.config.get('SSL_HOST', None) or app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+                    ).split(":")[0]
+
+                query_string = environ.get('QUERY_STRING', '')
+                query_splitter = "?" if query_string else ""
+                path_info = request.environ['PATH_INFO']
+                return redirect("https://%s%s%s%s" % (server_name, path_info, query_splitter, query_string))
+            return 
+        
     def wsgi_app(self, environ, start_response):
         self.debug_out.buf = StringIO()
         session = environ['beaker.session']
         #environ['abc'] = "AAA"
         self.debug_out.pprint(session)
         self.debug_out.pprint(environ)
+        if self.config.get('SCRIPT_NAME') is not None:
+            environ["SCRIPT_NAME"] = self.config.get('SCRIPT_NAME')
         result = Flask.wsgi_app(self, environ, start_response)
         self.debug_out.buf = None
         return result
@@ -164,6 +317,7 @@ class CustomFlask(Flask):
             }
         session_opts.update(self.config.get('BEAKER_SETTINGS',dict()))
         self.wsgi_app = self.session_middleware = SessionMiddleware(self.wsgi_app, config=session_opts)
+        self.wsgi_app = SQLAlchemySessionMiddleware(self.wsgi_app, self)
         #self.middleware = SessionMiddleware(self.inner_call, config=session_opts)
         
 ##     def __init__(self, import_name, static_path=None):

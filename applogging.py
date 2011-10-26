@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 SMTP_LOG_FORMAT = """
 Message type:       %(levelname)s
 Location:           %(pathname)s:%(lineno)d
@@ -12,93 +13,93 @@ Message:
 
 FILE_LOG_FORMAT = """%(levelname)s %(asctime)s %(pathname)s:%(lineno)s >>> %(message)s"""
 
-def ignore_url():
-    requrl = request.url
-    if 'favicon' in requrl or 'imgsrc' in requrl or 'healthcheck' in requrl:
-        return True
-    else:
-        return False
+SYSLOG_FORMAT = FILE_LOG_FORMAT
+
+import os
 import sys
 def initlogging(app):
-    print >>sys.stderr, "init logging..."
-
     import logging, logging.handlers
 
-    ## TODO
-    app.logger.setLevel(logging.DEBUG)
-
-    if not app.config['DEBUG']:
-        app.logger.handlers = []
+    # DEBUG flag is not True set several handler for production.
+    if not app.config.get('DEBUG', True) or app.config.get('LOGGING_DEBUG', False):
+        del app.logger.handlers[:]
 
         import socket
         hostname = socket.gethostname()
-        exc_mailto = app.config.get('EXCEPTION_MAILTO')
-        if exc_mailto is not None:
-            mh = logging.handlers.SMTPHandler(app.config['MAIL_SERVER'], 'server-error@filejet.jp', exc_mailto, 
-                                              'FileJet Application Failed on %s' % hostname)
-
+        log_exc_mailto = app.config.get('LOGGING_EXCEPTION_MAILTO')
+        if log_exc_mailto is not None:
+            print >>sys.stderr, "register logging handler => exception mail to %s" % log_exc_mailto
+            mh = logging.handlers.SMTPHandler(app.config['MAIL_SERVER'], 'info@cerevo.com', log_exc_mailto, 
+                                              'Application(%s) Failed on %s' % (os.path.basename(app.root_path), hostname,))
             mh.setFormatter(logging.Formatter(SMTP_LOG_FORMAT))
             mh.setLevel(logging.ERROR)
             app.logger.addHandler(mh)
 
-        h = logging.handlers.TimedRotatingFileHandler(app.config.get('LOGFILENAME', '/tmp/myojin.log'), when='D', interval=1, backupCount=2)
-        h.setLevel(logging.DEBUG)
-        h.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
-        app.logger.addHandler(h)
+        log_filename = app.config.get('LOGGING_FILENAME', None)
+        if log_filename is not None:
+            print >>sys.stderr, "register logging handler => file to %s" % log_filename
+            fh = logging.handlers.TimedRotatingFileHandler(log_filename, when='D', interval=1, backupCount=2)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
+            app.logger.addHandler(fh)
+
+        log_syslog_host = app.config.get('LOGGING_SYSLOG_HOST', None)
+        if log_syslog_host is not None:
+            print >>sys.stderr, "register logging handler => syslog to %s" % str(log_syslog_host)
+            sh = logging.handlers.SysLogHandler(log_syslog_host, app.config.get('LOGGING_SYSLOG_CATEGORY', 'local0'))
+            sh.setLevel(logging.DEBUG)
+            sh.setFormatter(logging.Formatter(SYSLOG_FORMAT))
+            app.logger.addHandler(sh)
+
+        request_logging = app.config.get('LOGGING_REQUEST_ENABLED', True)
+        if request_logging:
+            ignore_urls = app.config.get('LOGGING_REQUEST_IGNORE_URLS')
+            ignore_urls_string = " ".join(ignore_urls)
+
+            from flask import request
+            # setting before and after request functions
+            REQUEST_START_LOGGING_FORMAT  = "[REQSTART][user=%s] %04s %s"
+            REQUEST_END_LOGGING_FORMAT    = "[  REQEND][user=%s] %04s %s %s"
+
+            current_user = app.current_user
+
+            @app.before_request
+            def before_request_logging():
+                if request.url in ignore_urls_string: return
+
+                try:
+                    app.logger.debug(REQUEST_START_LOGGING_FORMAT % (
+                                     "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                     request.method, request.path))
+                except:
+                    import traceback
+                    traceback.print_exc(file=sys.stderr)
+
+            @app.after_request
+            def after_request_logging(response):
+                if request.url in ignore_urls_string: return
+
+                try:
+                    if response.status_code < 400:
+                        app.logger.debug(REQUEST_END_LOGGING_FORMAT % (
+                                         "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                         request.method, request.path, response.status_code))
+                    else:
+                        app.logger.info(REQUEST_END_LOGGING_FORMAT % (
+                                         "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                         request.method, request.path, response.status_code))
+                except:
+                    import traceback
+                    traceback.print_exc(file=sys.stderr)
+
+                return response
+
+#    print >>sys.stderr, "app.config['DEBUG'] => %s" % app.config.get('DEBUG')
+#    print >>sys.stderr, "app.config['LOGGING_LEVEL'] => %s" % app.config.get('LOGGING_LEVEL')
+
+    app.logger.setLevel(app.config.get('LOGGING_LEVEL', logging.DEBUG))
 
     print >>sys.stderr, "app.logger.effective_level: %s" % (logging.getLevelName(app.logger.getEffectiveLevel()))
     print >>sys.stderr, "app.logger.handlers: %s" % (app.logger.handlers)
+    print >>sys.stderr, "app.logger initialized."
 
-    app.logger.debug("app.logger test DEBUG")
-    app.logger.info("app.logger test INFO")
-
-
-    from flask import request
-    if not app.config.get('DEBUG'):
-
-        # setting before and after request functions
-        REQUEST_START_LOGGING_FORMAT  = "[REQSTART][user=%s] %04s %s"
-        REQUEST_END_LOGGING_FORMAT    = "[  REQEND][user=%s] %04s %s %s"
-
-
-        current_user = app.current_user
-
-        @app.before_request
-        def before_request_logging():
-            if ignore_url(): return
-
-            try:
-                app.logger.debug(REQUEST_START_LOGGING_FORMAT % (
-                                 "%05s,%10s" % (current_user.id, current_user.nickname.encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
-                                 request.method, request.path))
-            except:
-                pass
-
-        @app.after_request
-        def after_request_logging(response):
-            if ignore_url(): return response
-
-            try:
-                if response.status_code < 400:
-                    app.logger.debug(REQUEST_END_LOGGING_FORMAT % (
-                                     "%05s,%10s" % (current_user.id, current_user.nickname.encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
-                                     request.method, request.path, response.status_code))
-                else:
-                    app.logger.info(REQUEST_END_LOGGING_FORMAT % (
-                                    "%05s,%10s" % (current_user.id, current_user.nickname.encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
-                                    request.method, request.path, response.status_code))
-            except:
-                pass
-
-            return response
-
-#if app.config['DEBUG']:
-#    @app.after_request
-#    def no_cache(response):
-#        response.headers['Pragma'] = 'no-cache'
-#        response.headers['Cache-Control'] = 'no-cache'
-#        response.headers['Expires'] = '-1'
-
-#        app.logger.debug(response.headers)
-
-#        return response

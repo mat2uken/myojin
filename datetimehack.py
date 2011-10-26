@@ -1,17 +1,19 @@
 import datetime
 from abc import ABCMeta
 
-## class MyABC:
+class MyABC(ABCMeta):
+    def __getattr__(self,name):
+        return getattr(self._p,name)
 
-##         MyABC.register(tuple)
 from datetime import timedelta
 class date(object):
-    __metaclass__ = ABCMeta
+    _p = datetime.date
+    __metaclass__ = MyABC
     _today = None
     def __new__(cls, *args, **kws):
         import datetime
         return datetime._date.__new__(datetime._date, *args, **kws)
-
+    
     @classmethod
     def set_next_day(cls):
         cls.set_today(cls.today() + timedelta(days=1))
@@ -31,7 +33,8 @@ class date(object):
         datetime.datetime.set_now(dd)
 
 class Datetime(object):
-    __metaclass__ = ABCMeta
+    _p = datetime.datetime
+    __metaclass__ = MyABC
     _now = None
     def __new__(cls, *args, **kws):
         import datetime
@@ -40,8 +43,9 @@ class Datetime(object):
     def utcfromtimestamp(cls, *args,**kws):
         import datetime
         return datetime._datetime.utcfromtimestamp(*args,**kws)
-    @staticmethod
-    def today():
+    @classmethod
+    def today(cls):
+        return cls.now()
         cls = date
         import datetime
         d = cls._today or datetime._date.today()

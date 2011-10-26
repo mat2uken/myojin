@@ -137,4 +137,12 @@ class User(BaseModel, UserModelBase):
         else:
             return False
 
-__all__ = ['User', 'Memo']
+@UserModelBase.current_user_getter
+def get_current_user():
+    return User.get_current_user()
+
+class Image(BaseModel):
+    def __init__(self, *args, **kws):
+        BaseModel.init_basemodel(**locals())
+
+__all__ = ['User', 'Memo', 'Image']

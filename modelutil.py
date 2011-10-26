@@ -203,21 +203,6 @@ class BaseModel(object):
     def init_basemodel(self, **kws):
         BaseModel.__init__(self, **kws)
 
-    @staticmethod
-    def kws_filter(modelClass, **kws):
-        q = modelClass.query
-        p = dict()
-        for k, v in kws.items():
-            if v is None:
-                continue
-            if v is NoneObject:
-                v = None
-            elif isinstance(v, (BaseModel, LocalProxy)):
-                k += '_id'
-                v = v.id
-            p[k] = v
-        return q.filter_by(**p)
-
     def __new__(cls, *args, **kws):
         if not args and not kws:
             return object.__new__(cls)
@@ -288,7 +273,23 @@ class BaseModel(object):
             for x in getattr(self, arg):
                 x.regenerate()
         self.deleted = False
-        
+
+    @classmethod
+    def get_by(cls, q=None, **kwargs):
+        q = q or cls.query
+        for k, v in kwargs.items():
+            q = q.filter(getattr(cls, k)==v)
+        return q
+
+    def cached_getter(self, prop):
+        cachekey = '_' + prop
+        obj = getattr(self, cachekey, None)
+        if obj is None:
+            obj = getattr(self, prop, None)
+            setattr(self, cachekey, obj)
+        return obj
+
+
 def _to_str(x):
     if isinstance(x,(tuple, list)):
         return u"[%s]" % u", ".join((repr(str(y)) for y in x ))

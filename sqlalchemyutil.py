@@ -1,5 +1,7 @@
 # encoding: utf-8
 from __future__ import absolute_import # import sqlalchemyが衝突するので
+from sqlalchemy.exc import IntegrityError
+
 mod_sqlalchemy_sql =  __import__('sqlalchemy.sql', {}, {}, [''])
 mod_sqlalchemy_expression = getattr(mod_sqlalchemy_sql, 'expression')
 between = getattr(mod_sqlalchemy_expression, 'between')
@@ -19,6 +21,25 @@ def get_sum_by_case(cases):
         )
     return ret
 
+
+def retry_flush(db, n_times):
+    def deco(f):
+        if db.engine.name == 'sqlite':
+            result = f()
+            db.session.flush()
+            return True
+        for x in range(n_times):
+            try:
+                with db.session.begin_nested():
+                    result = f()
+            except IntegrityError, e:
+                #print "IntegrityError retry", x
+                continue
+            else:
+                return True
+        return False
+    return deco
+
 def get_sum_by_case_query(cases, wheres):
     q = select(get_sum_by_case(cases)).where(and_(*wheres))
     return q
@@ -34,10 +55,64 @@ class EnumStatus(types.TypeDecorator):
         self.name2int = dict((v,k) for k,v in enumerate(status_names))
 
     def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
         assert isinstance(value, basestring), repr(value)
         return self.name2int[value]
 
     def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        assert isinstance(value, (int,long))
+        return self.int2name[value]
+
+from datetime import datetime, date
+class Month(types.TypeDecorator):
+    impl = types.Date
+    @staticmethod
+    def _first_of_month(value):
+        if value is None:
+            return None
+        elif isinstance(value, datetime):
+            value = value.date()
+        assert isinstance(value, date)
+        return value.replace(day=1)
+        
+    def process_bind_param(self, value, dialect):
+        return self._first_of_month(value)
+
+    def process_result_value(self, value, dialect):
+        return self._first_of_month(value)
+
+from sqlalchemy import types
+
+class TypeMeta(type(types.TypeDecorator)):
+    def __hash__(self):
+        #print "HASH"
+        return hash(types.Binary)
+    def __eq__(self, other):
+        #print "EQ"
+        return other == types.Binary
+from pprint import pprint
+class FSBinary(types.TypeDecorator):
+    impl = types.Binary
+    __metaclass__ = TypeMeta
+    def __init__(self, *arg, **kws):
+        types.TypeDecorator.__init__(self, *arg, **kws)
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, basestring):
+            return value
+        elif hasattr(value, "read"):
+            return value.read()
+        return value.file.read()
+
+    def process_result_value(self, value, dialect):
+        return value
+        if value is None:
+            return None
         assert isinstance(value, (int,long))
         return self.int2name[value]
 

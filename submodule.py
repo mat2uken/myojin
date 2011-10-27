@@ -235,7 +235,7 @@ class SubModule(object):
                 except:
                     from flask import current_app as app
                     app.logger.debug(traceback.format_exc())
-                    flask.abort(500)
+                    raise #flask.abort(500) から変更 hokari TODO: hknumanoidに確認 session/__init__.py のdef init_middlewareにlog処理移動？
                 if isinstance(ctx,dict) and ctx.get("template"):
                     template_name = ctx['template']
                 elif isinstance(ctx, Response):

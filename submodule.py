@@ -1,3 +1,4 @@
+# coding: utf-8
 import traceback
 from functools import wraps
 from flask import request, make_response, Response, jsonify

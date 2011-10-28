@@ -244,7 +244,7 @@ class SubModule(object):
                     return ctx
                 else:
                     if isinstance(template, (tuple, list)):
-                        template_name = template[1 if request.is_smart else 0]
+                        template_name = template[1 if request.is_mobile else 0]
                     else:
                         template_name = template
                 html_string = render_template(template_name, ctx, with_functions)

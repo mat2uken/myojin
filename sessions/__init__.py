@@ -303,7 +303,7 @@ class CustomFlask(Flask):
         return Flask.__call__(self,environ, start_response)
         
     def init_middleware(self):
-        from myojin.applogging import initlogging
+        from myojin.logging import initlogging
         initlogging(self)
         session_opts = {
             #'session.type':'ext:memcached',

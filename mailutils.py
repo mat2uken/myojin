@@ -13,15 +13,18 @@ from unicodedata import normalize
 from myojin.mako import render
 from flask.globals import current_app
 
+EXTERNAL_CONFIG = current_app.config['EXTERNAL_CONFIG']
+
 class Mailer(object):
     def __init__(self, app=None):
         default_config = {
+            'MAIL_METHOD': 'smtp',
             'MAIL_DEBUG_LEVEL': 0,
             'MAIL_USERNAME': None,
             'MAIL_PASSWORD': None,
             'MAIL_SERVER': 'localhost',
             'MAIL_PORT': 25,
-            'MAIL_SENDER_FROM': 'info@hoge.com',
+            'MAIL_SENDER_FROM': 'example@example.com',
             'MAIL_USE_TLS': False,
             'MAIL_USE_SSL': False,
         }
@@ -35,7 +38,9 @@ class Mailer(object):
 
         if with_normalize:
             body = normalize("NFKC", body)
-        msg = MIMEText(body.encode(encoding, errors='replace'), 'plain', encoding)
+
+        body = body.encode(encoding, errors='replace')
+        msg = MIMEText(body, 'plain', encoding)
 
         if sender_from is None:
             sender_from = self.config['MAIL_SENDER_FROM']
@@ -53,6 +58,27 @@ class Mailer(object):
         msg['Subject'] = Header(subject, encoding)
         msg['Date'] = formatdate()
 
+        if self.config['MAIL_METHOD'] == 'smtp':
+            return self.send_smtp(sender_from, recipients, msg)
+        elif self.config['MAIL_METHOD'] == 'ses':
+            return self.send_ses(sender_from, recipients, subject, body)
+        else:
+            raise Exception('Unknown sendmail Method.')
+
+    def send_ses(self, sender_from, recipients, subject, body):
+        # SES Connection create
+        aws_access_key = EXTERNAL_CONFIG['aws_access_key']
+        aws_secret_key = EXTERNAL_CONFIG['aws_secret_key']
+
+        from boto.ses import SESConnection
+        ses_conn = SESConnection(aws_access_key, aws_secret_key)
+        ret = ses_conn.send_email(sender_from, subject, body, recipients, cc_addresses=None, bcc_addresses=None, format='text')
+
+        current_app.logger.debug('sent mail to %s by SES' % (str(recipients),))
+
+        return ret
+
+    def send_smtp(self, sender_from, recipients, msg):
         mail_server = smtplib.SMTP(self.config['MAIL_SERVER'], self.config['MAIL_PORT'])
         mail_server.set_debuglevel(self.config['MAIL_DEBUG_LEVEL'])
 
@@ -63,10 +89,12 @@ class Mailer(object):
         if self.config['MAIL_USERNAME'] and self.config['MAIL_PASSWORD']:
             mail_server.login(self.config['MAIL_USERNAME'], self.config['MAIL_PASSWORD'])
 
-        mail_server.sendmail(sender_from, recipients, msg.as_string())
+        ret = mail_server.sendmail(sender_from, recipients, msg.as_string())
 
         mail_server.close()
-        current_app.logger.debug('sent mail to %s' % (str(recipients),))
+        current_app.logger.debug('sent mail to %s by SMTP' % (str(recipients),))
+
+        return ret
 
 DEBUG_MAIL = """
 subject: %s

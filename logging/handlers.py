@@ -1,11 +1,11 @@
 # encoding: utf-8
 
-import logging, logging.handlers
+import logging
 from flask.globals import current_app
 
 from .. import mailutils
 
-class MailHandler(logging.handlers.SMTPHandler):
+class MailHandler(logging.Handler):
     """
     Logging to mail handler.
  
@@ -23,6 +23,14 @@ class MailHandler(logging.handlers.SMTPHandler):
             toaddrs = [toaddrs]
         self.toaddrs = toaddrs
         self.subject = subject
+
+    def getSubject(self, record):
+        """
+        Determine the subject for the mail.
+
+        simple return subject
+        """
+        return self.subject
 
     def emit(self, record):
         """

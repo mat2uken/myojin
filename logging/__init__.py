@@ -21,7 +21,6 @@ def initlogging(app):
     import logging
     from logging import handlers
     from . import handlers as myojin_handlers
-    print dir(myojin_handlers)
 
     # DEBUG flag is not True set several handler for production.
     if app.config.get('LOGGING_DEBUG', False) or not app.config.get('DEBUG', True):

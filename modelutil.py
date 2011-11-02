@@ -237,8 +237,8 @@ class BaseModel(object):
         
     def __repr__(self):
         ks = self.__repratts__ 
-        args = ",".join( _to_str(getattrs(self, k,None)) for k in ks[:5])
-        return "<%s %2s %s>"%(type(self).__name__ , self.id, args)
+        args = ", ".join(_to_str("%s=%s" % (k,getattrs(self, k, None))) for k in ks[:5])
+        return "<%s(%s) %s>"%(type(self).__name__ , self.id, args)
 
     def delete(self):
         for arg in getattr(self,'child_args',()):

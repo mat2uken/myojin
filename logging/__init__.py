@@ -64,8 +64,8 @@ def initlogging(app):
 
             from flask import request
             # setting before and after request functions
-            REQUEST_START_LOGGING_FORMAT  = "[REQSTART][user=%s] %04s %s"
-            REQUEST_END_LOGGING_FORMAT    = "[  REQEND][user=%s] %04s %s %s"
+            REQUEST_START_LOGGING_FORMAT  = "[REQSTART][%s] %04s %s"
+            REQUEST_END_LOGGING_FORMAT    = "[  REQEND][%s] %04s %s %s"
 
             current_user = app.current_user
 
@@ -75,7 +75,7 @@ def initlogging(app):
 
                 try:
                     app.logger.debug(REQUEST_START_LOGGING_FORMAT % (
-                                     "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                     repr(current_user).encode('utf-8', errors="ignore") if current_user.is_authenticated() else "anonymous",
                                      request.method, request.path))
                 except:
                     import traceback
@@ -88,11 +88,11 @@ def initlogging(app):
                 try:
                     if response.status_code < 400:
                         app.logger.debug(REQUEST_END_LOGGING_FORMAT % (
-                                         "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                         repr(current_user).encode('utf-8', errors="ignore") if current_user.is_authenticated() else "anonymous",
                                          request.method, request.path, response.status_code))
                     else:
                         app.logger.info(REQUEST_END_LOGGING_FORMAT % (
-                                         "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                         repr(current_user).encode('utf-8', errors="ignore") if current_user.is_authenticated() else "anonymous",
                                          request.method, request.path, response.status_code))
                 except:
                     import traceback

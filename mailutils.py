@@ -103,6 +103,10 @@ body:
 """
 
 def sendmail(recipients, template, ctx, sender_from=None, sender_from_name=None):
+
+    if isinstance(recipients, basestring):
+        recipients = [recipients]
+
     ##assert 'shared_guests_client' in ctx
     subject, body = render(template, ctx=ctx,to_unicode=True).split(u"\n",1)
     if not current_app.config.get("MAIL_SERVER", None):

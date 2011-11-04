@@ -60,21 +60,20 @@ class Mailer(object):
         if self.config['MAIL_METHOD'] == 'smtp':
             return self.send_smtp(sender_from, recipients, msg)
         elif self.config['MAIL_METHOD'] == 'ses':
-            return self.send_ses(sender_from, recipients, subject, body)
+            return self.send_ses(sender_from, recipients, msg.as_string())
         else:
             raise Exception('Unknown sendmail Method.')
 
-    def send_ses(self, sender_from, recipients, subject, body):
+    def send_ses(self, sender_from, recipients, body):
         # SES Connection create
         aws_access_key = EXTERNAL_CONFIG['aws_access_key']
         aws_secret_key = EXTERNAL_CONFIG['aws_secret_key']
 
         from boto.ses import SESConnection
         ses_conn = SESConnection(aws_access_key, aws_secret_key)
-        ret = ses_conn.send_email(sender_from, subject, body, recipients, cc_addresses=None, bcc_addresses=None, format='text')
+        ret = ses_conn.send_raw_email(sender_from, body, destinations=[])
 
         current_app.logger.debug('sent mail to %s by SES' % (str(recipients),))
-
         return ret
 
     def send_smtp(self, sender_from, recipients, msg):

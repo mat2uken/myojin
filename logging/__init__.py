@@ -18,18 +18,24 @@ SYSLOG_FORMAT = FILE_LOG_FORMAT
 import os
 import sys
 def initlogging(app):
-    import logging, logging.handlers
+    import logging
+    from logging import handlers
+    from . import handlers as myojin_handlers
 
     # DEBUG flag is not True set several handler for production.
-    if not app.config.get('DEBUG', True) or app.config.get('LOGGING_DEBUG', False):
-        del app.logger.handlers[:]
+    if app.config.get('LOGGING_DEBUG', False) or not app.config.get('DEBUG', True):
+        if app.config.get('LOGGING_DEBUG') is True:
+            from flask.logging import create_logger
+            create_logger(app)
+        else:
+            del app.logger.handlers[:]
 
         import socket
         hostname = socket.gethostname()
         log_exc_mailto = app.config.get('LOGGING_EXCEPTION_MAILTO')
         if log_exc_mailto is not None:
             print >>sys.stderr, "register logging handler => exception mail to %s" % log_exc_mailto
-            mh = logging.handlers.SMTPHandler(app.config['MAIL_SERVER'], 'info@cerevo.com', log_exc_mailto, 
+            mh = myojin_handlers.MailHandler(app.config.get('MAIL_SENDER_FROM', 'example@example.com'), log_exc_mailto, 
                                               'Application(%s) Failed on %s' % (os.path.basename(app.root_path), hostname,))
             mh.setFormatter(logging.Formatter(SMTP_LOG_FORMAT))
             mh.setLevel(logging.ERROR)
@@ -38,7 +44,7 @@ def initlogging(app):
         log_filename = app.config.get('LOGGING_FILENAME', None)
         if log_filename is not None:
             print >>sys.stderr, "register logging handler => file to %s" % log_filename
-            fh = logging.handlers.TimedRotatingFileHandler(log_filename, when='D', interval=1, backupCount=2)
+            fh = handlers.TimedRotatingFileHandler(log_filename, when='D', interval=1, backupCount=2)
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
             app.logger.addHandler(fh)
@@ -46,7 +52,7 @@ def initlogging(app):
         log_syslog_host = app.config.get('LOGGING_SYSLOG_HOST', None)
         if log_syslog_host is not None:
             print >>sys.stderr, "register logging handler => syslog to %s" % str(log_syslog_host)
-            sh = logging.handlers.SysLogHandler(log_syslog_host, app.config.get('LOGGING_SYSLOG_CATEGORY', 'local0'))
+            sh = handlers.SysLogHandler(log_syslog_host, app.config.get('LOGGING_SYSLOG_CATEGORY', 'local0'))
             sh.setLevel(logging.DEBUG)
             sh.setFormatter(logging.Formatter(SYSLOG_FORMAT))
             app.logger.addHandler(sh)
@@ -58,8 +64,8 @@ def initlogging(app):
 
             from flask import request
             # setting before and after request functions
-            REQUEST_START_LOGGING_FORMAT  = "[REQSTART][user=%s] %04s %s"
-            REQUEST_END_LOGGING_FORMAT    = "[  REQEND][user=%s] %04s %s %s"
+            REQUEST_START_LOGGING_FORMAT  = "[REQSTART][%s] %04s %s"
+            REQUEST_END_LOGGING_FORMAT    = "[  REQEND][%s] %04s %s %s"
 
             current_user = app.current_user
 
@@ -69,7 +75,7 @@ def initlogging(app):
 
                 try:
                     app.logger.debug(REQUEST_START_LOGGING_FORMAT % (
-                                     "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                     repr(current_user).encode('utf-8', errors="ignore") if current_user.is_authenticated() else "anonymous",
                                      request.method, request.path))
                 except:
                     import traceback
@@ -82,11 +88,11 @@ def initlogging(app):
                 try:
                     if response.status_code < 400:
                         app.logger.debug(REQUEST_END_LOGGING_FORMAT % (
-                                         "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                         repr(current_user).encode('utf-8', errors="ignore") if current_user.is_authenticated() else "anonymous",
                                          request.method, request.path, response.status_code))
                     else:
                         app.logger.info(REQUEST_END_LOGGING_FORMAT % (
-                                         "%05s,%10s" % (current_user.id, repr(current_user).encode('utf-8', errors="ignore"))[:10] if current_user.is_authenticated() else "anonymous",
+                                         repr(current_user).encode('utf-8', errors="ignore") if current_user.is_authenticated() else "anonymous",
                                          request.method, request.path, response.status_code))
                 except:
                     import traceback

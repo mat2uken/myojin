@@ -1,3 +1,4 @@
+# coding: utf-8
 import traceback
 from functools import wraps
 from flask import request, make_response, Response, jsonify
@@ -235,7 +236,7 @@ class SubModule(object):
                 except:
                     from flask import current_app as app
                     app.logger.debug(traceback.format_exc())
-                    flask.abort(500)
+                    raise #flask.abort(500) から変更 hokari TODO: hknumanoidに確認 session/__init__.py のdef init_middlewareにlog処理移動？
                 if isinstance(ctx,dict) and ctx.get("template"):
                     template_name = ctx['template']
                 elif isinstance(ctx, Response):
@@ -243,7 +244,10 @@ class SubModule(object):
                     return ctx
                 else:
                     if isinstance(template, (tuple, list)):
-                        template_name = template[1 if request.is_mobile else 0]
+                        try:
+                            template_name = template[1 if request.is_mobile else 0]
+                        except IndexError as e:
+                            template_name = template[0]
                     else:
                         template_name = template
                 html_string = render_template(template_name, ctx, with_functions)

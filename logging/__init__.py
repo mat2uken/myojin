@@ -59,8 +59,10 @@ def initlogging(app):
 
         request_logging = app.config.get('LOGGING_REQUEST_ENABLED', True)
         if request_logging:
-            ignore_urls = app.config.get('LOGGING_REQUEST_IGNORE_URLS')
+            ignore_urls = app.config.get('LOGGING_REQUEST_IGNORE_URLS', [])
             ignore_urls_string = " ".join(ignore_urls)
+            ignore_agents = app.config.get('LOGGING_REQUEST_IGNORE_AGENTS', [])
+            ignore_agents_string = " ".join(ignore_agents)
 
             from flask import request
             # setting before and after request functions
@@ -72,6 +74,7 @@ def initlogging(app):
             @app.before_request
             def before_request_logging():
                 if request.url in ignore_urls_string: return
+                if request.user_agent in ignore_agents_string: return
 
                 try:
                     app.logger.debug(REQUEST_START_LOGGING_FORMAT % (
@@ -84,6 +87,7 @@ def initlogging(app):
             @app.after_request
             def after_request_logging(response):
                 if request.url in ignore_urls_string: return
+                if request.user_agent in ignore_agents_string: return
 
                 try:
                     if response.status_code < 400:

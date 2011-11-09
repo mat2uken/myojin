@@ -71,11 +71,18 @@ def initlogging(app):
 
             current_user = app.current_user
 
+            def _check_ignore():
+                if request.url in ignore_urls_string:
+                    return True
+                ua = str(request.user_agent)
+                for ia in ignore_agents:
+                    if ia in ua: return True
+                return False
+
+
             @app.before_request
             def before_request_logging():
-                if request.url in ignore_urls_string: return
-                for ia in ignore_agents:
-                    if ia in str(request.user_agent): return
+                if _check_ignore(): return
 
                 try:
                     app.logger.debug(REQUEST_START_LOGGING_FORMAT % (
@@ -87,9 +94,7 @@ def initlogging(app):
 
             @app.after_request
             def after_request_logging(response):
-                if request.url in ignore_urls_string: return response
-                for ia in ignore_agents:
-                    if ia in str(request.user_agent): return response
+                if _check_ignore(): return response
 
                 try:
                     if response.status_code < 400:

@@ -71,7 +71,7 @@ class Mailer(object):
 
         from boto.ses import SESConnection
         ses_conn = SESConnection(aws_access_key, aws_secret_key)
-        ret = ses_conn.send_raw_email(sender_from, body, destinations=[])
+        ret = ses_conn.send_raw_email(body, source=sender_from, destinations=[])
 
         current_app.logger.debug('sent mail to %s by SES' % (str(recipients),))
         return ret

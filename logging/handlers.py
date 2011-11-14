@@ -5,6 +5,36 @@ from flask.globals import current_app
 
 from .. import mailutils
 
+import boto.sns
+
+class SNSHandler(logging.Handler):
+    def __init__(self, topic_name, subject="", region='ap-northeast-1'):
+        logging.Handler.__init__(self)
+
+        self.subject = 'SNS Notification by error log'
+        self.topic_name = topic_name
+
+        self.conn = boto.sns.connect_to_region(region)
+        topic_list = self.conn.get_all_topics()['ListTopicsResponse']['ListTopicsResult']['Topics']
+        self.topic = None
+        for topic in topic_list:
+            arn = topic['TopicArn']
+            if arn.endswith(topic_name):
+                self.topic = arn
+
+        if self.topic is None:
+            raise NotFoundTopic('not found topic name => %s' % (self.topic_name,))
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            ret = self.conn.publish(self.topic, msg, subject=self.subject)
+            app.logger.debug('sent to AWS SNS: topic=>%s, ret=%s' % (self.topic, ret))
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
+
 class MailHandler(logging.Handler):
     """
     Logging to mail handler.

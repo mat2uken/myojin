@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-SMTP_LOG_FORMAT = """
+SMTP_LOG_FORMAT = SNS_LOG_FORMAT = """
 Message type:       %(levelname)s
 Location:           %(pathname)s:%(lineno)d
 Module:             %(module)s
@@ -40,6 +40,14 @@ def initlogging(app):
             mh.setFormatter(logging.Formatter(SMTP_LOG_FORMAT))
             mh.setLevel(logging.ERROR)
             app.logger.addHandler(mh)
+
+        log_aws_sns_topic = app.config.get('LOGGING_AWS_SNS_TOPIC')
+        if log_aws_sns_topic is not None:
+            print >>sys.stderr, "register logging handler => exception notify to Amazon SNS(topic:%s)" % log_aws_sns_topic
+            sh = myojin_handlers.SNSHandler(topic_name=log_aws_sns_topic)
+            sh.setFormatter(logging.Formatter(SNS_LOG_FORMAT))
+            sh.setLevel(logging.ERROR)
+            app.logger.addHandler(sh)
 
         log_filename = app.config.get('LOGGING_FILENAME', None)
         if log_filename is not None:

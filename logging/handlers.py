@@ -8,13 +8,17 @@ from .. import mailutils
 import boto.sns
 
 class SNSHandler(logging.Handler):
-    def __init__(self, topic_name, subject="", region='ap-northeast-1'):
+    def __init__(self, topic_name, subject="", region='ap-northeast-1',
+                 aws_access_key=None, aws_secret_access_key=None):
         logging.Handler.__init__(self)
 
         self.subject = 'SNS Notification by error log'
         self.topic_name = topic_name
 
-        self.conn = boto.sns.connect_to_region(region)
+        if aws_access_key is not None:
+            self.conn = boto.sns.connect_to_region(region, aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_access_key)
+        else:
+            self.conn = boto.sns.connect_to_region(region)
         topic_list = self.conn.get_all_topics()['ListTopicsResponse']['ListTopicsResult']['Topics']
         self.topic = None
         for topic in topic_list:

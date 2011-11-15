@@ -42,9 +42,12 @@ def initlogging(app):
             app.logger.addHandler(mh)
 
         log_aws_sns_topic = app.config.get('LOGGING_AWS_SNS_TOPIC')
+        log_aws_sns_access_key = app.config.get('LOGGING_AWS_SNS_ACCESS_KEY')
+        log_aws_sns_secret_access_key = app.config.get('LOGGING_AWS_SNS_SECRET_ACCESS_KEY')
         if log_aws_sns_topic is not None:
             print >>sys.stderr, "register logging handler => exception notify to Amazon SNS(topic:%s)" % log_aws_sns_topic
-            sh = myojin_handlers.SNSHandler(topic_name=log_aws_sns_topic)
+            sh = myojin_handlers.SNSHandler(topic_name=log_aws_sns_topic, 
+                                            aws_access_key=log_aws_sns_access_key, aws_secret_access_key=log_aws_sns_secret_access_key)
             sh.setFormatter(logging.Formatter(SNS_LOG_FORMAT))
             sh.setLevel(logging.ERROR)
             app.logger.addHandler(sh)

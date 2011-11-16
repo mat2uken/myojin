@@ -33,7 +33,7 @@ class SNSHandler(logging.Handler):
         try:
             msg = self.format(record)
             ret = self.conn.publish(self.topic, msg, subject=self.subject)
-            app.logger.debug('sent to AWS SNS: topic=>%s, ret=%s' % (self.topic, ret))
+            current_app.logger.debug('sent to AWS SNS: topic=>%s, ret=%s' % (self.topic, ret))
         except (KeyboardInterrupt, SystemExit):
             raise
         except:

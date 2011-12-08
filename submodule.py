@@ -192,12 +192,6 @@ class SubModule(object):
                     formdata = json2multidict(formdata['data'])
                 info = form(formdata, csrf_enabled=False)
 
-##                 if not info.is_submitted():
-##                     return f(form=info, *args,**kws)
-##                 if not info.validate():
-##                     flask.abort(400)
-##                for k,v in info.data.items():
-##                    print 'form:',k,v
                 return f(form=info, *args,
                          **dict(kws, **dict(
                              (k,(getattr(info, k) if hasattr(v,"stream") else v))
@@ -270,8 +264,6 @@ def url_for(endpoint, _args=(), **values):
     from flask import current_app, request
     app = current_app
     environ = request.environ
-##     if "logout" in endpoint:
-##         print app.config['SERVER_NAME'], environ.get('HTTP_HOST'), environ.get('SERVER_NAME')
     if endpoint == ".":
         endpoint = request.endpoint
         if not _args:
@@ -288,7 +280,7 @@ def url_for(endpoint, _args=(), **values):
     # localhost -> app.config["HTTP_HOST"]
     result = result.replace('localhost', app.config["HTTP_HOST"])
 
-    #print result, is_https, current_app.is_ssl_request()
+
     if is_https and (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
         if result.startswith('http://'):
             result = 'https://' + result[len('http://'):]
@@ -302,8 +294,6 @@ def url_for(endpoint, _args=(), **values):
             ":%s" % port if int(port) != 80 else "")
         result = "/".join(items)
         
-        #result = result.replace('http://', 'https://')
-
     if hasattr(_args, "lists"):
         args = [(k,v) for k, vs in _args.lists for v in vs]
     else:
@@ -314,3 +304,4 @@ def url_for(endpoint, _args=(), **values):
     else:
         return result
 flask.url_for = url_for
+

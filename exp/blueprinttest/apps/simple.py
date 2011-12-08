@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, abort
 from jinja2 import TemplateNotFound
-
+print "simple:",__name__
 simple_page = Blueprint('simple_page', __name__ ,
-#                        )
-                        template_folder='templates2')
+                        template_folder=None)
+#                        template_folder='templates2')
 from flask.globals import _request_ctx_stack
 
 @simple_page.route('/', defaults={'page': 'index'})

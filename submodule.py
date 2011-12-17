@@ -1,4 +1,5 @@
 # coding: utf-8
+import types
 import traceback
 from functools import wraps
 from flask import request, make_response, Response, jsonify
@@ -170,14 +171,19 @@ class SubModule(object):
 ##            return f(*args, **kwargs)
 ##        return decorated
 
-    def redirect_to(self, condition, to, anchor=None):
+    def redirect_to(self, condition, _to, anchor=None, **kwargs):
         def decorator(f):
             @wraps(f)
             def decorated(*args, **kwargs):
                 if condition():
-                    _anchor = anchor or f.__name__
-                    from myojin.utils import redirect_to
-                    return redirect_to(to, _anchor=_anchor)
+                    to = _to if type(_to) is not types.FunctionType else _to()
+                    if to.find('/') > -1:
+                        from myojin.utils import redirect
+                        return redirect(to, **kwargs)
+                    else:
+                        _anchor = anchor or f.__name__
+                        from myojin.utils import redirect_to
+                        return redirect_to(to, _anchor=_anchor, **kwargs)
                 else:
                     return f(*args, **kwargs)
             return decorated

@@ -1,3 +1,5 @@
+# coding: utf-8
+import traceback
 from functools import wraps
 from flask import request, make_response, Response, jsonify
 from myojin.auth import UserModelBase
@@ -74,6 +76,8 @@ def json2multidict(jsonstr):
     m = MultiDict()
     for k,v in jsondata.items():
         if v is not None:
+            if isinstance(v, unicode):
+                v = v.encode('utf-8')
             if isinstance(v, (str, int, float,)):
                 m[k] = v
             else:
@@ -135,21 +139,36 @@ class SubModule(object):
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 
+            endpoint = self.name + "." + f.__name__
+            if ssl_required:
+                self.ssl_required_endpoints.append(endpoint)
+##                decos += (self.ssl_redirect,)
+
             if argform:
                 decos += (partial(argform_deco,argform), )
+
             f = reduce(lambda f,d:d(f),
                        reversed(decos),
                        #decos,
                        f)
-            endpoint = self.name + "." + f.__name__
             self.urls.append(dict(rule=self.url_prefix + rule,
                                   endpoint=endpoint,
                                   view_func=f,
                                   **options))
-            if ssl_required:
-                self.ssl_required_endpoints.append(endpoint)
             return f
         return decorator
+
+##    def ssl_redirect(self, f):
+##        @wraps(f)
+##        def decorated(*args, **kwargs):
+##            from flask import current_app, request
+##            endpoint = self.name + "." + f.__name__
+##            if (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')) and \
+##               (endpoint in self.ssl_required_endpoints and not current_app.is_ssl_request()):
+##                from myojin.utils import redirect
+##                return redirect(request.url.replace("http:", "https:"), code=302)
+##            return f(*args, **kwargs)
+##        return decorated
 
     def redirect_to(self, condition, to, anchor=None):
         def decorator(f):
@@ -206,14 +225,25 @@ class SubModule(object):
         def decorator(f):
             @wraps(f)
             def decorated_func(*args, **kws):
-                ctx = f(*args, **kws)
+                try:
+                    ctx = f(*args, **kws)
+                except:
+                    from flask import current_app as app
+                    app.logger.debug(traceback.format_exc())
+                    raise #flask.abort(500) から変更 hokari TODO: hknumanoidに確認 session/__init__.py のdef init_middlewareにlog処理移動？
                 if isinstance(ctx,dict) and ctx.get("template"):
                     template_name = ctx['template']
                 elif isinstance(ctx, Response):
                     self.set_cookies(ctx, with_cookies)
                     return ctx
                 else:
-                    template_name = template
+                    if isinstance(template, (tuple, list)):
+                        try:
+                            template_name = template[1 if request.is_mobile else 0]
+                        except IndexError as e:
+                            template_name = template[0]
+                    else:
+                        template_name = template
                 html_string = render_template(template_name, ctx, with_functions)
                 response = make_response(html_string)
                 self.set_cookies(response, with_cookies)
@@ -254,7 +284,7 @@ def render_template(template_name, ctx, with_functions):
             ctx.update(fn())
     if not isinstance(ctx,dict):
         return ctx
-    return render(template_name, ctx)
+    return render(template_name, ctx=ctx)
     
 import flask
 flask._url_for = flask.url_for
@@ -269,31 +299,36 @@ def url_for(endpoint, _args=(), **values):
         if not _args:
             _args = request.args
 
-    is_https = endpoint in current_app.ssl_required_endpoints
+    is_https_request = bool(current_app.is_ssl_request())
+    is_https_required = bool(endpoint in current_app.ssl_required_endpoints)
+#    print "https: request=>%s, required=>%s" % (is_https_request, is_https_required)
+
     if '_https' in values and values['_https'] == True:
         is_https = True
         del values['_https']
-    if bool(is_https) != bool(current_app.is_ssl_request()) and endpoint != ".static":
+    if is_https_request != is_https_required and endpoint != ".static":
         values['_external'] = True
     result = flask._url_for(endpoint, **values)
 
     # localhost -> app.config["HTTP_HOST"]
     result = result.replace('localhost', app.config["HTTP_HOST"])
 
-
-    if is_https and (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
+#    if (is_https_request or is_https_required) and \
+    if (is_https_required) and \
+       (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')):
         if result.startswith('http://'):
             result = 'https://' + result[len('http://'):]
             items = result.split("/",3)
             items[2] = items[2].split(":")[0]
             result = "/".join(items)
-    if current_app.is_ssl_request() and not is_https and result.startswith('http://'):
+
+    if is_https_request and not is_https_required and result.startswith('http://'):
         items = result.split("/",3)
         port = current_app.config.get("EXT_HTTP_PORT") or current_app.config['HTTP_PORT']
         items[2] = items[2].split(":")[0] + (
             ":%s" % port if int(port) != 80 else "")
         result = "/".join(items)
-        
+
     if hasattr(_args, "lists"):
         args = [(k,v) for k, vs in _args.lists for v in vs]
     else:

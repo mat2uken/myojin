@@ -48,26 +48,27 @@ class CustomRequest(Request):
     def is_post(self):
         return self.method.upper() == 'POST'
 
-    @property
-    def is_smart(self):
-        ret = getattr(self, '_is_smart', None)
+    def judge_mobile(self):
+        ret = getattr(self, '_is_mobile', None)
         if ret is None:
-            def _is_smart_():
+            def _is_mobile_():
                 ua = self.environ.get('HTTP_USER_AGENT', None)
                 if ua is not None:
                     self.ua = ua
                     return mobile_re.match(ua.lower()) is not None
-            self._is_smart = _is_smart_()
-            ret = self._is_smart
+            self._is_mobile = _is_mobile_()
+            ret = self._is_mobile
         return ret
+    is_mobile = property(judge_mobile, None)
 
     def _is_find_ua(self, string):
-        ret = getattr(self, string, None)
+        key = '_is_' + string
+        ret = getattr(self, key, None)
         if ret is None:
             ua = self.environ.get('HTTP_USER_AGENT', None)
             self.ua = ua
             ret = False if ua is None else ua.lower().find(string) > -1
-            setattr(self, '_is_' + string, ret)
+            setattr(self, key, ret)
         return ret
 
     @property
@@ -278,7 +279,7 @@ class CustomFlask(Flask):
             environ = request.environ
             if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
                 server_name = (
-                    app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
+                    app.config.get('SSL_HOST', None) or app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
                     ).split(":")[0]
 
                 query_string = environ.get('QUERY_STRING', '')
@@ -303,7 +304,7 @@ class CustomFlask(Flask):
         return Flask.__call__(self,environ, start_response)
         
     def init_middleware(self):
-        from myojin.applogging import initlogging
+        from myojin.logging import initlogging
         initlogging(self)
         session_opts = {
             #'session.type':'ext:memcached',

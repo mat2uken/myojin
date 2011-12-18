@@ -230,6 +230,7 @@ class CustomFlask(Flask):
         return decorator
         
     def add_url_rule(self, rule, endpoint=None, view_func=None, debug_only=False, **options):
+        if endpoint:endpoint = endpoint.replace("___",".")
         if not debug_only or self.config.get("DEBUG"):
             super(CustomFlask, self).add_url_rule(rule, endpoint, view_func, **options)
             

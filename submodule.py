@@ -32,7 +32,7 @@ import flask
 class Module(flask.Module):
     def __init__(self, *args,**kws):
         super(Module, self).__init__(*args,**kws)
-        self._record(self.add_state)
+        getattr(self,"_record",getattr(self,"record"))(self.add_state)
         self.ssl_required_endpoints = []
     def add_state(self, state):
         self._state = state
@@ -46,9 +46,9 @@ class Module(flask.Module):
             for c in state.app.url_map._rules[-1]._converters.values():
                 c.view_func = view_func
 
-        self._record(setattr_view_func_to_conv)
+        getattr(self,"_record",getattr(self,"record"))(setattr_view_func_to_conv)
         
-        @self._record
+        @getattr(self,"_record",getattr(self,"record"))#self._record
         def append_ssl_required_endpoints(state):
             state.app.ssl_required_endpoints.update(
                 '%s.%s' % (self.name, endpoint)
@@ -139,7 +139,7 @@ class SubModule(object):
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 
-            endpoint = self.name + "." + f.__name__
+            endpoint = self.name + "___" + f.__name__
             if ssl_required:
                 self.ssl_required_endpoints.append(endpoint)
 ##                decos += (self.ssl_redirect,)

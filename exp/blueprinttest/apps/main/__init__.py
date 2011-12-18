@@ -8,12 +8,13 @@ mainpage = Blueprint('main', __name__ ,
                         template_folder="templates2")
 page = mainpage
 @mainpage.route('/', defaults={'page': 'index'})
-@mainpage.route('/aaa/<page>', endpoint='aaa') 
+@mainpage.route('/aaa/', endpoint='aaa') 
+@mainpage.route('/aaa/', endpoint='aaa___bbb') 
 #@mainpage.route('/<page>')
-def show(page):
+def show(page=None):
     ctx = _request_ctx_stack.top
     print ctx.app,mainpage
-    #print url_for(".abc.show")
+    print url_for("main.aaa.bbb")
     return render_template('index.html')
     try:
         return render_template('pages/%s.html' % page)

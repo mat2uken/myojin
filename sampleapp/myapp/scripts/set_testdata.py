@@ -1,12 +1,8 @@
 # encoding: utf-8
-import random
-
-from datetime import datetime, date
-from dateutil import relativedelta
 from .. import app
 from ..models import *
-import os.path
-from myojin.utils import drop_all_tables    
+from myojin.utils import drop_all_tables
+
 def main():
     db.metadata.bind = db.engine
     db.metadata.drop_all()
@@ -37,4 +33,3 @@ def main():
         for x in range(7):
             Memo(user=user, text=u"%s" % x ).save()
     db.session.commit()
-    return

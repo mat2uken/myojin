@@ -11,7 +11,7 @@ Message:
 %(message)s
 """
 
-FILE_LOG_FORMAT = """%(levelname)s %(asctime)s %(pathname)s:%(lineno)s >>> %(message)s"""
+FILE_LOG_FORMAT = """>>> %(levelname)s %(asctime)s %(pathname)s:%(lineno)s >>> %(message)s"""
 
 SYSLOG_FORMAT = FILE_LOG_FORMAT
 

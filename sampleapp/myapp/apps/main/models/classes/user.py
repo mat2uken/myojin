@@ -1,37 +1,16 @@
 # encoding: utf-8
-
-from myojin.modelutil import BaseModel, QueryProperty, CustomQuery
-## from .guest import *
-from myojin.funcutils import getattrs, setattrs, keyword_only
-from ..... import db, app
-from myojin.auth import UserModelBase
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import contains_eager
-from sqlalchemy.sql.expression import desc, distinct
 import hashlib
-from datetime import datetime, date, timedelta
+from datetime import datetime
+from myojin.modelutil import BaseModel, QueryProperty, CustomQuery
+from myojin.funcutils import keyword_only
+from myojin.auth import UserModelBase
+from myojin.mailutils import sendmail
+from ..... import db, app
 
-def gen_initial_user_types():
-    return dict(default=dict(
-        use_basefile_expiry=True,
-        basefile_expiry_td=timedelta(days=7),
-        max_upload=2000,
-        use_max_upload=False,
-        month_max_upload=2000,
-        use_month_max_upload=False,
-        isset_filelimit=False,
-        ))
+def _check_expire_date(expire_date):
+    return datetime.strptime(expire_date, '%Y%m%d%H%M%S') > datetime.now()
 
-
-ETERNAL = date(3000,1,1)
-def is_eternal(dt):
-    return dt >= ETERNAL
-    
-from .. import tables
-from sqlalchemy.sql import func,select,and_, exists
-from decimal import _Infinity
-
-class Memo(BaseModel, UserModelBase):
+class Memo(BaseModel):
     @keyword_only
     def __init__(self, user=None, text=""):
         BaseModel.init_basemodel(
@@ -40,46 +19,28 @@ class Memo(BaseModel, UserModelBase):
             text=text
             )
 
+class Image(BaseModel):
+    def __init__(self, *args, **kws):
+        BaseModel.init_basemodel(**locals())
+
 class User(BaseModel, UserModelBase):
 
-    def update_last_login_dt(self):
-        self.last_login_dt = datetime.now()
-
-    def after_login(self):
-        self.update_last_login_dt()
-        db.session.commit()
-
-    def login(self):
-        super(User, self).login()
-        self.after_login()
-
-    
     @keyword_only
-    def __init__(self, email, nickname, password=None, is_activated=False, config=None, memos=None):
+    def __init__(self, email, password=None, is_activated=False):
         BaseModel.init_basemodel(
             self=self,
-            config=config or dict(),
             email=email,
-            memos=memos or [],
-            nickname=nickname,
             is_activated=is_activated,
             )
-        assert password
         if password:
             self.set_password(password)
         else:
             self.set_unusable_password()
-        # set default notify
-        self.notify = dict(announcement=True,
-                           pc_upload=True, pc_download=True,
-                           nts_upload=True, nts_download=True,
-                           post_success=True, post_fail=True)
-
         
-    __repratts__  = ('nickname',)
-    child_args = ('shared_folders', 'basefiles', 'user_news',)
+    __repratts__  = ('email',)
 
     salt = "AnjbRbAeiPdib"
+
     @classmethod
     def default_filter(cls, query, table):
         return BaseModel.default_filter(query, table).filter_by(is_activated=True)
@@ -90,59 +51,63 @@ class User(BaseModel, UserModelBase):
     
     unactivated_query = QueryProperty(CustomQuery, default_filter_name='default_unactivated_filter')
 
+    @classmethod
+    def activate_user(cls, email, token, expire_date):
+        user = cls.unactivated_query.filter_by(email=email).first()
+        if user is not None and user.activate(token, expire_date):
+            pass
+        else:
+            raise InvalidActivationCode()
+
+    def activate_email(self, email, token, expire_date):
+        if self.activate(token, expire_date):
+            self.email = email
+        else:
+            raise InvalidActivationCode()
+
+    @classmethod
+    def not_complete_user(cls, email):
+        user = cls.query_all.filter_by(email=email).first()
+        if user is not None:
+            raise ExistsUser(user)
+        else:
+            return None
+
     @property
     def activation_code(self):
         assert isinstance(self.id, (int, long))
-        s = "%s$%s$%s$%s$%s" % (self.salt, self.id, self.nickname,self.email,self.modify_dt.strftime("%Y%m%d%H%M%S"))
+        s = "%s$%s$%s$%s" % (self.salt, self.id, self.email, self.modify_dt.strftime("%Y%m%d%H%M%S"))
         return hashlib.sha1(s).hexdigest()
-        modify_dt
-        return "todo:make:hash:%s" % self.id
 
-    def activate(self, activation_code):
-        assert isinstance(activation_code, basestring)
-        if isinstance(activation_code,unicode):
-            activation_code = activation_code.encode("utf-8")
-        if activation_code == self.activation_code:
-            self.is_activated = True
-            self.account_status = get_joined_service_status()
-            self.save()
-            db.session.add(self)
-            db.session.commit()
-            return True
-        return False
-
-    def set_new_email(self, new_email, raw_password):
-        if self.check_password(raw_password):
-            unique = self.query.filter_by(email=new_email).first()
-            if unique is None:
-                self.new_email = new_email
-                self.save()
-                db.session.add(self)
-                db.session.commit()
-                return True
+    def activate(self, activation_code, expire_date):
+        if _check_expire_date(expire_date):
+            if activation_code == self.activation_code:
+                self.is_activated = True
+                return
             else:
-                return False
+                raise InvalidActivationCode()
         else:
-            return False
+            raise InvalidActivationCode()
 
-    def activate_new_email(self, activation_code):
-        if self.new_email is not None:
-            if self.activate(activation_code):
-                self.email = self.new_email
-                self.new_email = None
-                db.session.flush()
-                return True
-            else:
-                return False
-        else:
-            return False
+    def goodbye(self, advice):
+        self.exit_email = self.email
+        self.email = None
+        self.exit_advice = advice
+        self.deleted = True
+        self.exit_dt = datetime.now()
+
+    def is_unique_email(self, email):
+        if self.email != email:
+            return User.query_all.filter(User.email==email).count() == 0
+        return True
 
 @UserModelBase.current_user_getter
 def get_current_user():
     return User.get_current_user()
 
-class Image(BaseModel):
-    def __init__(self, *args, **kws):
-        BaseModel.init_basemodel(**locals())
+class InvalidActivationCode(Exception): pass
+class ExistsUser(Exception):
+    def __init__(self, user):
+        self.user = user
 
-__all__ = ['User', 'Memo', 'Image']
+__all__ = ['User', 'Memo', 'Image', 'InvalidActivationCode', 'ExistsUser']

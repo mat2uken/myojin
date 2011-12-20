@@ -3,7 +3,7 @@
 from myojin.modelutil import BaseModel, QueryProperty, CustomQuery
 ## from .guest import *
 from myojin.funcutils import getattrs, setattrs, keyword_only
-from ..... import db, app, debug
+from ..... import db, app
 from myojin.auth import UserModelBase
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import contains_eager

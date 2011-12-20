@@ -5,7 +5,10 @@ from flask.globals import current_app
 
 from .. import mailutils
 
-import boto.sns
+try:
+    import boto.sns
+except:
+    pass
 
 class SNSHandler(logging.Handler):
     def __init__(self, topic_name, subject="", region='ap-northeast-1',

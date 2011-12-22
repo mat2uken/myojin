@@ -4,7 +4,7 @@ memo = Table(
     "memo", db.metadata,
     Column('id', BigInteger, primary_key=True),
     Column('user_id', bigInteger, ForeignKey('user.id')),
-    Column('text', UnicodeText(), default="", nullable=False,),
+    Column('text', UnicodeText(), default=u"", nullable=False,),
     Column('deleted', Boolean(), default=False),
     )
 

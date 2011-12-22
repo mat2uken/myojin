@@ -4,10 +4,8 @@ from . import get_static_file_path
 
 def main(args=None):
     app_name = app.root_path.rsplit('/', 1)[1]
-    if args is None:
-        args = 'pc'
-    namespaces = 'PC_JS_NAMESPACES' if args == 'pc' else 'MOBILE_JS_NAMESPACES'
-    save_filename = '%s%s.js' % (app_name, ('' if args == 'pc' else '.mobile'))
+    namespaces = 'USE_JS_NAMESPACES'
+    save_filename = '%s.js' % app_name
 
     build_args = [
         'python',

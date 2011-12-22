@@ -257,6 +257,7 @@ class CustomFlask(Flask):
         
     def __init__(self, *args, **kws):
         super(CustomFlask,self).__init__(*args, **kws)
+        self.preserved = False
         self.app = self
         from flask.globals import _request_ctx_stack
         _request_ctx_stack.push(self)

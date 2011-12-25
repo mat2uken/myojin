@@ -33,7 +33,7 @@ import flask
 class Module(flask.Module):
     def __init__(self, *args,**kws):
         super(Module, self).__init__(*args,**kws)
-        self._record(self.add_state)
+        getattr(self,"_record",getattr(self,"record"))(self.add_state)
         self.ssl_required_endpoints = []
     def add_state(self, state):
         self._state = state
@@ -47,9 +47,9 @@ class Module(flask.Module):
             for c in state.app.url_map._rules[-1]._converters.values():
                 c.view_func = view_func
 
-        self._record(setattr_view_func_to_conv)
+        getattr(self,"_record",getattr(self,"record"))(setattr_view_func_to_conv)
         
-        @self._record
+        @getattr(self,"_record",getattr(self,"record"))#self._record
         def append_ssl_required_endpoints(state):
             state.app.ssl_required_endpoints.update(
                 '%s.%s' % (self.name, endpoint)
@@ -140,7 +140,7 @@ class SubModule(object):
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 
-            endpoint = self.name + "." + f.__name__
+            endpoint = self.name + "___" + f.__name__
             if ssl_required:
                 self.ssl_required_endpoints.append(endpoint)
 ##                decos += (self.ssl_redirect,)
@@ -217,12 +217,6 @@ class SubModule(object):
                     formdata = json2multidict(formdata['data'])
                 info = form(formdata, csrf_enabled=False)
 
-##                 if not info.is_submitted():
-##                     return f(form=info, *args,**kws)
-##                 if not info.validate():
-##                     flask.abort(400)
-##                for k,v in info.data.items():
-##                    print 'form:',k,v
                 return f(form=info, *args,
                          **dict(kws, **dict(
                              (k,(getattr(info, k) if hasattr(v,"stream") else v))
@@ -306,8 +300,6 @@ def url_for(endpoint, _args=(), **values):
     from flask import current_app, request
     app = current_app
     environ = request.environ
-##     if "logout" in endpoint:
-##         print app.config['SERVER_NAME'], environ.get('HTTP_HOST'), environ.get('SERVER_NAME')
     if endpoint == ".":
         endpoint = request.endpoint
         if not _args:
@@ -342,7 +334,6 @@ def url_for(endpoint, _args=(), **values):
         items[2] = items[2].split(":")[0] + (
             ":%s" % port if int(port) != 80 else "")
         result = "/".join(items)
-        #result = result.replace('http://', 'https://')
 
     if hasattr(_args, "lists"):
         args = [(k,v) for k, vs in _args.lists for v in vs]
@@ -354,3 +345,4 @@ def url_for(endpoint, _args=(), **values):
     else:
         return result
 flask.url_for = url_for
+

@@ -12,7 +12,7 @@ from unicodedata import normalize
 from myojin.mako import render
 from flask.globals import current_app
 
-EXTERNAL_CONFIG = current_app.config['EXTERNAL_CONFIG']
+EXTERNAL_CONFIG = current_app.config.get('EXTERNAL_CONFIG',{})
 
 class Mailer(object):
     def __init__(self, app=None):

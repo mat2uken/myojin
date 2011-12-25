@@ -78,9 +78,6 @@ def verify_urlsafe_hmac_digest(dt_digest, key, msg, expiry_timedelta):
 if __name__=="__main__":
     print random_chars("abc", 3)
     kms=[("KEY", "ABCDEFG"), ("KeY", "ABCDEFG"), ("KEY", "ABCDEFGH"), ]
-##     for key,msg in kms:
-##         d = urlsafe_hmac_digest(key, msg)
-        #print d, len(d)
     key = "key"
     msg = "msg"
     d = urlsafe_hmac_digest(key, msg)
@@ -88,10 +85,6 @@ if __name__=="__main__":
     print verify_urlsafe_hmac_digest(d,key,msg, td)
     import sys
     print d,len(d)
-    #print d
-    #sys.exit()
-    print '-----'
-    print '-----'
     print urlsafe_hmac_digest(*kms[0])
     assert verify_urlsafe_hmac_digest(
         urlsafe_hmac_digest(*kms[0]),

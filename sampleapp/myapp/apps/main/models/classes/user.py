@@ -54,16 +54,13 @@ class User(BaseModel, UserModelBase):
     @classmethod
     def activate_user(cls, email, token, expire_date):
         user = cls.unactivated_query.filter_by(email=email).first()
-        if user is not None and user.activate(token, expire_date):
-            pass
-        else:
+        if user is None:
             raise InvalidActivationCode()
+        user.activate(token, expire_date)
 
     def activate_email(self, email, token, expire_date):
-        if self.activate(token, expire_date):
-            self.email = email
-        else:
-            raise InvalidActivationCode()
+        self.activate(token, expire_date)
+        self.email = email
 
     @classmethod
     def not_complete_user(cls, email):
@@ -83,7 +80,6 @@ class User(BaseModel, UserModelBase):
         if _check_expire_date(expire_date):
             if activation_code == self.activation_code:
                 self.is_activated = True
-                return
             else:
                 raise InvalidActivationCode()
         else:

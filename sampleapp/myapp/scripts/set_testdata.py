@@ -6,14 +6,9 @@ from myojin.utils import drop_all_tables
 def main():
     db.metadata.bind = db.engine
     db.metadata.drop_all()
-    #drop_all_tables(db)
-    
     db.metadata.create_all()
-
-    # external sites
-    #init_external()
-
     db.session.flush()
+
     # ユーザーの作成
     print "create first_user..."
     first_user = User(email="mat2uken@cerevo.com", password='myojin').save()

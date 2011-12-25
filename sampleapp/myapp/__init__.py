@@ -22,6 +22,7 @@ def init():
 
 app.init = (init)
 from .core.globals import current_app
+from .core.globals import current_user
 #from .apps.main import models
 
 #from .apps.main.models.tests import test_classes

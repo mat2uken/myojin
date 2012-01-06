@@ -1,3 +1,4 @@
+# coding: utf-8
 from flaskext.wtf import QuerySelectMultipleField, QuerySelectField
 
 
@@ -75,7 +76,6 @@ class CustomQuerySelectField(QuerySelectField):
             self._set_data(obj)
         return self._data
 
-# coding: utf-8
 from flaskext.wtf import Form, TextField, TextAreaField, QuerySelectField, QuerySelectMultipleField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField, SelectMultipleField, IntegerField
 
 #def getrows(form=None, _search=False, rows=None, page=None, sidx=None, sord=None):

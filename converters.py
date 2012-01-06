@@ -108,7 +108,6 @@ class BaseModelConverter(BaseConverter):
                 attr_value = getattr(value, self.attr)
             key = self.HMAC_KEY
             msg = attr_value + self.tokenkind
-            print attr_value, urlsafe_hmac_digest(key=key, msg=msg)
             return attr_value + urlsafe_hmac_digest(key=key, msg=msg)
         import werkzeug.local
         assert isinstance(value, (self.model, werkzeug.local.LocalProxy, list, tuple))

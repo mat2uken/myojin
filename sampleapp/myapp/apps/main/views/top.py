@@ -3,7 +3,7 @@
 import datetime
 from myojin import submodule, utils as flaskext_utils
 from myojin.rum import rum_response
-from ....core.decorators import admin_required, admin_ip_check, login_required
+from ....core.decorators import admin_required, login_required
 from .... import current_app
 from flask import request, session, make_response, app
 from myojin.utils import redirect, redirect_to

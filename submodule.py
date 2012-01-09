@@ -203,13 +203,11 @@ class SubModule(object):
                 try:
                     if request.method == 'GET':
                         formdata = request.args
-                    elif request.content_type.startswith("application/json"):
-                        formdata = dict(data=request.stream.read())
-                    else:
-                        if request.content_type.startswith("application/json"):
+                    elif request.content_type is not None and \
+                         request.content_type.startswith("application/json"):
                             formdata = dict(data=request.stream.read())
-                        else:
-                            formdata = request.form
+                    else:
+                        formdata = request.form
                 except IOError as e:
                     flask.abort(400)
 

@@ -203,7 +203,7 @@ class SubModule(object):
                 try:
                     if request.method == 'GET':
                         formdata = request.args
-                    elif request.content_type is not None and \
+                    elif isinstance(request.content_type, basestring) and \
                          request.content_type.startswith("application/json"):
                             formdata = dict(data=request.stream.read())
                     else:

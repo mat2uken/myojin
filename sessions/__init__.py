@@ -279,7 +279,7 @@ class CustomFlask(Flask):
             from flask import request, jsonify, session
             from flask import Module, abort, redirect
             environ = request.environ
-            if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
+            if not app.is_ssl_request() and app.in_ssl_required_endpoint(request.endpoint):
                 server_name = (
                     app.config.get('SSL_HOST', None) or app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
                     ).split(":")[0]
@@ -289,7 +289,15 @@ class CustomFlask(Flask):
                 path_info = request.environ['PATH_INFO']
                 return redirect("https://%s%s%s%s" % (server_name, path_info, query_splitter, query_string))
             return 
-        
+
+    def make_endpoint_for_ssl_redirection(self, endpoint):
+        if endpoint is not None:
+            splited_endpoint = endpoint.split('.')
+            return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
+
+    def in_ssl_required_endpoint(self, endpoint):
+        return self.make_endpoint_for_ssl_redirection(endpoint) in self.ssl_required_endpoints
+
     def wsgi_app(self, environ, start_response):
         self.debug_out.buf = StringIO()
         session = environ['beaker.session']

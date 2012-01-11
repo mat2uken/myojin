@@ -159,18 +159,6 @@ class SubModule(object):
             return f
         return decorator
 
-##    def ssl_redirect(self, f):
-##        @wraps(f)
-##        def decorated(*args, **kwargs):
-##            from flask import current_app, request
-##            endpoint = self.name + "." + f.__name__
-##            if (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')) and \
-##               (endpoint in self.ssl_required_endpoints and not current_app.is_ssl_request()):
-##                from myojin.utils import redirect
-##                return redirect(request.url.replace("http:", "https:"), code=302)
-##            return f(*args, **kwargs)
-##        return decorated
-
     def redirect_to(self, condition, _to, anchor=None, **kwargs):
         def decorator(f):
             @wraps(f)
@@ -306,7 +294,7 @@ def url_for(endpoint, _args=(), **values):
             _args = request.args
 
     is_https_request = bool(current_app.is_ssl_request())
-    is_https_required = bool(endpoint in current_app.ssl_required_endpoints)
+    is_https_required = current_app.in_ssl_required_endpoint(endpoint)
 #    print "https: request=>%s, required=>%s" % (is_https_request, is_https_required)
 
     if '_https' in values and values['_https'] == True:

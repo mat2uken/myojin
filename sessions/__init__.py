@@ -86,7 +86,8 @@ class CustomRequest(Request):
 from datetime import datetime, timedelta
 import random
 import time
-from beaker.session import getpid
+#from beaker.session import getpid
+from os import getpid
 from beaker.crypto import hmac as HMAC, hmac_sha1 as SHA1, md5
 class CustomBeakerSession(beaker.session.Session):
     def _create_id(self):
@@ -229,6 +230,7 @@ class CustomFlask(Flask):
         return decorator
         
     def add_url_rule(self, rule, endpoint=None, view_func=None, debug_only=False, **options):
+        if endpoint:endpoint = endpoint.replace("___",".")
         if not debug_only or self.config.get("DEBUG"):
             super(CustomFlask, self).add_url_rule(rule, endpoint, view_func, **options)
             
@@ -277,7 +279,7 @@ class CustomFlask(Flask):
             from flask import request, jsonify, session
             from flask import Module, abort, redirect
             environ = request.environ
-            if not app.is_ssl_request() and request.endpoint in app.ssl_required_endpoints:
+            if not app.is_ssl_request() and app.in_ssl_required_endpoint(request.endpoint):
                 server_name = (
                     app.config.get('SSL_HOST', None) or app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
                     ).split(":")[0]
@@ -287,7 +289,15 @@ class CustomFlask(Flask):
                 path_info = request.environ['PATH_INFO']
                 return redirect("https://%s%s%s%s" % (server_name, path_info, query_splitter, query_string))
             return 
-        
+
+    def make_endpoint_for_ssl_redirection(self, endpoint):
+        if endpoint is not None:
+            splited_endpoint = endpoint.split('.')
+            return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
+
+    def in_ssl_required_endpoint(self, endpoint):
+        return self.make_endpoint_for_ssl_redirection(endpoint) in self.ssl_required_endpoints
+
     def wsgi_app(self, environ, start_response):
         self.debug_out.buf = StringIO()
         session = environ['beaker.session']

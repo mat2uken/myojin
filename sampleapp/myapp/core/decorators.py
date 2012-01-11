@@ -1,6 +1,6 @@
-from .globals import current_user
+from .globals import current_user, current_app
 from functools import wraps
-from flask import request, session, url_for, redirect
+from flask import request, url_for, redirect, jsonify
 
 def login_required(redirect_to=lambda *args, **kws:url_for("main.top.login", \
                    next='/%s%s' % (request.script_root, request.url.replace(request.url_root, ''))),
@@ -8,65 +8,25 @@ def login_required(redirect_to=lambda *args, **kws:url_for("main.top.login", \
     def decorator(f):
         @wraps(f)
         def decorated(*args,**kws):
-            #import time;time.sleep(10)
             if not is_authenticated(*args,**kws):
+                current_app.logger.debug('not logged-in user: user=>%s, path=>%s' % (current_user, request.path))
+                if request.is_xhr:
+                    return jsonify(result='ok', __location__=url_for('main.top.login'))
                 return redirect(redirect_to(*args,**kws))
             return f(*args,**kws)
         return decorated
     return decorator
-    
+
 from werkzeug.exceptions import NotFound
 def admin_required():
     def decorator(f):
         @wraps(f)
         def decorated(*args,**kws):
             if current_user.is_authenticated() and current_user.is_admin:
+                current_app.logger.debug('logged-in by admin user: user=>%s, path=>%s' % (current_user, request.path))
                 return f(*args,**kws)
-            return redirect(url_for('main.top.adminlogin'))
-        return decorated
-    return decorator
-
-def post_session_id():
-    def decorator(f):
-        @wraps(f)
-        def decorated(*args,**kws):
-            from flask.globals import _request_ctx_stack, request, current_app
-            sid = request.form.get('sid', request.args.get('sid', None))
-            if sid:
-                Session = type(_request_ctx_stack.top.session)
-                arg_session = Session(dict(), id=sid, **current_app.session_middleware.options)
-                arg_session.load()
-                session._form_session = arg_session
-            return f(*args,**kws)
-        return decorated
-    return decorator
-
-from IPy import IP
-def admin_ip_check():
-    def decorator(f):
-        @wraps(f)
-        def decorated(*args,**kws):
-            from .globals import allow_ip_address, reset_allow_ip_address
-            ip_address = allow_ip_address
-            if allow_ip_address is None:
-                from ..models import AllowIPAddress
-                allow = AllowIPAddress.query.first()
-                ip_address = [] if allow is None else allow.ip_address
-                reset_allow_ip_address(ip_address)
-
-            ip_int_set = frozenset(
-                ip.int()
-                for iplist in ip_address
-                for ip_range_str in ip_address
-                for ip in IP(ip_range_str)
-            )
-
-            if IP(request.environ['REMOTE_ADDR']).int() in ip_int_set:
-                return f(*args,**kws)
-            from .. import app
-            app.logger.debug('ip fail!!')
-            app.logger.debug(request.environ['REMOTE_ADDR'])
-            app.logger.debug(allow_ip_address)
-            raise NotFound()
+            else:
+                current_app.logger.debug('logged-in by non-admin user or not logged-in: user=>%s, path=>%s' % (current_user, request.path))
+                return redirect(url_for('admin.top.login'))
         return decorated
     return decorator

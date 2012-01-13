@@ -1,0 +1,66 @@
+${next.body()}
+
+<%def name="csses()">
+    %if current_app.config.get("USE_COMPILED_CSS", False):
+        <link rel="stylesheet" type="text/css" href="/static/dst/css/${latest_rev('css')}/juuichi.css" />
+    %endif
+</%def>
+
+<%def name="scripts()">
+    %if current_app.config.get("USE_COMPILED_JS", False):
+        <script src="/static/dst/js/${latest_rev('js')}/juuichi.js"></script>
+    %else:
+        <script src="/static/js/goog/base.js"></script>
+        <script src="/static/js/deps.js"></script>
+    %endif
+</%def>
+
+<%def name="googRequire(path)">
+    %if not current_app.config.get("USE_COMPILED_JS", False):
+        goog.require('${path}');
+    %endif
+</%def>
+
+<%def name="loadJs(path)">
+    %if not current_app.config.get("USE_COMPILED_JS", False):
+        <script src="/static/js/${path}"></script>
+    %endif
+</%def>
+
+<%def name="loadCss(filename)">
+    %if not current_app.config.get("USE_COMPILED_CSS", False):
+        <link rel="stylesheet" type="text/css" href="/static/css/${filename}" />
+    %endif
+</%def>
+
+<%!
+    def _isTrue(value):
+        if isinstance(value, bool):
+            ret = value
+        else:
+            ret = 'True' == value
+        return 'true' if ret else 'false'
+    def _jsValue(value):
+        if value is None or 'None' == value or len(value) == 0:
+            return 'null'
+        else:
+            return "'" + value.encode('utf-8') + "'"
+    def _toEmptyIfNone(value, repl=None):
+        return ('' if repl is None else repl) if value is None else value
+    def _error(field, tag='span', class_=''):
+        if len(field.errors) == 0:
+            return ''
+        else:
+            markup = '<%(tag)s class="%(class_)s">%(error)s</%(tag)s>'
+            return markup % dict(tag=tag, class_=class_, error=field.errors[0])
+    def _boolean(value):
+        _isTrue(value) if isinstance(value, bool) else _jsValue(value)
+    def _idDisplay(bool, c=''):
+        return 'display: %s;' % (c if bool else 'none')
+%>
+
+<%def name="isTrue(value)">${_isTrue(value) | n}</%def>
+<%def name="jsValue(value)">${_jsValue(value) | n}</%def> 
+<%def name="toEmptyIfNone(value, repl=None)">${_toEmptyIfNone(value, repl=repl)}</%def>
+<%def name="error(field, tag='span', class_='')">${_error(field, tag=tag, class_=class_) | n}</%def>
+<%def name="isDisplay(bool, c='')">${_idDisplay(bool, c=c)}</%def>

@@ -1,18 +1,36 @@
+<%inherit file="./defun.html"/>
+<!DOCTYPE html>
 <html>
-<body>
-${current_user.nickname if current_user else "anonymous"}
-<hr/>
-login:
-%if current_user:
-${current_user.nickname}
-%else:
-anonymous
-%endif
-<br/>
--h--<br/>${next.body()}<br/>
--f--<br/>
-%for arg in [('main.top.userhome',),('main.top.admin',),('main.top.login',),('main.top.logout',),('main.top.users',)]:
-<a href="${url_for(*arg)}">${arg[0]}</a><br/>
-%endfor
-</body>
+    <head>
+        <meta charset="utf-8">
+        <title>${next.title()}</title>
+        <meta name="viewport" content="width=1024" />
+        <meta http-equiv="X-UA-Compatible" content="IE=9" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <link rel="icon" type="image/png" id="favicon" href="/static/ico/favicon.ico" />
+        ${self.csses()}
+        <!--[if lt IE 9]>
+            <script type="text/javascript" src="/static/js/html5.js" charset="utf-8"></script>
+            <script type="text/javascript">createNonSupportedElement();</script>
+        <![endif]-->
+    </head>
+    <body>
+##        ${self.body()}
+        ${current_user.nickname if current_user else "anonymous"}
+        <hr/>
+        login:
+        %if current_user:
+            ${current_user.nickname}
+        %else:
+            anonymous
+        %endif
+        <br/>
+        -h--<br/>${next.body()}<br/>
+        -f--<br/>
+        %for arg in [('main.top.userhome',),('main.top.admin',),('main.top.login',),('main.top.logout',),('main.top.users',)]:
+            <a href="${url_for(*arg)}">${arg[0]}</a><br/>
+        %endfor
+        ${self.scripts()}
+    </body>
 </html>

@@ -1,3 +1,4 @@
+# coding: utf-8
 
 class SizeLimitException(Exception):
     pass
@@ -8,7 +9,6 @@ def default_stream_factory(total_content_length, filename, content_type,
     if total_content_length > 1024 * 500:
         return TemporaryFile('wb+')
     return StringIO()
-
 
 class LimitedFileWrapper(object):
     def __init__(self, file, limit):

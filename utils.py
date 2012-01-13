@@ -47,7 +47,7 @@ def redirect(*args, **kws):
     if current_app.is_ssl_request() and not to.startswith('https'):
         try:
             endpoint = current_app.url_map.bind(request.host, to).match()[0]
-            if endpoint in current_app.ssl_required_endpoints:
+            if current_app.in_ssl_required_endpoint(endpoint):
                 to = "https://%s%s" % (request.host, to)
         except exceptions.NotFound as e:
             pass

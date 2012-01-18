@@ -1,6 +1,6 @@
 # encoding: utf-8
 from myojin.sessions import CustomFlask
-from  .. import __name__
+from .. import __name__
 app = CustomFlask(__name__)
 
 from .middlewares import reigst_middleware

@@ -2,13 +2,13 @@ ${next.body()}
 
 <%def name="csses()">
     %if current_app.config.get("USE_COMPILED_CSS", False):
-        <link rel="stylesheet" type="text/css" href="/static/dst/css/${latest_rev('css')}/juuichi.css" />
+        <link rel="stylesheet" type="text/css" href="/static/dst/css/${latest_rev('css')}/${current_app.root_path.rsplit('/', 1)[1]}.css" />
     %endif
 </%def>
 
 <%def name="scripts()">
     %if current_app.config.get("USE_COMPILED_JS", False):
-        <script src="/static/dst/js/${latest_rev('js')}/juuichi.js"></script>
+        <script src="/static/dst/js/${latest_rev('js')}/${current_app.root_path.rsplit('/', 1)[1]}.js"></script>
     %else:
         <script src="/static/js/goog/base.js"></script>
         <script src="/static/js/deps.js"></script>

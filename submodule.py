@@ -1,4 +1,5 @@
 # coding: utf-8
+import types
 import traceback
 from functools import wraps
 from flask import request, make_response, Response, jsonify
@@ -32,7 +33,7 @@ import flask
 class Module(flask.Module):
     def __init__(self, *args,**kws):
         super(Module, self).__init__(*args,**kws)
-        self._record(self.add_state)
+        getattr(self,"_record",getattr(self,"record"))(self.add_state)
         self.ssl_required_endpoints = []
     def add_state(self, state):
         self._state = state
@@ -46,9 +47,9 @@ class Module(flask.Module):
             for c in state.app.url_map._rules[-1]._converters.values():
                 c.view_func = view_func
 
-        self._record(setattr_view_func_to_conv)
+        getattr(self,"_record",getattr(self,"record"))(setattr_view_func_to_conv)
         
-        @self._record
+        @getattr(self,"_record",getattr(self,"record"))#self._record
         def append_ssl_required_endpoints(state):
             state.app.ssl_required_endpoints.update(
                 '%s.%s' % (self.name, endpoint)
@@ -139,7 +140,7 @@ class SubModule(object):
             if xhr_required:
                 decos = tuple([request_xhr]) + decos
 
-            endpoint = self.name + "." + f.__name__
+            endpoint = self.name + "___" + f.__name__
             if ssl_required:
                 self.ssl_required_endpoints.append(endpoint)
 ##                decos += (self.ssl_redirect,)
@@ -158,26 +159,19 @@ class SubModule(object):
             return f
         return decorator
 
-##    def ssl_redirect(self, f):
-##        @wraps(f)
-##        def decorated(*args, **kwargs):
-##            from flask import current_app, request
-##            endpoint = self.name + "." + f.__name__
-##            if (not current_app.config.get('DEBUG') or current_app.config.get('HTTP_USE_SSL')) and \
-##               (endpoint in self.ssl_required_endpoints and not current_app.is_ssl_request()):
-##                from myojin.utils import redirect
-##                return redirect(request.url.replace("http:", "https:"), code=302)
-##            return f(*args, **kwargs)
-##        return decorated
-
-    def redirect_to(self, condition, to, anchor=None):
+    def redirect_to(self, condition, _to, anchor=None, **kwargs):
         def decorator(f):
             @wraps(f)
             def decorated(*args, **kwargs):
                 if condition():
-                    _anchor = anchor or f.__name__
-                    from myojin.utils import redirect_to
-                    return redirect_to(to, _anchor=_anchor)
+                    to = _to if type(_to) is not types.FunctionType else _to()
+                    if to.find('/') > -1:
+                        from myojin.utils import redirect
+                        return redirect(to, **kwargs)
+                    else:
+                        _anchor = anchor or f.__name__
+                        from myojin.utils import redirect_to
+                        return redirect_to(to, _anchor=_anchor, **kwargs)
                 else:
                     return f(*args, **kwargs)
             return decorated
@@ -197,13 +191,11 @@ class SubModule(object):
                 try:
                     if request.method == 'GET':
                         formdata = request.args
-                    elif request.content_type.startswith("application/json"):
-                        formdata = dict(data=request.stream.read())
-                    else:
-                        if request.content_type.startswith("application/json"):
+                    elif isinstance(request.content_type, basestring) and \
+                         request.content_type.startswith("application/json"):
                             formdata = dict(data=request.stream.read())
-                        else:
-                            formdata = request.form
+                    else:
+                        formdata = request.form
                 except IOError as e:
                     flask.abort(400)
 
@@ -211,12 +203,6 @@ class SubModule(object):
                     formdata = json2multidict(formdata['data'])
                 info = form(formdata, csrf_enabled=False)
 
-##                 if not info.is_submitted():
-##                     return f(form=info, *args,**kws)
-##                 if not info.validate():
-##                     flask.abort(400)
-##                for k,v in info.data.items():
-##                    print 'form:',k,v
                 return f(form=info, *args,
                          **dict(kws, **dict(
                              (k,(getattr(info, k) if hasattr(v,"stream") else v))
@@ -244,7 +230,10 @@ class SubModule(object):
                     return ctx
                 else:
                     if isinstance(template, (tuple, list)):
-                        template_name = template[1 if request.is_smart else 0]
+                        try:
+                            template_name = template[1 if request.is_mobile else 0]
+                        except IndexError as e:
+                            template_name = template[0]
                     else:
                         template_name = template
                 html_string = render_template(template_name, ctx, with_functions)
@@ -297,15 +286,13 @@ def url_for(endpoint, _args=(), **values):
     from flask import current_app, request
     app = current_app
     environ = request.environ
-##     if "logout" in endpoint:
-##         print app.config['SERVER_NAME'], environ.get('HTTP_HOST'), environ.get('SERVER_NAME')
     if endpoint == ".":
         endpoint = request.endpoint
         if not _args:
             _args = request.args
 
     is_https_request = bool(current_app.is_ssl_request())
-    is_https_required = bool(endpoint in current_app.ssl_required_endpoints)
+    is_https_required = current_app.in_ssl_required_endpoint(endpoint)
 #    print "https: request=>%s, required=>%s" % (is_https_request, is_https_required)
 
     if '_https' in values and values['_https'] == True:
@@ -333,7 +320,6 @@ def url_for(endpoint, _args=(), **values):
         items[2] = items[2].split(":")[0] + (
             ":%s" % port if int(port) != 80 else "")
         result = "/".join(items)
-        #result = result.replace('http://', 'https://')
 
     if hasattr(_args, "lists"):
         args = [(k,v) for k, vs in _args.lists for v in vs]
@@ -345,3 +331,4 @@ def url_for(endpoint, _args=(), **values):
     else:
         return result
 flask.url_for = url_for
+

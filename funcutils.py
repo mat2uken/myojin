@@ -1,5 +1,16 @@
 from functools import wraps
 
+def caching(f):
+    @wraps(f)
+    def decorated(self, *args, **kws):
+        key = '_cached_' + f.__name__
+        result = getattr(self, key, None)
+        if result is None:
+            result = f(self, *args, **kws)
+            setattr(self, key, result)
+        return result
+    return decorated
+
 def getattrs(obj, attrnames, default=None):
     attrs = attrnames.split(".") if isinstance(attrnames, basestring) else attrnames
     return _getattrs(obj, attrs, default)

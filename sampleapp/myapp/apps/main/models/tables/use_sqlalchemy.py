@@ -10,6 +10,7 @@ from sqlalchemy import ForeignKeyConstraint,UniqueConstraint
 from datetime import datetime, date, timedelta
 from sqlalchemy.sql.expression import desc
 from sqlalchemy import schema
+from myojin.sqlalchemyutil import EnumStatus
 assert str(db.engine.url) != 'sqlite://', "must be initialized"
 
 if db.engine.name == 'sqlite':

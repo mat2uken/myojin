@@ -22,7 +22,7 @@ mapper(
 
 mapper(
     Image, image, extension=MyojinMapperExt(),
-    #order_by=user.c.id,
+    order_by=image.c.id,
     properties=dict(
         ))
 

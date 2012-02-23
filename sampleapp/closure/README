@@ -1,0 +1,4 @@
+# coding: utf-8
+
+# deps.jsを生成
+python closure/library/closure/bin/build/depswriter.py --root_with_prefix="kanda/static/js/kanda/ ../kanda" > kanda/static/js/deps.js

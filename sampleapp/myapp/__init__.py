@@ -3,7 +3,7 @@ import sys;reload(sys);sys.setdefaultencoding('utf-8')
 import flaskext
 from flaskext import script    # <- important for wsgi
 from myojin import sessions  # <- important for wsgi
-from .core.app import app, debug
+from .core.app import app
 
 def init():
     global db
@@ -22,6 +22,7 @@ def init():
 
 app.init = (init)
 from .core.globals import current_app
+from .core.globals import current_user
 #from .apps.main import models
 
 #from .apps.main.models.tests import test_classes

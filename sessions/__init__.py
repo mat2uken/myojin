@@ -85,7 +85,10 @@ class CustomRequest(Request):
 from datetime import datetime, timedelta
 import random
 import time
-from beaker.session import getpid
+try:
+    from beaker.session import getpid
+except ImportError as e:
+    from os import getpid
 from beaker.crypto import hmac as HMAC, hmac_sha1 as SHA1, md5
 class CustomBeakerSession(beaker.session.Session):
     def _create_id(self):

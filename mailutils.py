@@ -48,6 +48,7 @@ class Mailer(object):
             msg['From'] = str(Header('%s' % sender_from_name, encoding)) + ' <%s>' % sender_from
         else:
             msg['From'] = sender_from
+        msg['Reply-To'] = msg['From']
 
         if isinstance(recipients, list) or isinstance(recipients, tuple):
             msg['To'] = ','.join(recipients)

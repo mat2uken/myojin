@@ -292,7 +292,8 @@ class CustomFlask(Flask):
     def make_endpoint_for_ssl_redirection(self, endpoint):
         if endpoint is not None:
             splited_endpoint = endpoint.split('.')
-            return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
+            if not len(splited_endpoint) < 3:
+                return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
 
     def in_ssl_required_endpoint(self, endpoint):
         return self.make_endpoint_for_ssl_redirection(endpoint) in self.ssl_required_endpoints

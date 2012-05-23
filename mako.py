@@ -22,6 +22,8 @@ def init(app,globals=None):
         else:
             return abs_url_path.replace('https', 'http')
     _globals['static'] = static
+    static_misc_url_path = app.config.get('STATIC_MISC_URL_PATH', '/static')
+    _globals['static_for_misc'] = lambda p: os.path.join(static_misc_url_path, p)
 _globals = None
 
 def get_template(template_name):

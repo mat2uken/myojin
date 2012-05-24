@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from mako.lookup import TemplateLookup
 _lookup = None
 from flask import request, session, url_for
+from myojin import custom_script
 
 def init(app,globals=None):
     global _globals, _lookup
@@ -14,14 +15,23 @@ def init(app,globals=None):
 
     import os
     from flask import request
+    production_config = custom_script.read_pyconfig(app, 'production.cfg')
     static_url_path = app.config.get('STATIC_URL_PATH', '/static')
+    static_url_path_prod = production_config.get('STATIC_URL_PATH')
     def static(p):
-        ap = os.path.join(static_url_path, p)
+        if request.args.get('production') == '1':
+            ap = os.path.join(static_url_path_prod, p)
+        else:
+            ap = os.path.join(static_url_path, p)
         return ap.replace('http', 'https') if request.is_secure else ap.replace('https', 'http')
     _globals['static'] = static
     static_misc_url_path = app.config.get('STATIC_MISC_URL_PATH', '/static')
+    static_misc_url_path_prod = production_config.get('STATIC_MISC_URL_PATH')
     def static_for_misc(p):
-        ap = os.path.join(static_misc_url_path, p)
+        if request.args.get('production') == '1':
+            ap = os.path.join(static_misc_url_path_prod, p)
+        else:
+            ap = os.path.join(static_misc_url_path, p)
         return ap.replace('http', 'https') if request.is_secure else ap.replace('https', 'http')
     _globals['static_for_misc'] = static_for_misc
 _globals = None

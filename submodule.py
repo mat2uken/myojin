@@ -276,7 +276,12 @@ def render_template(template_name, ctx, with_functions):
             ctx.update(fn())
     if not isinstance(ctx,dict):
         return ctx
-    return render(template_name, ctx=ctx)
+    try:
+        return render(template_name, ctx=ctx)
+    except:
+        import traceback
+        from kanda import app
+        app.logger.debug(traceback.format_exc())
     
 import flask
 flask._url_for = flask.url_for

@@ -16,14 +16,14 @@ def init(app,globals=None):
     from flask import request
     static_url_path = app.config.get('STATIC_URL_PATH', '/static')
     def static(p):
-        abs_url_path = os.path.join(static_url_path, p)
-        if request.is_secure:
-            return abs_url_path.replace('http', 'https')
-        else:
-            return abs_url_path.replace('https', 'http')
+        ap = os.path.join(static_url_path, p)
+        return ap.replace('http', 'https') if request.is_secure else ap.replace('https', 'http')
     _globals['static'] = static
     static_misc_url_path = app.config.get('STATIC_MISC_URL_PATH', '/static')
-    _globals['static_for_misc'] = lambda p: os.path.join(static_misc_url_path, p)
+    def static_for_misc(p):
+        ap = os.path.join(static_misc_url_path, p)
+        return ap.replace('http', 'https') if request.is_secure else ap.replace('https', 'http')
+    _globals['static_for_misc'] = static_for_misc
 _globals = None
 
 def get_template(template_name):

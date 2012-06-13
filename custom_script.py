@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 if __name__=="__main__":
     import sys,os
     sys.path.append("..")
@@ -12,6 +13,7 @@ import copy
 import os,sys
 import pwd
 from pprint import pprint
+
 def get_username():
     return pwd.getpwuid( os.getuid() )[ 0 ]
 
@@ -208,6 +210,7 @@ class RunScript(Test):
                    dest='args',
                    default=None),
             )
+
     def run(self, config, startdir, pattern, args):
         app = config_from_file(config)
         mod = import_module(app.import_name + ".scripts." + self.script_name)
@@ -232,6 +235,25 @@ class Manager(script.Manager):
         self.add_command("shell", MyShell())
         self.add_command("test", Test())
 
+    def get_usage(self):
+
+        """
+        Returns string consisting of all commands and their
+        descriptions.
+        """
+        pad = max(map(len, self._commands.iterkeys())) + 2
+        format = '  %%- %ds%%s' % pad
+
+        rv = []
+
+        for name, command in sorted(self._commands.iteritems()):
+            usage = name
+            description = command.description or ''
+            usage = format % (name, description)
+            rv.append(usage)
+
+        return "\n".join(rv)
+
 if __name__=="__main__":
-    import ntra
+    pass
     

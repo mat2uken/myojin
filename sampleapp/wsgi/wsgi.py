@@ -19,7 +19,7 @@ def application(environ, start_response):
     from myojin import custom_script
     config_name = environ['MYOJIN_CONFIG_NAME']
     print >>sys.stderr, '*' * 20, "initializing wsgi application by %s.cfg" % config_name, '*' * 20
-    custom_script.config_from_file(config="%s.cfg" % config_name, defaults=('wsgi.cfg',),
+    custom_script.config_from_file(config="%s.cfg" % config_name, defaults=('base.cfg',),
                                    app=app, use_username_config=False)
 
     INSTALLED = True

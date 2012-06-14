@@ -86,7 +86,6 @@ class CustomRequest(Request):
 from datetime import datetime, timedelta
 import random
 import time
-#from beaker.session import getpid
 from os import getpid
 from beaker.crypto import hmac as HMAC, hmac_sha1 as SHA1, md5
 class CustomBeakerSession(beaker.session.Session):
@@ -293,7 +292,8 @@ class CustomFlask(Flask):
     def make_endpoint_for_ssl_redirection(self, endpoint):
         if endpoint is not None:
             splited_endpoint = endpoint.split('.')
-            return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
+            if not len(splited_endpoint) < 3:
+                return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
 
     def in_ssl_required_endpoint(self, endpoint):
         return self.make_endpoint_for_ssl_redirection(endpoint) in self.ssl_required_endpoints

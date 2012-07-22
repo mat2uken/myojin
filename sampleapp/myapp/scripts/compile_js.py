@@ -14,6 +14,7 @@ def main(args=None):
         '--root=${here}/static/js/goog/',
         '--compiler_jar=${here}/../closure/compiler.jar',
         '--compiler_flags=--compilation_level=ADVANCED_OPTIMIZATIONS',
+#        '--compiler_flags=--externs=${here}/static/js/externs.js',
         '--output_mode=compiled',
     ]
 

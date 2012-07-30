@@ -70,7 +70,7 @@ def newline_filter(s, escape=False):
 
 from json import dumps
 def json_dumps(s):
-    assert isinstance(s, (list,dict))
+    assert isinstance(s, (tuple,list,dict))
     return Markup(dumps(s))
 
 def debug_space(s):

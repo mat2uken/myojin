@@ -280,6 +280,7 @@ def render_template(template_name, ctx, with_functions):
         return render(template_name, ctx=ctx)
     except:
         import traceback
+        print traceback.print_exc()
     
 import flask
 flask._url_for = flask.url_for

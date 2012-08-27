@@ -25,6 +25,7 @@ def init(app,globals=None):
             ap = os.path.join(static_url_path, p)
         return ap.replace('http', 'https') if request.is_secure else ap.replace('https', 'http')
     _globals['static'] = static
+    _globals['static_url'] = static_url_path
     static_misc_url_path = app.config.get('STATIC_MISC_URL_PATH', '/static')
     static_misc_url_path_prod = production_config.get('STATIC_MISC_URL_PATH')
     def static_for_misc(p):

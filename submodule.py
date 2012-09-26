@@ -278,10 +278,11 @@ def render_template(template_name, ctx, with_functions):
         return ctx
     try:
         return render(template_name, ctx=ctx)
-    except:
+    except Exception as e:
         import traceback
         from flask import current_app
         current_app.logger.debug(traceback.format_exc())
+        raise(e)
     
 import flask
 flask._url_for = flask.url_for

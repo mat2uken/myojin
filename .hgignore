@@ -16,7 +16,7 @@ env/
 nohup.out
 settings.py
 pip-log.txt
-
+.fuse*
 ._*
 workueue/*_worker.sh
 *.orig

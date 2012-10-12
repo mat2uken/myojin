@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import tempfile
 from corp import app
 
@@ -10,7 +11,8 @@ from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po, write_po
 from babel.messages.extract import extract_from_dir, DEFAULT_KEYWORDS, DEFAULT_MAPPING
 
-__all__ = ['init_catalog', 'update_catalog', 'extract_catalog', 'compile_catalog']
+__all__ = ['init_catalog', 'update_catalog', 'extract_catalog', 'compile_catalog',
+           'dump_catalog_to_json', 'save_catalog_from_json']
 
 
 LOCALES_DIRNAME = app.config['LOCALES_DIRNAME']
@@ -20,6 +22,8 @@ MSGID_BUGS_ADDRESS = app.config['MSGID_BUGS_ADDRESS']
 MSGID_COPYRIGHT_HOLDER = app.config['MSGID_COPYRIGHT_HOLDER']
 
 LOCALES_DIR = os.path.join(app.root_path, LOCALES_DIRNAME)
+
+DEFAULT_DOMAIN = app.config["DEFAULT_DOMAIN"] if app.config.get("DEFAULT_DOMAIN") else "messages"
 
 def _build_mo_filepath(locale, domain):
     locale_ = Locale.parse(locale)
@@ -32,8 +36,31 @@ def _build_po_filepath(locale, domain):
 def _build_pot_filepath(domain):
     return os.path.join(LOCALES_DIR, domain + '.pot')
 
+def _get_locales(locales):
+    locales_ = []
+    if locales is None:
+        for locale in os.listdir(LOCALES_DIR):
+            if os.path.isdir(os.path.join(LOCALES_DIR, locale)):
+                locale_ = Locale.parse(locale)
+                locales_.append(locale_)
+    else:
+        if isinstance(locales, (list, tuple)):
+            for locale in locales:
+                locale_ = Locale.parse(locale)
+                locales_.append(locale_)
+        else:
+            locale_ = Locale.parse(locales)
+            locales_.append(locale_)
+    return locales_
+
+from mercurial import ui, hg
+def _get_latest_repo_revision():
+    repo = hg.repository(ui.ui(), ".")
+    latest_rev = repo.changectx("tip").rev()
+    return latest_rev
+
 def extract_catalog(width=76, no_location=False, omit_header=False, sort_output=False, sort_by_file=False):
-    domain = app.name
+    domain = DEFAULT_DOMAIN
     keywords = DEFAULT_KEYWORDS.copy()
     comment_tags = {}
 
@@ -45,13 +72,7 @@ def extract_catalog(width=76, no_location=False, omit_header=False, sort_output=
         method_map, options_map = parse_mapping(f)
     app.logger.debug("config: %s" % config_filename)
 
-    from mercurial import ui, hg
-    def get_latest_repo_revision():
-        repo = hg.repository(ui.ui(), ".")
-        latest_rev = repo.changectx("tip").rev()
-        return latest_rev
-
-    catalog = Catalog(project=domain,version=str(get_latest_repo_revision()),
+    catalog = Catalog(project=domain,version=str(_get_latest_repo_revision()),
                       msgid_bugs_address=MSGID_BUGS_ADDRESS, copyright_holder=MSGID_COPYRIGHT_HOLDER,
                       charset=MSGID_CHARSET)
 
@@ -75,12 +96,14 @@ def extract_catalog(width=76, no_location=False, omit_header=False, sort_output=
 
     output_filename = _build_pot_filepath(domain)
     with open(output_filename, 'w') as outfile:
-        write_po(outfile, catalog, width=width,
+        write_po(outfile, catalog, 
+                 ignore_obsolete=True,
+                 width=width,
                  no_location=no_location, omit_header=omit_header,
                  sort_output=sort_output, sort_by_file=sort_by_file)
 
 def init_catalog(locale='en'):
-    domain = app.name
+    domain = DEFAULT_DOMAIN
     locale_ = Locale.parse(locale)
     output_file = _build_po_filepath(locale_.language, domain)
     input_file = _build_pot_filepath(domain)
@@ -94,29 +117,69 @@ def init_catalog(locale='en'):
         catalog.fuzzy = False
     
     with open(output_file, 'w') as outfile:
-        write_po(outfile, catalog)
+        write_po(outfile, catalog, ignore_obsolete=False)
 
-def update_catalog(locales=None, ignore_obsolete=False, no_fuzzy_matching=False):
-    domain = app.name
+def dump_catalog_to_json(locale):
+    domain = DEFAULT_DOMAIN
+    locale_ = Locale.parse(locale)
+    
+    app.logger.debug("getting catalog: (%s)" % locale_.language)
+    po_file = _build_po_filepath(locale_.language, domain)
+    if not os.path.exists(po_file):
+        raise Exception('Cannot find po_file: %s' % po_file)
+    with open(po_file, 'r') as infile:
+        catalog = read_po(infile, locale=locale_.language, domain=domain)
+
+    app.logger.debug("updating catalog: locale(%s)" % locale_.language)
+    with open(_build_pot_filepath(domain), 'r') as infile:
+        template = read_po(infile)
+    catalog.update(template, no_fuzzy_matching=True)
+
+    return json.dumps([[m.id, m.string,
+                        ','.join(m.user_comments),
+                        ','.join(["%s:%d" % loc for loc in m.locations])
+                       ] for m in catalog if m.id != ''])
+
+def save_catalog_from_json(msg_json, locale):
+    domain = DEFAULT_DOMAIN
+    locale_ = Locale.parse(locale)
+
+    app.logger.info("saving catalog: locale(%s)" % locale_.language)
+    catalog = Catalog(project=domain,version=str(_get_latest_repo_revision()),
+                      msgid_bugs_address=MSGID_BUGS_ADDRESS, copyright_holder=MSGID_COPYRIGHT_HOLDER,
+                      charset=MSGID_CHARSET)
+    for key, msg_string, comments, locations in json.loads(msg_json):
+        catalog.add(key, msg_string, locations=[tuple(x) for x in locations], user_comments=comments)
+
+    app.logger.info("updateing catalog: locale(%s)" % locale_.language)
+    po_file = _build_po_filepath(locale_.language, domain)
+    with open(_build_pot_filepath(domain), 'r') as infile:
+        template = read_po(infile)
+    catalog.update(template, no_fuzzy_matching=True)
+    tmpname = os.path.join(os.path.dirname(po_file),
+                           tempfile.gettempprefix() +
+                           os.path.basename(po_file))
+    with open(tmpname, 'w') as tmpfile:
+        write_po(tmpfile, catalog, ignore_obsolete=False)
+
+    try:
+        os.rename(tmpname, po_file)
+    except OSError:
+        os.remove(po_file)
+        shutil.copy(tmpname, po_file)
+        os.remove(tmpname)
+    
+    compile_catalog(locales=locale_.language)
+
+def update_catalog(locales=None, ignore_obsolete=True, no_fuzzy_matching=True):
+    domain = DEFAULT_DOMAIN
+    locales_ = _get_locales(locales)
 
     po_files = []
-    def add_po_file(locale):
-        po_file = _build_po_filepath(locale, domain)
+    for locale_ in locales_:
+        po_file = _build_po_filepath(locale_.language, domain)
         if os.path.exists(po_file):
-            po_files.append((locale, po_file))
-    if locales is None:
-        for locale in os.listdir(LOCALES_DIR):
-            if os.path.isdir(os.path.join(LOCALES_DIR, locale)):
-                locale_ = Locale.parse(locale)
-                add_po_file(locale_.language)
-    else:
-        if isinstance(locales, (list, tuple)):
-            for locale in locales:
-                locale_ = Locale.parse(locale)
-                add_po_file(locale_.language)
-        else:
-            locale_ = Locale.parse(locale)
-            add_po_file(locale_.language)
+            po_files.append((locale_.language, po_file))
 
     input_file = _build_pot_filepath(domain)
     with open(input_file, 'r') as infile:
@@ -144,29 +207,17 @@ def update_catalog(locales=None, ignore_obsolete=False, no_fuzzy_matching=False)
                 os.remove(tmpname)
 
 def compile_catalog(locales=None):
-    domain = app.name
+    domain = DEFAULT_DOMAIN
+    locales_ = _get_locales(locales)
 
     po_files = []
     mo_files = []
-    def add_po_mo_file(locale):
-        po_file = _build_po_filepath(locale, domain)
+    for locale_ in locales_:
+        po_file = _build_po_filepath(locale_.language, domain)
         if os.path.exists(po_file):
-            po_files.append((locale, po_file))
-            mo_file = _build_mo_filepath(locale, domain)
+            po_files.append((locale_.language, po_file))
+            mo_file = _build_mo_filepath(locale_.language, domain)
             mo_files.append(mo_file)
-    if locales is None:
-        for locale in os.listdir(LOCALES_DIR):
-            if os.path.isdir(os.path.join(LOCALES_DIR, locale)):
-                locale_ = Locale.parse(locale)
-                add_po_mo_file(locale_.language)
-    else:
-        if isinstance(locales, (list, tuple)):
-            for locale in locales:
-                locale_ = Locale.parse(locale)
-                add_po_mo_file(locale_.language)
-        else:
-            locale_ = Locale.parse(locales)
-            add_po_mo_file(locale_.language)
 
     for idx, (locale, po_file) in enumerate(po_files):
         mo_file = mo_files[idx]

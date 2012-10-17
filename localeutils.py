@@ -130,6 +130,8 @@ def dump_catalog_to_json(locale):
     with open(po_file, 'r') as infile:
         catalog = read_po(infile, locale=locale_.language, domain=domain)
 
+    extract_catalog()
+
     app.logger.debug("updating catalog: locale(%s)" % locale_.language)
     with open(_build_pot_filepath(domain), 'r') as infile:
         template = read_po(infile)

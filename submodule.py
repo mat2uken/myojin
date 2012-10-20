@@ -276,10 +276,8 @@ def render_template(template_name, ctx, with_functions):
             ctx.update(fn())
     if not isinstance(ctx,dict):
         return ctx
-    try:
-        return render(template_name, ctx=ctx)
-    except:
-        import traceback
+
+    return render(template_name, ctx=ctx)
     
 import flask
 flask._url_for = flask.url_for

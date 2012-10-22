@@ -2,13 +2,10 @@
 from flask import Flask, Request#, Session
 import flask
 
-
 from werkzeug.contrib.sessions import FilesystemSessionStore
 SESSION_KEY = "HOGE"
 import werkzeug.contrib.sessions#.Session
-#class Session(flask.Session):
-#from flaskext.auth import CustomRequest
-from flask import Flask, Request#, Session
+from flask import Flask, Request
 import flask
 
 import threading
@@ -107,7 +104,6 @@ class CustomBeakerSession(beaker.session.Session):
                 if self.cookie_expires is False:
                     expires = datetime.fromtimestamp( 0x7FFFFFFF )
                 elif isinstance(self.cookie_expires, timedelta):
-##                     expires = datetime.today() + self.cookie_expires
                     expires = datetime.now() + self.cookie_expires
                     print expires
                 elif isinstance(self.cookie_expires, datetime):
@@ -119,10 +115,6 @@ class CustomBeakerSession(beaker.session.Session):
                     expires.strftime("%a, %d-%b-%Y %H:%M:%S GMT" )
             self.request['cookie_out'] = self.cookie[self.key].output(header='')
             self.request['set_cookie'] = False
-
-## class CustomConfig(Config):
-##     def from_pyfile(self, filename):
-##         super(CustomConfig,self).from_pyfile(filename)
 
 class CustomSessionObject(SessionObject):
     def _session(self):
@@ -155,9 +147,6 @@ class CustomSessionObject(SessionObject):
         for k,v in items:
             if not k.startswith("_"):
                 self[k] = v
-        #self.save()
-        #self.persist()
-        #self.load()
 beaker.middleware.SessionObject = CustomSessionObject
 
 class Session(werkzeug.contrib.sessions.Session):
@@ -197,22 +186,8 @@ class CustomFlask(Flask):
     request_class = CustomRequest
     session_store = session_store
     registered_check_ssl_handler = None
-##     before_login_handlers = ()
-##     after_login_handlers = ()
     after_auth_check_handlers = ()
     
-##     def before_login_handler(self):
-##         def decorator(f):
-##             self.before_login_handlers += (f,)
-##             return f
-##         return decorator
-
-##     def after_login_handler(self):
-##         def decorator(f):
-##             self.after_login_handlers += (f,)
-##             return f
-##         return decorator
-
     def create_url_adapter_(self, request):
         app = self
         environ = request.environ
@@ -237,13 +212,6 @@ class CustomFlask(Flask):
         for h in self.after_auth_check_handlers:
             h(*args, **kws)
 
-##     def before_login(self, *args, **kws):
-##         for h in self.before_login_handlers:
-##             h(*args, **kws)
-    
-##     def after_login(self, *args, **kws):
-##         for h in self.after_login_handlers:
-##             h(*args, **kws)
     check_ssl_handler = ()
     def check_ssl_handler(self):
         def decorator(f):
@@ -264,12 +232,16 @@ class CustomFlask(Flask):
         _request_ctx_stack.push(self)
         self.ssl_required_endpoints = set()
 
+        from myojin.converters import EmptiablePath, DictConverter, ModelConverter
+        self.url_map.converters['emptiable_path'] = EmptiablePath
+        self.url_map.converters['dict'] = DictConverter
+
         from werkzeug import LocalStack, LocalProxy
         def get_current_user():
             from myojin.auth import UserModelBase
             return UserModelBase.current_user()
         self.current_user = LocalProxy(get_current_user)
-        
+
         @self.before_request
         def check_request():
             app = self
@@ -314,84 +286,14 @@ class CustomFlask(Flask):
         return Flask.__call__(self,environ, start_response)
         
     def init_middleware(self):
-        session_opts = {
-            #'session.type':'ext:memcached',
-            #'session.type':'file',
-            'session.auto':True,
-            
-            #'session.lock_dir': '/tmp/container_mcd_lock',
-            #'session.cookie_expires':True,
-            #'session.encrypt_key':'',
-            #'session.validate_key':'HOKARIHOKARI',
-            }
+        session_opts = {}
         session_opts.update(self.config.get('BEAKER_SETTINGS',dict()))
         self.wsgi_app = self.session_middleware = SessionMiddleware(self.wsgi_app, config=session_opts)
         self.wsgi_app = SQLAlchemySessionMiddleware(self.wsgi_app, self)
         #self.middleware = SessionMiddleware(self.inner_call, config=session_opts)
         
-##     def __init__(self, import_name, static_path=None):
-##         super(CustomFlask,self).__init__(import_name, static_path=None)
-##         self.config.__class__ = CustomConfig# = Config(self.root_path, self.default_config)
-##         self.config.app = self
-        
     def open_session(self, request):
-##         self.debug_out.buf = StringIO()
         return getattr(request,'session', None)
         
-        sid = request.cookies.get(COOKIE_NAME)
-        if sid is None:
-            if 'sid' in request.form:
-                return session_store.get(request.form['sid'])
-            else:
-                return session_store.new()
-        else:
-            return session_store.get(sid)
-        
-        
     def save_session(self, session, response):
-##         self.debug_out.buf = None
         return
-        if session.should_save:
-            session_store.save(session)
-            response.set_cookie(COOKIE_NAME, session.sid)
-        #return response(environ, start_response)
-        
-    
-
-
-def test():
-    import memcache
-    mc = memcache.Client(['127.0.0.1:11211'], debug=0)
-
-    mc.set("some_key", "Some value")
-    value = mc.get("some_key")
-
-    mc.set("another_key", 3)
-    mc.delete("another_key")
-
-    mc.set("key", "1")   # note that the key used for incr/decr must be a string.
-    mc.incr("key")
-    mc.decr("key")
-
-##     key = derive_key(obj)
-##     obj = mc.get(key)
-##     if not obj:
-##         obj = backend_api.get(...)
-##         mc.set(key, obj)
-
-
-
-## session_store = FilesystemSessionStore()
-
-## def application(environ, start_response):
-##     request = Request(environ)
-##     sid = request.cookie.get('cookie_name')
-##     if sid is None:
-##         request.session = session_store.new()
-##     else:
-##         request.session = session_store.get(sid)
-##     response = get_the_response_object(request)
-##     if request.session.should_save:
-##         session_store.save(request.session)
-##         response.set_cookie('cookie_name', request.session.sid)
-##     return response(environ, start_response)

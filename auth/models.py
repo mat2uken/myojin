@@ -33,19 +33,7 @@ class UserModelBase(object):
 
     @classmethod
     def get_user_id(cls):
-        from flask.globals import _request_ctx_stack, request, current_app
-##         if 'sid' in request.form or 'sid' in request.args:
-##             Session = type(_request_ctx_stack.top.session)
-##             sid = request.form.get('sid', request.args.get('sid', None))
-##             if sid:
-##                 arg_session = Session(dict(), id=sid, **current_app.session_middleware.options)
-##                 arg_session.load()
-##                 user_id = arg_session.get(cls.USER_ID_KEY, None)
-##             else:
-##                 user_id = None
-##         else:
-        form_session = getattr(session, '_form_session', None)
-        user_id = (form_session or session).get(cls.USER_ID_KEY, None)
+        user_id = session.get(cls.USER_ID_KEY, None)
         return user_id
 
     @classmethod
@@ -65,9 +53,9 @@ class UserModelBase(object):
     @property
     def password_check_result(self):
         return getattr(self,'_password_check_result',False)
+
     def login(self, *args, **kws):
         from flask.globals import _request_ctx_stack, request, current_app
-        ## current_app.before_login(*args, **kws)
         
         assert self.password_check_result
         user = self
@@ -86,6 +74,7 @@ class UserModelBase(object):
         if hasattr(session, "_user"):
             delattr(session,"_user")
         session[self.USER_ID_KEY] = user.id
+        session.save()
 
     def change_password(self, old_raw_password, new_raw_password):
         if self.check_password(old_raw_password):

@@ -30,18 +30,12 @@ class DictConverter(AnyConverter):
     def to_python(self, value):
         return self.k2v[value]
     
-
-
 class EmptiablePath(PathConverter):
     regex = r'(?:|[^/].*?)'#'[^/].*?'
     def to_url(self, value):
         
         return value
     
-from flask.globals import current_app
-current_app.url_map.converters['emptiable_path'] = EmptiablePath
-current_app.url_map.converters['dict'] = DictConverter
-
 from datetime import timedelta
 from myojin.hashutils import urlsafe_hmac_digest, verify_urlsafe_hmac_digest
 
@@ -50,7 +44,7 @@ class BaseModelConverter(BaseConverter):
     HMAC_KEY = None
     def __init__(self, url_map, attr="encoded_id", tokenkind=None, minutes=30, days=0, uselist=False,
                  value_only=False, query_with=None):
-        assert self.HMAC_KEY
+#        assert self.HMAC_KEY
         self.query_arg_name = query_with or self.model.default_query_arg4converter
         self.value_only = value_only
         self.tokenkind = tokenkind
@@ -112,3 +106,15 @@ class BaseModelConverter(BaseConverter):
         import werkzeug.local
         assert isinstance(value, (self.model, werkzeug.local.LocalProxy, list, tuple))
         return str(getattr(value, self.attr))
+
+from flask import current_app
+from myojin.modelutil import BaseModelType
+class ModelConverter(BaseModelConverter):
+        query_arg_name = "query"
+        model = BaseModelType
+
+        def get_hmac_key_config(self):
+            return current_app.config['HMAC_KEY']
+
+        HMAC_KEY = property(get_hmac_key_config)
+

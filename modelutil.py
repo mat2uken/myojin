@@ -8,29 +8,25 @@ from sqlalchemy.sql import Join
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import exc as orm_exc
 
-from myojin.converters import BaseModelConverter
 from werkzeug.local import LocalProxy
 
 from sqlalchemy.orm import class_mapper, object_session
 
 from datetime import timedelta
 
-
+model_types = []
 class BaseModelType(type):
+    default_query_arg4converter = "query"
+
     def __init__(cls, name, bases, attrs):
         super(BaseModelType, cls).__init__(name, bases, attrs)
         if name == 'BaseModel':
             return
         BaseModel.classlist.append(cls)
-        class ModelConverter(BaseModelConverter):
-            HMAC_KEY = current_app.config['HMAC_KEY']
-            query_arg_name = "query"
-            model = cls
-        current_app.url_map.converters[name] = ModelConverter
-
         BaseModel.models += (cls, )
+        global model_types
+        model_types += [name]
         
-
 def get_child_info(cls, mainattr, targetattrs):
     info = getattr(cls, '_child_info_cache', {}).get(mainattr, None)
     if not info:
@@ -106,10 +102,9 @@ class QueryProperty(object):
     def __init__(self, query_cls, **kws):
         self.query_cls = query_cls
         self.kws = kws
-        self.db = current_app.db
     def __get__(self, instance, owner):
         mapper = class_mapper(owner)
-        return self.query_cls(mapper, self.db.session.registry(), **self.kws).default_filter()
+        return self.query_cls(mapper, current_app.db.session.registry(), **self.kws).default_filter()
 
 
 from datetime import date, datetime
@@ -178,8 +173,14 @@ class BaseModel(object):
     query = QueryProperty(CustomQuery, default_filter_name='default_filter')
     userquery = QueryProperty(CustomQuery, default_filter_name='default_user_filter')
 
-    query_all = current_app.db.session.query_property()
-    db = current_app.db
+    @property
+    def query_all(self):
+        return current_app.db.session.query_property()
+
+    @property
+    def db(self):
+        return current_app.db
+
     def save(self):
         self.db.session.add(self)
         return self

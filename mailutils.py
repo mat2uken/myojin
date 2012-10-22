@@ -12,8 +12,6 @@ from unicodedata import normalize
 from myojin.mako import render
 from flask.globals import current_app
 
-EXTERNAL_CONFIG = current_app.config.get('EXTERNAL_CONFIG',{})
-
 class Mailer(object):
     def __init__(self, app=None):
         default_config = {
@@ -66,6 +64,8 @@ class Mailer(object):
             raise Exception('Unknown sendmail Method.')
 
     def send_ses(self, sender_from, recipients, body):
+        EXTERNAL_CONFIG = current_app.config.get('EXTERNAL_CONFIG',{})
+
         # SES Connection create
         aws_access_key = EXTERNAL_CONFIG['aws_access_key']
         aws_secret_key = EXTERNAL_CONFIG['aws_secret_key']

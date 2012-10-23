@@ -119,7 +119,7 @@ def init_catalog(locale='en'):
     with open(output_file, 'w') as outfile:
         write_po(outfile, catalog, ignore_obsolete=False)
 
-def dump_catalog_to_json(locale):
+def dump_catalog(locale):
     domain = DEFAULT_DOMAIN
     locale_ = Locale.parse(locale)
     
@@ -136,11 +136,18 @@ def dump_catalog_to_json(locale):
     with open(_build_pot_filepath(domain), 'r') as infile:
         template = read_po(infile)
     catalog.update(template, no_fuzzy_matching=True)
+    
+    return catalog
 
-    return json.dumps([[m.id, m.string,
-                        ','.join(m.user_comments),
-                        ','.join(["%s:%d" % loc for loc in m.locations])
-                       ] for m in catalog if m.id != ''])
+def dump_catalog_to_json(locale, id_only=False):
+    catalog = dump_catalog(locale)
+    if id_only:
+        return json.dumps([[m.id,] for m in catalog if m.id != ''])
+    else:
+        return json.dumps([[m.id, m.string,
+                            ','.join(m.user_comments),
+                            ','.join(["%s:%d" % loc for loc in m.locations])
+                           ] for m in catalog if m.id != ''])
 
 def save_catalog_from_json(msg_json, locale):
     domain = DEFAULT_DOMAIN

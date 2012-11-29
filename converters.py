@@ -82,7 +82,7 @@ class BaseModelConverter(BaseConverter):
         if self.value_only:
             return val
         try:
-            obj = getattr(self.model,self.query_arg_name).filter_by(**{attr:val}).one()
+            obj = getattr(self.model,self.query_arg_name).filter(getattr(self.model, attr)==val).one()
         except orm_exc.NoResultFound, e:
             raise ValidationError()
         except orm_exc.MultipleResultsFound, e:

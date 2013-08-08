@@ -65,6 +65,7 @@ class UserModelBase(object):
     @property
     def password_check_result(self):
         return getattr(self,'_password_check_result',False)
+
     def login(self, *args, **kws):
         from flask.globals import _request_ctx_stack, request, current_app
         ## current_app.before_login(*args, **kws)
@@ -91,6 +92,7 @@ class UserModelBase(object):
         if self.check_password(old_raw_password):
             self.set_password(new_raw_password)
             return True
+
     def gen_hash_password(self, raw_password):
         import random
         from flask.globals import current_app

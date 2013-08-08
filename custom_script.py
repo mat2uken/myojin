@@ -16,7 +16,7 @@ def get_username():
     return pwd.getpwuid( os.getuid() )[ 0 ]
 
 def read_pyconfig(app, filename):
-    filename = os.path.join(app.root_path, filename)
+    filename = os.path.join(app.root_path, 'config', filename)
     
     if not os.path.exists(filename):
         return dict()

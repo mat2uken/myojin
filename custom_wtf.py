@@ -1,6 +1,5 @@
 # coding: utf-8
-from flaskext.wtf import QuerySelectMultipleField, QuerySelectField
-
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 
 class CustomQuerySelectMultipleField(QuerySelectMultipleField):
     def __init__(self, column=None, get_key=None, order_by=None, query_with=None, *args,**kws):
@@ -76,8 +75,8 @@ class CustomQuerySelectField(QuerySelectField):
             self._set_data(obj)
         return self._data
 
-from flaskext.wtf import Form, TextField, TextAreaField, QuerySelectField, QuerySelectMultipleField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField, SelectMultipleField, IntegerField
-
+from wtforms import TextField, TextAreaField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 #def getrows(form=None, _search=False, rows=None, page=None, sidx=None, sord=None):
 def coerce_bool(s):
     print "s:",s

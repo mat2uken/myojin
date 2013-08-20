@@ -1,14 +1,13 @@
 # encoding: utf-8
 import sys;reload(sys);sys.setdefaultencoding('utf-8')
-import flaskext
-from flaskext import script    # <- important for wsgi
+import flask_script as scirpt   # <- important for wsgi
 from myojin import sessions  # <- important for wsgi
 from .core.app import app
 
 def init():
     global db
     if app.config.get('DEBUG') and app.config.get('TESTING'):
-        import flaskext.datetimehack
+        from myojin import datetimehack
     #from myojin import rum,converters
     from .core.database import db
     from .core import globals
@@ -16,8 +15,9 @@ def init():
     #for x in globals.__all__:
     #    setattr(myojin, x, getattr(globals,x ))
     app.current_user = globals.current_user
-    from .apps import main
-    from .core import mako
+    with app.app_context():
+        from .core import mako
+        from .apps import main
     app.register_module(main.module)
 
 app.init = (init)

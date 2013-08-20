@@ -1,7 +1,4 @@
-
-# manage.py
-
-from flaskext.script import Manager
+from flask_script import Manager
 
 from myapp import app
 from myojin.custom_script import Manager

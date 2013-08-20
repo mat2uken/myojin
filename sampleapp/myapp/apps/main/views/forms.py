@@ -1,7 +1,9 @@
 # coding: utf-8
-from flaskext.wtf import Form, TextField, TextAreaField, QuerySelectField, QuerySelectMultipleField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField, SelectMultipleField, IntegerField
 
-#def getrows(form=None, _search=False, rows=None, page=None, sidx=None, sord=None):
+from flask_wtf import Form
+from wtforms import TextField, TextAreaField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
+
 def coerce_bool(s):
     print "s:",s
     return True
@@ -46,5 +48,3 @@ class JqGridForm(Form):
     sord = TextField('')
     filters = JsonField('')
 
-
-#print JqGridForm.search.name

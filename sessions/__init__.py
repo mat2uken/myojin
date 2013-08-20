@@ -5,10 +5,8 @@ import flask
 
 from werkzeug.contrib.sessions import FilesystemSessionStore
 SESSION_KEY = "HOGE"
-import werkzeug.contrib.sessions#.Session
-#class Session(flask.Session):
-#from flaskext.auth import CustomRequest
-from flask import Flask, Request#, Session
+import werkzeug.contrib.sessions
+from flask import Flask, Request
 import flask
 
 import threading

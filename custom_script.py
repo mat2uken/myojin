@@ -5,8 +5,8 @@ if __name__=="__main__":
     sys.path.append("..")
     sys.path.remove("")
 
-from flaskext import script
-from flaskext.script import Command, Option
+import flask_script as script
+from flask_script import Command, Option
 from unittest import TestLoader, TestResult
 from importlib import import_module
 import copy

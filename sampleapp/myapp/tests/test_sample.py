@@ -5,7 +5,6 @@ if __name__==u"__main__":
     call('python manage.py test -s myojin/tests/ -p test_sample.py'.split())
     sys.exit()
 
-import flaskext
 import unittest 
 
 def open_filename(filename):

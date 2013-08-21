@@ -1,11 +1,9 @@
 from .app import app
-## from flaskext.sqlalchemy import SQLAlchemy
-
 
 from sqlalchemy import orm
 from sqlalchemy.orm.interfaces import SessionExtension
 from sqlalchemy.orm import sessionmaker
-import flaskext.sqlalchemy
+import flask_sqlalchemy
 
 class MySessionExtension(SessionExtension):
     def after_begin(self, session, transaction, connection):
@@ -19,15 +17,13 @@ smaker = sessionmaker(extension=MySessionExtension(), autocommit=False,
                                                          autoflush=False,)
 def _create_scoped_session(db):
     return orm.scoped_session(lambda: smaker(bind=db.engine))
-## flaskext.sqlalchemy._create_scoped_session = _create_scoped_session
-class CustomSQLAlchemy(flaskext.sqlalchemy.SQLAlchemy):
+
+class CustomSQLAlchemy(flask_sqlalchemy.SQLAlchemy):
     def __init__(self,*args,**kws):
         super(CustomSQLAlchemy, self).__init__(*args,**kws)
         self.session = _create_scoped_session(self)
 
 db = CustomSQLAlchemy(app)
-
-
 
 import threading, thread, os
 def _get_ident():

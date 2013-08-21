@@ -8,6 +8,7 @@ html\.hold$
 ^python-magic/
 ^python_magic.egg-info/
 ^dist/
+sampleapp/myojin
 
 syntax: glob
 env/
@@ -16,6 +17,7 @@ env/
 nohup.out
 settings.py
 pip-log.txt
+deps.js
 .fuse*
 ._*
 workueue/*_worker.sh

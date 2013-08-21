@@ -1,4 +1,3 @@
-
 from functools import wraps
 
 from flask import _request_ctx_stack, request
@@ -37,8 +36,7 @@ def ip_restriction(*iplists):
          for iplist in iplists
          for ip_range_str in ([iplist] if isinstance(iplist,basestring) else iplist)
          for ip in IP(ip_range_str))
-##      for x in ip_int_set:
-##          print IP(x),
+
      def decorator(f):
          @wraps(f)
          def decorated(*args, **kws):
@@ -53,6 +51,4 @@ def ip_restriction(*iplists):
          return decorated
      return decorator
  
-#from flaskext.decorators import ip_restriction
-#@ip_restriction(["192.168.1.0/24"], '127.0.0.1')
      

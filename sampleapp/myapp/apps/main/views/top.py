@@ -2,7 +2,6 @@
 
 import datetime
 from myojin import submodule, utils as flaskext_utils
-from myojin.rum import rum_response
 from ....core.decorators import admin_required, login_required
 from .... import current_app
 from flask import request, session, make_response, app
@@ -10,6 +9,7 @@ from myojin.utils import redirect, redirect_to
 module = submodule.SubModule(__name__, url_prefix="")
 from ..models import User, Memo
 from flask import url_for
+from myojin.rum import rum_response
 
 # トップ画面。
 @module.route('/')
@@ -54,7 +54,9 @@ def user_by_token(user):
     return user.nickname
 
 # adminユーザログインフォーム
-from flaskext.wtf import Form, TextField, TextAreaField, QuerySelectField, QuerySelectMultipleField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField
+from flask_wtf import Form
+from wtforms import TextField, TextAreaField, PasswordField, FileField, BooleanField, SelectField, RadioField, HiddenField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 class AdminLogin(Form):
     email = TextField(u'Email')
     password = PasswordField(u'Password')
@@ -116,3 +118,4 @@ fields.FieldFactory.fields(User, (
     'is_admin',
     'deleted',
         ))
+

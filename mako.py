@@ -78,10 +78,10 @@ def debug_space(s):
     return unicode(s).replace(u' ',u'　')
 
 try:
-    from flaskext.babel import gettext # as _
+    from flask_babel import gettext # as _
 except ImportError, e:
     def gettext(*args, **kws):
-        from flaskext.babel import gettext
+        from flask_babel import gettext
 
 def comma_num_filter(n):
     if isinstance(n, basestring):

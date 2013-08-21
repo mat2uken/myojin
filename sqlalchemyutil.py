@@ -2,7 +2,8 @@
 from __future__ import absolute_import # import sqlalchemyが衝突するので
 from sqlalchemy.exc import IntegrityError
 
-mod_sqlalchemy_sql =  __import__('sqlalchemy.sql', {}, {}, [''])
+mod_sqlalchemy =  __import__('sqlalchemy', {}, {}, [''])
+mod_sqlalchemy_sql = getattr(mod_sqlalchemy, 'sql')
 mod_sqlalchemy_expression = getattr(mod_sqlalchemy_sql, 'expression')
 between = getattr(mod_sqlalchemy_expression, 'between')
 case = getattr(mod_sqlalchemy_expression, 'case')

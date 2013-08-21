@@ -91,6 +91,8 @@ def extract_catalog(width=76, no_location=False, omit_header=False, sort_output=
                                  keywords, comment_tags,
                                  callback=cb, strip_comment_tags=False)
     for filename, lineno, message, comments in extracted:
+        if os.path.split(filename)[1].startswith("."):
+            continue
         filepath = os.path.normpath(os.path.join(extract_path, filename))
         catalog.add(message, None, [(filepath, lineno)], auto_comments=comments)
 

@@ -9,8 +9,8 @@ reigst_middleware(app)
 ## app.debug = app.config['DEBUG']
 
 def init_babel():
-    from flaskext import babel
-    b = babel.Babel(app, configure_jinja=False)
+    import flask_babel
+    b = flask_babel.Babel(app, configure_jinja=False)
     @b.localeselector
     def get_locale():
         from flask import request

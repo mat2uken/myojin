@@ -5,7 +5,6 @@ from werkzeug.urls import url_encode, url_quote
 import functools
 from importlib import import_module
 from sqlalchemy.orm import exc as orm_exc
-from myojin.submodule import Identifier
 
 class DictConverter(AnyConverter):
     def __init__(self, map, **kws):
@@ -15,6 +14,7 @@ class DictConverter(AnyConverter):
     def get_view_func(self):
         return self._view_func
     def set_view_func(self, view_func):
+        from myojin.submodule import Identifier
         mod = import_module(view_func.__module__)
         self.k2v = {k:(
             getattr(mod,v)

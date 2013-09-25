@@ -5,3 +5,4 @@ import flask
 ##     pass
 
 from .models import UserModelBase, AnonymousUser
+from .user import ActivableUserBase

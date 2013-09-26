@@ -410,33 +410,7 @@ goog.fx.DragListGroup.prototype.init = function() {
 
     var dragItems = goog.dom.getChildren(dragList);
     for (var j = 0, numItems = dragItems.length; j < numItems; ++j) {
-      var dragItem = dragItems[j];
-      var dragItemHandle = this.getHandleForDragItem_(dragItem);
-
-      var uid = goog.getUid(dragItemHandle);
-      this.dragItemForHandle_[uid] = dragItem;
-
-      if (this.dragItemHoverClasses_) {
-        this.eventHandler_.listen(
-            dragItem, goog.events.EventType.MOUSEOVER,
-            this.handleDragItemMouseover_);
-        this.eventHandler_.listen(
-            dragItem, goog.events.EventType.MOUSEOUT,
-            this.handleDragItemMouseout_);
-      }
-      if (this.dragItemHandleHoverClasses_) {
-        this.eventHandler_.listen(
-            dragItemHandle, goog.events.EventType.MOUSEOVER,
-            this.handleDragItemHandleMouseover_);
-        this.eventHandler_.listen(
-            dragItemHandle, goog.events.EventType.MOUSEOUT,
-            this.handleDragItemHandleMouseout_);
-      }
-
-      this.dragItems_.push(dragItem);
-      this.eventHandler_.listen(dragItemHandle,
-          [goog.events.EventType.MOUSEDOWN, goog.events.EventType.TOUCHSTART],
-          this.handlePotentialDragStart_);
+      this.listenForDragEvents(dragItems[j]);
     }
   }
 
@@ -444,7 +418,29 @@ goog.fx.DragListGroup.prototype.init = function() {
 };
 
 
-/** @inheritDoc */
+/**
+ * Adds a single item to the given drag list and sets up the drag listeners for
+ * it.
+ * If opt_index is specified the item is inserted at this index, otherwise the
+ * item is added as the last child of the list.
+ *
+ * @param {!Element} list The drag list where to add item to.
+ * @param {!Element} item The new element to add.
+ * @param {number=} opt_index Index where to insert the item in the list. If not
+ * specified item is inserted as the last child of list.
+ */
+goog.fx.DragListGroup.prototype.addItemToDragList = function(list, item,
+    opt_index) {
+  if (goog.isDef(opt_index)) {
+    goog.dom.insertChildAt(list, item, opt_index);
+  } else {
+    goog.dom.appendChild(list, item);
+  }
+  this.listenForDragEvents(item);
+};
+
+
+/** @override */
 goog.fx.DragListGroup.prototype.disposeInternal = function() {
   this.eventHandler_.dispose();
 
@@ -488,6 +484,43 @@ goog.fx.DragListGroup.prototype.recacheListAndItemBounds_ = function(
       dragItem.dlgBounds_ = goog.style.getBounds(dragItem);
     }
   }
+};
+
+
+/**
+ * Listens for drag events on the given drag item. This method is currently used
+ * to initialize drag items.
+ *
+ * @param {Element} dragItem the element to initialize. This element has to be
+ * in one of the drag lists.
+ * @protected
+ */
+goog.fx.DragListGroup.prototype.listenForDragEvents = function(dragItem) {
+  var dragItemHandle = this.getHandleForDragItem_(dragItem);
+  var uid = goog.getUid(dragItemHandle);
+  this.dragItemForHandle_[uid] = dragItem;
+
+  if (this.dragItemHoverClasses_) {
+    this.eventHandler_.listen(
+        dragItem, goog.events.EventType.MOUSEOVER,
+        this.handleDragItemMouseover_);
+    this.eventHandler_.listen(
+        dragItem, goog.events.EventType.MOUSEOUT,
+        this.handleDragItemMouseout_);
+  }
+  if (this.dragItemHandleHoverClasses_) {
+    this.eventHandler_.listen(
+        dragItemHandle, goog.events.EventType.MOUSEOVER,
+        this.handleDragItemHandleMouseover_);
+    this.eventHandler_.listen(
+        dragItemHandle, goog.events.EventType.MOUSEOUT,
+        this.handleDragItemHandleMouseout_);
+  }
+
+  this.dragItems_.push(dragItem);
+  this.eventHandler_.listen(dragItemHandle,
+      [goog.events.EventType.MOUSEDOWN, goog.events.EventType.TOUCHSTART],
+      this.handlePotentialDragStart_);
 };
 
 
@@ -690,12 +723,12 @@ goog.fx.DragListGroup.prototype.handleDragMove_ = function(dragEvent) {
 goog.fx.DragListGroup.prototype.cleanup_ = function(opt_e) {
   this.cleanupDragDom_();
 
-  delete this.currDragItem_;
-  delete this.currHoverList_;
-  delete this.origList_;
-  delete this.origNextItem_;
-  delete this.draggerEl_;
-  delete this.dragger_;
+  this.currDragItem_ = null;
+  this.currHoverList_ = null;
+  this.origList_ = null;
+  this.origNextItem_ = null;
+  this.draggerEl_ = null;
+  this.dragger_ = null;
 
   // Note: IE doesn't allow 'delete' for fields on HTML elements (because
   // they're not real JS objects in IE), so we just set them to null.
@@ -918,7 +951,7 @@ goog.fx.DragListGroup.prototype.isInRect_ = function(pos, rect) {
  */
 goog.fx.DragListGroup.prototype.updateCurrHoverItem = function(
     hoverNextItem, opt_draggerElCenter) {
-  if (goog.isDefAndNotNull(hoverNextItem)) {
+  if (hoverNextItem) {
     this.currHoverItem_ = hoverNextItem;
   }
 };

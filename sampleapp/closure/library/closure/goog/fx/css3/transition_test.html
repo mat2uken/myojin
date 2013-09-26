@@ -13,6 +13,7 @@ See the COPYING file for details.
 <title>Closure Unit Tests - goog.fx.css3.Transition</title>
 <script src="../../base.js"></script>
 <script>
+  goog.require('goog.Timer');
   goog.require('goog.dispose');
   goog.require('goog.dom');
   goog.require('goog.events');
@@ -20,6 +21,7 @@ See the COPYING file for details.
   goog.require('goog.style.transition');
   goog.require('goog.testing.MockClock');
   goog.require('goog.testing.jsunit');
+  goog.require('goog.testing.recordFunction');
 </script>
 </head>
 <body>
@@ -38,6 +40,7 @@ function createTransition(element, duration) {
 
 
 function setUp() {
+  mockClock = new goog.testing.MockClock(true);
   element = goog.dom.createElement('div');
   document.body.appendChild(element);
 }
@@ -51,6 +54,8 @@ function tearDown() {
 
 
 function testPlayEventFiredOnPlay() {
+  if (!goog.style.transition.isSupported()) return;
+
   transition = createTransition(element, 10);
   var handlerCalled = false;
   goog.events.listen(transition, goog.fx.Transition.EventType.PLAY,
@@ -64,6 +69,8 @@ function testPlayEventFiredOnPlay() {
 
 
 function testBeginEventFiredOnPlay() {
+  if (!goog.style.transition.isSupported()) return;
+
   transition = createTransition(element, 10);
   var handlerCalled = false;
   goog.events.listen(transition, goog.fx.Transition.EventType.BEGIN,
@@ -76,47 +83,142 @@ function testBeginEventFiredOnPlay() {
 }
 
 
-function testEndEventFiredOnStop() {
+function testFinishEventsFiredAfterFinish() {
+  if (!goog.style.transition.isSupported()) return;
+
   transition = createTransition(element, 10);
-  var handlerCalled = false;
-  goog.events.listen(transition, goog.fx.Transition.EventType.END,
-      function() {
-        handlerCalled = true;
-      });
-
-  transition.play();
-  transition.stop();
-  assertTrue(handlerCalled);
-}
-
-
-function testFinishEventFiredOnStop() {
-  transition = createTransition(element, 10);
-  var handlerCalled = false;
+  var finishHandlerCalled = false;
+  var endHandlerCalled = false;
   goog.events.listen(transition, goog.fx.Transition.EventType.FINISH,
       function() {
-        handlerCalled = true;
+        finishHandlerCalled = true;
+      });
+  goog.events.listen(transition, goog.fx.Transition.EventType.END,
+      function() {
+        endHandlerCalled = true;
       });
 
   transition.play();
-  transition.stop();
-  assertTrue(handlerCalled);
+
+  mockClock.tick(10000);
+
+  assertTrue(finishHandlerCalled);
+  assertTrue(endHandlerCalled);
 }
 
 
-function testStopEventFiredOnStop() {
+function testEventsWhenTransitionIsUnsupported() {
+  if (goog.style.transition.isSupported()) return;
+
   transition = createTransition(element, 10);
-  var handlerCalled = false;
+
+  var stopHandlerCalled = false;
+  var finishHandlerCalled = false, endHandlerCalled = false;
+  var beginHandlerCalled = false, playHandlerCalled = false;
+  goog.events.listen(transition, goog.fx.Transition.EventType.BEGIN,
+      function() {
+        beginHandlerCalled = true;
+      });
+  goog.events.listen(transition, goog.fx.Transition.EventType.PLAY,
+      function() {
+        playHandlerCalled = true;
+      });
+  goog.events.listen(transition, goog.fx.Transition.EventType.FINISH,
+      function() {
+        finishHandlerCalled = true;
+      });
+  goog.events.listen(transition, goog.fx.Transition.EventType.END,
+      function() {
+        endHandlerCalled = true;
+      });
   goog.events.listen(transition, goog.fx.Transition.EventType.STOP,
       function() {
-        handlerCalled = true;
+        stopHandlerCalled = true;
       });
+
+  assertFalse(transition.play());
+
+  assertTrue(beginHandlerCalled);
+  assertTrue(playHandlerCalled);
+  assertTrue(endHandlerCalled);
+  assertTrue(finishHandlerCalled);
+
+  transition.stop();
+
+  assertFalse(stopHandlerCalled);
+}
+
+
+function testCallingStopDuringAnimationWorks() {
+  if (!goog.style.transition.isSupported()) return;
+
+  transition = createTransition(element, 10);
+
+  var stopHandler = goog.testing.recordFunction();
+  var endHandler = goog.testing.recordFunction();
+  var finishHandler = goog.testing.recordFunction();
+  goog.events.listen(transition, goog.fx.Transition.EventType.STOP,
+      stopHandler);
+  goog.events.listen(transition, goog.fx.Transition.EventType.END,
+      endHandler);
+  goog.events.listen(transition, goog.fx.Transition.EventType.FINISH,
+      finishHandler);
+
+  transition.play();
+  mockClock.tick(1);
+  transition.stop();
+  assertEquals(1, stopHandler.getCallCount());
+  assertEquals(1, endHandler.getCallCount());
+  mockClock.tick(10000);
+  assertEquals(0, finishHandler.getCallCount());
+}
+
+
+function testCallingStopImmediatelyWorks() {
+  if (!goog.style.transition.isSupported()) return;
+
+  transition = createTransition(element, 10);
+
+  var stopHandler = goog.testing.recordFunction();
+  var endHandler = goog.testing.recordFunction();
+  var finishHandler = goog.testing.recordFunction();
+  goog.events.listen(transition, goog.fx.Transition.EventType.STOP,
+      stopHandler);
+  goog.events.listen(transition, goog.fx.Transition.EventType.END,
+      endHandler);
+  goog.events.listen(transition, goog.fx.Transition.EventType.FINISH,
+      finishHandler);
 
   transition.play();
   transition.stop();
-  assertTrue(handlerCalled);
+  assertEquals(1, stopHandler.getCallCount());
+  assertEquals(1, endHandler.getCallCount());
+  mockClock.tick(10000);
+  assertEquals(0, finishHandler.getCallCount());
 }
 
+function testCallingStopAfterAnimationDoesNothing() {
+  if (!goog.style.transition.isSupported()) return;
+
+  transition = createTransition(element, 10);
+
+  var stopHandler = goog.testing.recordFunction();
+  var endHandler = goog.testing.recordFunction();
+  var finishHandler = goog.testing.recordFunction();
+  goog.events.listen(transition, goog.fx.Transition.EventType.STOP,
+      stopHandler);
+  goog.events.listen(transition, goog.fx.Transition.EventType.END,
+      endHandler);
+  goog.events.listen(transition, goog.fx.Transition.EventType.FINISH,
+      finishHandler);
+
+  transition.play();
+  mockClock.tick(10000);
+  transition.stop();
+  assertEquals(0, stopHandler.getCallCount());
+  assertEquals(1, endHandler.getCallCount());
+  assertEquals(1, finishHandler.getCallCount());
+}
 </script>
 </body>
 </html>

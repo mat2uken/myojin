@@ -25,7 +25,9 @@ goog.require('goog.dom');
 goog.require('goog.dom.Range');
 goog.require('goog.editor.BrowserFeature');
 goog.require('goog.editor.node');
+goog.require('goog.editor.plugins.AbstractBubblePlugin');
 goog.require('goog.testing.dom');
+
 
 
 /**
@@ -164,7 +166,7 @@ goog.testing.editor.TestHelper.prototype.select = function(from, fromOffset,
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.testing.editor.TestHelper.prototype.disposeInternal = function() {
   if (goog.editor.node.isEditableContainer(this.root_)) {
     this.tearDownEditableElement();

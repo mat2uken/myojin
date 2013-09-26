@@ -120,16 +120,12 @@ goog.events.ActionHandler.prototype.handleClick_ = function(e) {
 goog.events.ActionHandler.prototype.dispatchEvents_ = function(e) {
   var beforeActionEvent = new goog.events.BeforeActionEvent(e);
 
-  try {
-    // Allow application specific logic here before the ACTION event.
-    // For example, Gmail uses this event to restore keyboard focus
-    if (!this.dispatchEvent(beforeActionEvent)) {
-      // If the listener swallowed the BEFOREACTION event, don't dispatch the
-      // ACTION event.
-      return;
-    }
-  } finally {
-    beforeActionEvent.dispose();
+  // Allow application specific logic here before the ACTION event.
+  // For example, Gmail uses this event to restore keyboard focus
+  if (!this.dispatchEvent(beforeActionEvent)) {
+    // If the listener swallowed the BEFOREACTION event, don't dispatch the
+    // ACTION event.
+    return;
   }
 
 
@@ -138,15 +134,13 @@ goog.events.ActionHandler.prototype.dispatchEvents_ = function(e) {
   try {
     this.dispatchEvent(actionEvent);
   } finally {
-    actionEvent.dispose();
-
     // Stop propagating the event
     e.stopPropagation();
   }
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.events.ActionHandler.prototype.disposeInternal = function() {
   goog.events.ActionHandler.superClass_.disposeInternal.call(this);
   goog.events.unlisten(this.element_, goog.events.ActionHandler.KEY_EVENT_TYPE_,

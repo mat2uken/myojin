@@ -16,6 +16,8 @@
 /**
  * @fileoverview Thin wrappers around the DOM element returned from
  * the different draw methods of the graphics. This is the SVG implementation.
+ * @author arv@google.com (Erik Arvidsson)
+ * @author yoah@google.com (Yoah Bar-David)
  */
 
 goog.provide('goog.graphics.SvgEllipseElement');
@@ -45,6 +47,9 @@ goog.require('goog.graphics.TextElement');
  *     this element.
  * @constructor
  * @extends {goog.graphics.GroupElement}
+ * @deprecated goog.graphics is deprecated. It existed to abstract over browser
+ *     differences before the canvas tag was widely supported.  See
+ *     http://en.wikipedia.org/wiki/Canvas_element for details.
  */
 goog.graphics.SvgGroupElement = function(element, graphics) {
   goog.graphics.GroupElement.call(this, element, graphics);
@@ -54,6 +59,7 @@ goog.inherits(goog.graphics.SvgGroupElement, goog.graphics.GroupElement);
 
 /**
  * Remove all drawing elements from the group.
+ * @override
  */
 goog.graphics.SvgGroupElement.prototype.clear = function() {
   goog.dom.removeChildren(this.getElement());
@@ -64,6 +70,7 @@ goog.graphics.SvgGroupElement.prototype.clear = function() {
  * Set the size of the group element.
  * @param {number|string} width The width of the group element.
  * @param {number|string} height The height of the group element.
+ * @override
  */
 goog.graphics.SvgGroupElement.prototype.setSize = function(width, height) {
   this.getGraphics().setElementAttributes(this.getElement(),
@@ -95,6 +102,7 @@ goog.inherits(goog.graphics.SvgEllipseElement, goog.graphics.EllipseElement);
  * Update the center point of the ellipse.
  * @param {number} cx Center X coordinate.
  * @param {number} cy Center Y coordinate.
+ * @override
  */
 goog.graphics.SvgEllipseElement.prototype.setCenter = function(cx, cy) {
   this.getGraphics().setElementAttributes(this.getElement(),
@@ -106,6 +114,7 @@ goog.graphics.SvgEllipseElement.prototype.setCenter = function(cx, cy) {
  * Update the radius of the ellipse.
  * @param {number} rx Radius length for the x-axis.
  * @param {number} ry Radius length for the y-axis.
+ * @override
  */
 goog.graphics.SvgEllipseElement.prototype.setRadius = function(rx, ry) {
   this.getGraphics().setElementAttributes(this.getElement(),
@@ -137,6 +146,7 @@ goog.inherits(goog.graphics.SvgRectElement, goog.graphics.RectElement);
  * Update the position of the rectangle.
  * @param {number} x X coordinate (left).
  * @param {number} y Y coordinate (top).
+ * @override
  */
 goog.graphics.SvgRectElement.prototype.setPosition = function(x, y) {
   this.getGraphics().setElementAttributes(this.getElement(), {'x': x, 'y': y});
@@ -147,6 +157,7 @@ goog.graphics.SvgRectElement.prototype.setPosition = function(x, y) {
  * Update the size of the rectangle.
  * @param {number} width Width of rectangle.
  * @param {number} height Height of rectangle.
+ * @override
  */
 goog.graphics.SvgRectElement.prototype.setSize = function(width, height) {
   this.getGraphics().setElementAttributes(this.getElement(),
@@ -176,11 +187,13 @@ goog.inherits(goog.graphics.SvgPathElement, goog.graphics.PathElement);
 
 /**
  * Update the underlying path.
- * @param {goog.graphics.Path} path The path object to draw.
+ * @param {!goog.graphics.Path} path The path object to draw.
+ * @override
  */
 goog.graphics.SvgPathElement.prototype.setPath = function(path) {
   this.getGraphics().setElementAttributes(this.getElement(),
-      {'d': goog.graphics.SvgGraphics.getSvgPath(path)});
+      {'d': /** @suppress {missingRequire} */
+            goog.graphics.SvgGraphics.getSvgPath(path)});
 };
 
 
@@ -207,6 +220,7 @@ goog.inherits(goog.graphics.SvgTextElement, goog.graphics.TextElement);
 /**
  * Update the displayed text of the element.
  * @param {string} text The text to draw.
+ * @override
  */
 goog.graphics.SvgTextElement.prototype.setText = function(text) {
   this.getElement().firstChild.data = text;
@@ -235,6 +249,7 @@ goog.inherits(goog.graphics.SvgImageElement, goog.graphics.ImageElement);
  * Update the position of the image.
  * @param {number} x X coordinate (left).
  * @param {number} y Y coordinate (top).
+ * @override
  */
 goog.graphics.SvgImageElement.prototype.setPosition = function(x, y) {
   this.getGraphics().setElementAttributes(this.getElement(), {'x': x, 'y': y});
@@ -245,6 +260,7 @@ goog.graphics.SvgImageElement.prototype.setPosition = function(x, y) {
  * Update the size of the image.
  * @param {number} width Width of image.
  * @param {number} height Height of image.
+ * @override
  */
 goog.graphics.SvgImageElement.prototype.setSize = function(width, height) {
   this.getGraphics().setElementAttributes(this.getElement(),
@@ -255,6 +271,7 @@ goog.graphics.SvgImageElement.prototype.setSize = function(width, height) {
 /**
  * Update the source of the image.
  * @param {string} src Source of the image.
+ * @override
  */
 goog.graphics.SvgImageElement.prototype.setSource = function(src) {
   this.getGraphics().setElementAttributes(this.getElement(),

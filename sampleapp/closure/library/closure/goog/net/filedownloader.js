@@ -41,14 +41,16 @@ goog.require('goog.asserts');
 goog.require('goog.async.Deferred');
 goog.require('goog.crypt.hash32');
 goog.require('goog.debug.Error');
+goog.require('goog.events');
 goog.require('goog.events.EventHandler');
 goog.require('goog.fs');
-goog.require('goog.fs.DirectoryEntry.Behavior');
-goog.require('goog.fs.Error.ErrorCode');
-goog.require('goog.fs.FileSaver.EventType');
+goog.require('goog.fs.DirectoryEntry');
+goog.require('goog.fs.Error');
+goog.require('goog.fs.FileSaver');
 goog.require('goog.net.EventType');
-goog.require('goog.net.XhrIo.ResponseType');
+goog.require('goog.net.XhrIo');
 goog.require('goog.net.XhrIoPool');
+goog.require('goog.object');
 
 
 
@@ -106,25 +108,29 @@ goog.inherits(goog.net.FileDownloader, goog.Disposable);
  *
  * Returns a Deferred that will contain the downloaded blob. If there's an error
  * while downloading the URL, this Deferred will be passed the
- * {@link goog.net.FileDownloader.Error} object as an errback. If the deferred
- * is cancelled, the download will be cancelled as well.
+ * {@link goog.net.FileDownloader.Error} object as an errback.
  *
  * If a download is already in progress for the given URL, this will return the
  * deferred blob for that download. If the URL has already been downloaded, this
  * will fail once it tries to save the downloaded blob.
+ *
+ * When a download is in progress, all Deferreds returned for that download will
+ * be branches of a single parent. If all such branches are cancelled, or if one
+ * is cancelled with opt_deepCancel set, then the download will be cancelled as
+ * well.
  *
  * @param {string} url The URL of the file to download.
  * @return {!goog.async.Deferred} The deferred result blob.
  */
 goog.net.FileDownloader.prototype.download = function(url) {
   if (this.isDownloading(url)) {
-    return this.downloads_[url].deferred.branch();
+    return this.downloads_[url].deferred.branch(true /* opt_propagateCancel */);
   }
 
   var download = new goog.net.FileDownloader.Download_(url, this);
   this.downloads_[url] = download;
   this.pool_.getObject(goog.bind(this.gotXhr_, this, download));
-  return download.deferred;
+  return download.deferred.branch(true /* opt_propagateCancel */);
 };
 
 
@@ -276,7 +282,7 @@ goog.net.FileDownloader.prototype.setBlob = function(url, blob, opt_name) {
       }).
       addCallback(goog.bind(this.fileSuccess_, this, download)).
       addErrback(goog.bind(this.error_, this, download));
-  return download.deferred.branch();
+  return download.deferred.branch(true /* opt_propagateCancel */);
 };
 
 
@@ -581,7 +587,7 @@ goog.net.FileDownloader.prototype.freeXhr_ = function(xhr) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.net.FileDownloader.prototype.disposeInternal = function() {
   delete this.dir_;
   goog.dispose(this.eventHandler_);
@@ -723,7 +729,7 @@ goog.net.FileDownloader.Download_ = function(url, downloader) {
 goog.inherits(goog.net.FileDownloader.Download_, goog.Disposable);
 
 
-/** @inheritDoc */
+/** @override */
 goog.net.FileDownloader.Download_.prototype.disposeInternal = function() {
   this.cancelled = true;
   if (this.xhr) {

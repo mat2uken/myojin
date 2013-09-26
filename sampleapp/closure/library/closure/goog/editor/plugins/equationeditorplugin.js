@@ -14,16 +14,18 @@
 
 goog.provide('goog.editor.plugins.EquationEditorPlugin');
 
+goog.require('goog.dom');
 goog.require('goog.editor.Command');
 goog.require('goog.editor.plugins.AbstractDialogPlugin');
 goog.require('goog.editor.range');
+goog.require('goog.events');
+goog.require('goog.events.EventType');
 goog.require('goog.functions');
-goog.require('goog.ui.editor.AbstractDialog.Builder');
+goog.require('goog.log');
+goog.require('goog.ui.editor.AbstractDialog');
 goog.require('goog.ui.editor.EquationEditorDialog');
-goog.require('goog.ui.editor.EquationEditorOkEvent');
-goog.require('goog.ui.equation.EquationEditor');
 goog.require('goog.ui.equation.ImageRenderer');
-goog.require('goog.ui.equation.TexEditor');
+goog.require('goog.ui.equation.PaletteManager');
 
 
 
@@ -51,7 +53,7 @@ goog.editor.plugins.EquationEditorPlugin = function(opt_helpUrl) {
 
   /**
    * The listener key for double click events.
-   * @type {number?}
+   * @type {goog.events.Key}
    * @private
    */
   this.dblClickKey_;
@@ -65,20 +67,20 @@ goog.inherits(goog.editor.plugins.EquationEditorPlugin,
 
 /**
  * The logger for the EquationEditorPlugin.
- * @type {goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @private
  */
 goog.editor.plugins.EquationEditorPlugin.prototype.logger_ =
-    goog.debug.Logger.getLogger('goog.editor.plugins.EquationEditorPlugin');
+    goog.log.getLogger('goog.editor.plugins.EquationEditorPlugin');
 
 
-/** @inheritDoc */
+/** @override */
 goog.editor.plugins.EquationEditorPlugin.prototype.getTrogClassId =
     goog.functions.constant('EquationEditorPlugin');
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.editor.plugins.EquationEditorPlugin.prototype.createDialog =
     function(dom, opt_arg) {
@@ -89,7 +91,7 @@ goog.editor.plugins.EquationEditorPlugin.prototype.createDialog =
 
   this.originalElement_ = equationImgEl;
   var dialog = new goog.ui.editor.EquationEditorDialog(
-      this.populateContext_(), dom, equationStr, this.helpUrl_);
+      this.populateContext_(dom), dom, equationStr, this.helpUrl_);
   dialog.addEventListener(goog.ui.editor.AbstractDialog.EventType.OK,
       this.handleOk_,
       false,
@@ -100,13 +102,15 @@ goog.editor.plugins.EquationEditorPlugin.prototype.createDialog =
 
 /**
  * Populates the context that this plugin runs in.
+ * @param {!goog.dom.DomHelper} domHelper The dom helper to be used for the
+ *     palette manager.
  * @return {Object} The context that this plugin runs in.
  * @private
  */
 goog.editor.plugins.EquationEditorPlugin.prototype.populateContext_ =
-    function() {
+    function(domHelper) {
   var context = {};
-  context.paletteManager = new goog.ui.equation.PaletteManager();
+  context.paletteManager = new goog.ui.equation.PaletteManager(domHelper);
   return context;
 };
 
@@ -124,7 +128,7 @@ goog.editor.plugins.EquationEditorPlugin.prototype.populateContext_ =
  */
 goog.editor.plugins.EquationEditorPlugin.prototype.getEquationFromSelection_ =
     function() {
-  var range = this.fieldObject.getRange();
+  var range = this.getFieldObject().getRange();
   if (range) {
     return range.getText();
   }
@@ -133,7 +137,7 @@ goog.editor.plugins.EquationEditorPlugin.prototype.getEquationFromSelection_ =
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.editor.plugins.EquationEditorPlugin.prototype.enable =
     function(fieldObject) {
   goog.base(this, 'enable', fieldObject);
@@ -145,7 +149,7 @@ goog.editor.plugins.EquationEditorPlugin.prototype.enable =
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.editor.plugins.EquationEditorPlugin.prototype.disable =
     function(fieldObject) {
   goog.base(this, 'disable', fieldObject);
@@ -180,7 +184,7 @@ goog.editor.plugins.EquationEditorPlugin.prototype.handleOk_ =
   this.restoreOriginalSelection();
 
   // Notify listeners that the editable field's contents are about to change.
-  this.fieldObject.dispatchBeforeChange();
+  this.getFieldObject().dispatchBeforeChange();
 
   var dh = this.getFieldDomHelper();
   var node = dh.htmlToDocumentFragment(e.equationHtml);
@@ -196,7 +200,7 @@ goog.editor.plugins.EquationEditorPlugin.prototype.handleOk_ =
     // <br> right before and/or after the selection. Currently this is fixed
     // only for case of collapsed selection where we simply avoid calling
     // removeContants().
-    var range = this.fieldObject.getRange();
+    var range = this.getFieldObject().getRange();
     if (!range.isCollapsed()) {
       range.removeContents();
     }
@@ -207,5 +211,5 @@ goog.editor.plugins.EquationEditorPlugin.prototype.handleOk_ =
   // equation image.
   goog.editor.range.placeCursorNextTo(node, false);
 
-  this.fieldObject.dispatchChange();
+  this.getFieldObject().dispatchChange();
 };

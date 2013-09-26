@@ -126,20 +126,20 @@ goog.crypt.Hmac.prototype.initialize_ = function(key) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.crypt.Hmac.prototype.reset = function() {
   this.hasher_.reset();
   this.hasher_.update(this.keyI_);
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.crypt.Hmac.prototype.update = function(bytes, opt_length) {
   this.hasher_.update(bytes, opt_length);
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.crypt.Hmac.prototype.digest = function() {
   var temp = this.hasher_.digest();
   this.hasher_.reset();
@@ -153,11 +153,10 @@ goog.crypt.Hmac.prototype.digest = function() {
  * Calculates an HMAC for a given message.
  *
  * @param {Array.<number>} message  An array of integers in {0, 255}.
- * @return {Array} the digest of the given message.
+ * @return {!Array.<number>} the digest of the given message.
  */
 goog.crypt.Hmac.prototype.getHmac = function(message) {
   this.reset();
   this.update(message);
   return this.digest();
 };
-

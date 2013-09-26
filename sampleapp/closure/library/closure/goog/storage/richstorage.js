@@ -76,7 +76,7 @@ goog.storage.RichStorage.Wrapper = function(value) {
  */
 goog.storage.RichStorage.Wrapper.wrapIfNecessary = function(value) {
   if (!goog.isDef(value) || value instanceof goog.storage.RichStorage.Wrapper) {
-    return /** @type {(!goog.storage.RichStorage.Wrapper|undefined)} */ value;
+    return /** @type {(!goog.storage.RichStorage.Wrapper|undefined)} */ (value);
   }
   return new goog.storage.RichStorage.Wrapper(value);
 };
@@ -114,7 +114,7 @@ goog.storage.RichStorage.Wrapper.unwrapIfPossible = function(wrapper) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.storage.RichStorage.prototype.set = function(key, value) {
   goog.base(this, 'set', key,
       goog.storage.RichStorage.Wrapper.wrapIfNecessary(value));
@@ -126,7 +126,7 @@ goog.storage.RichStorage.prototype.set = function(key, value) {
  *
  * WARNING: This returns an Object, which once used to be
  * goog.storage.RichStorage.Wrapper. This is due to the fact
- * that deserialized objects loose type information and it
+ * that deserialized objects lose type information and it
  * is hard to do proper typecasting in JavaScript. Be sure
  * you know what you are doing when using the returned value.
  *
@@ -136,13 +136,13 @@ goog.storage.RichStorage.prototype.set = function(key, value) {
 goog.storage.RichStorage.prototype.getWrapper = function(key) {
   var wrapper = goog.storage.RichStorage.superClass_.get.call(this, key);
   if (!goog.isDef(wrapper) || wrapper instanceof Object) {
-    return /** @type {(!Object|undefined)} */ wrapper;
+    return /** @type {(!Object|undefined)} */ (wrapper);
   }
   throw goog.storage.ErrorCode.INVALID_VALUE;
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.storage.RichStorage.prototype.get = function(key) {
   return goog.storage.RichStorage.Wrapper.unwrapIfPossible(
       this.getWrapper(key));

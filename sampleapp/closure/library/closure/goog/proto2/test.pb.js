@@ -19,10 +19,12 @@
  */
 
 goog.provide('proto2.TestAllTypes');
+goog.provide('proto2.TestAllTypes.NestedEnum');
 goog.provide('proto2.TestAllTypes.NestedMessage');
 goog.provide('proto2.TestAllTypes.OptionalGroup');
 goog.provide('proto2.TestAllTypes.RepeatedGroup');
-goog.provide('proto2.TestAllTypes.NestedEnum');
+goog.provide('proto2.TestDefaultChild');
+goog.provide('proto2.TestDefaultParent');
 
 goog.require('goog.proto2.Message');
 
@@ -2312,7 +2314,7 @@ proto2.TestAllTypes.prototype.clearRepeatedInt64String = function() {
  * @enum {number}
  */
 proto2.TestAllTypes.NestedEnum = {
-  FOO: 1,
+  FOO: 0,
   BAR: 2,
   BAZ: 3
 };
@@ -2386,6 +2388,57 @@ proto2.TestAllTypes.NestedMessage.prototype.bCount = function() {
  */
 proto2.TestAllTypes.NestedMessage.prototype.clearB = function() {
   this.clear$Field(1);
+};
+
+
+/**
+ * Gets the value of the c field.
+ * @return {?number} The value.
+ */
+proto2.TestAllTypes.NestedMessage.prototype.getC = function() {
+  return /** @type {?number} */ (this.get$Value(2));
+};
+
+
+/**
+ * Gets the value of the c field or the default value if not set.
+ * @return {number} The value.
+ */
+proto2.TestAllTypes.NestedMessage.prototype.getCOrDefault = function() {
+  return /** @type {number} */ (this.get$ValueOrDefault(2));
+};
+
+
+/**
+ * Sets the value of the c field.
+ * @param {number} value The value.
+ */
+proto2.TestAllTypes.NestedMessage.prototype.setC = function(value) {
+  this.set$Value(2, value);
+};
+
+
+/**
+ * @return {boolean} Whether the c field has a value.
+ */
+proto2.TestAllTypes.NestedMessage.prototype.hasC = function() {
+  return this.has$Value(2);
+};
+
+
+/**
+ * @return {number} The number of values in the c field.
+ */
+proto2.TestAllTypes.NestedMessage.prototype.cCount = function() {
+  return this.count$Values(2);
+};
+
+
+/**
+ * Clears the values in the c field.
+ */
+proto2.TestAllTypes.NestedMessage.prototype.clearC = function() {
+  this.clear$Field(2);
 };
 
 
@@ -2539,6 +2592,148 @@ proto2.TestAllTypes.RepeatedGroup.prototype.aCount = function() {
  */
 proto2.TestAllTypes.RepeatedGroup.prototype.clearA = function() {
   this.clear$Field(47);
+};
+
+
+
+/**
+ * Message TestDefaultParent.
+ * @constructor
+ * @extends {goog.proto2.Message}
+ */
+proto2.TestDefaultParent = function() {
+  goog.proto2.Message.apply(this);
+};
+goog.inherits(proto2.TestDefaultParent, goog.proto2.Message);
+
+
+/**
+ * Overrides {@link goog.proto2.Message#clone} to specify its exact return type.
+ * @return {!proto2.TestDefaultParent} The cloned message.
+ * @override
+ */
+proto2.TestDefaultParent.prototype.clone;
+
+
+/**
+ * Gets the value of the child field.
+ * @return {proto2.TestDefaultChild} The value.
+ */
+proto2.TestDefaultParent.prototype.getChild = function() {
+  return /** @type {proto2.TestDefaultChild} */ (this.get$Value(1));
+};
+
+
+/**
+ * Gets the value of the child field or the default value if not set.
+ * @return {!proto2.TestDefaultChild} The value.
+ */
+proto2.TestDefaultParent.prototype.getChildOrDefault = function() {
+  return /** @type {!proto2.TestDefaultChild} */ (this.get$ValueOrDefault(1));
+};
+
+
+/**
+ * Sets the value of the child field.
+ * @param {!proto2.TestDefaultChild} value The value.
+ */
+proto2.TestDefaultParent.prototype.setChild = function(value) {
+  this.set$Value(1, value);
+};
+
+
+/**
+ * @return {boolean} Whether the child field has a value.
+ */
+proto2.TestDefaultParent.prototype.hasChild = function() {
+  return this.has$Value(1);
+};
+
+
+/**
+ * @return {number} The number of values in the child field.
+ */
+proto2.TestDefaultParent.prototype.childCount = function() {
+  return this.count$Values(1);
+};
+
+
+/**
+ * Clears the values in the child field.
+ */
+proto2.TestDefaultParent.prototype.clearChild = function() {
+  this.clear$Field(1);
+};
+
+
+
+/**
+ * Message TestDefaultChild.
+ * @constructor
+ * @extends {goog.proto2.Message}
+ */
+proto2.TestDefaultChild = function() {
+  goog.proto2.Message.apply(this);
+};
+goog.inherits(proto2.TestDefaultChild, goog.proto2.Message);
+
+
+/**
+ * Overrides {@link goog.proto2.Message#clone} to specify its exact return type.
+ * @return {!proto2.TestDefaultChild} The cloned message.
+ * @override
+ */
+proto2.TestDefaultChild.prototype.clone;
+
+
+/**
+ * Gets the value of the foo field.
+ * @return {?boolean} The value.
+ */
+proto2.TestDefaultChild.prototype.getFoo = function() {
+  return /** @type {?boolean} */ (this.get$Value(1));
+};
+
+
+/**
+ * Gets the value of the foo field or the default value if not set.
+ * @return {boolean} The value.
+ */
+proto2.TestDefaultChild.prototype.getFooOrDefault = function() {
+  return /** @type {boolean} */ (this.get$ValueOrDefault(1));
+};
+
+
+/**
+ * Sets the value of the foo field.
+ * @param {boolean} value The value.
+ */
+proto2.TestDefaultChild.prototype.setFoo = function(value) {
+  this.set$Value(1, value);
+};
+
+
+/**
+ * @return {boolean} Whether the foo field has a value.
+ */
+proto2.TestDefaultChild.prototype.hasFoo = function() {
+  return this.has$Value(1);
+};
+
+
+/**
+ * @return {number} The number of values in the foo field.
+ */
+proto2.TestDefaultChild.prototype.fooCount = function() {
+  return this.count$Values(1);
+};
+
+
+/**
+ * Clears the values in the foo field.
+ */
+proto2.TestDefaultChild.prototype.clearFoo = function() {
+  this.clear$Field(1);
 };
 
 
@@ -2787,6 +2982,11 @@ goog.proto2.Message.set$Metadata(proto2.TestAllTypes.NestedMessage, {
     name: 'b',
     fieldType: goog.proto2.Message.FieldType.INT32,
     type: Number
+  },
+  2: {
+    name: 'c',
+    fieldType: goog.proto2.Message.FieldType.INT32,
+    type: Number
   }
 });
 
@@ -2816,5 +3016,32 @@ goog.proto2.Message.set$Metadata(proto2.TestAllTypes.RepeatedGroup, {
     repeated: true,
     fieldType: goog.proto2.Message.FieldType.INT32,
     type: Number
+  }
+});
+
+
+goog.proto2.Message.set$Metadata(proto2.TestDefaultParent, {
+  0: {
+    name: 'TestDefaultParent',
+    fullName: 'TestDefaultParent'
+  },
+  1: {
+    name: 'child',
+    fieldType: goog.proto2.Message.FieldType.MESSAGE,
+    type: proto2.TestDefaultChild
+  }
+});
+
+
+goog.proto2.Message.set$Metadata(proto2.TestDefaultChild, {
+  0: {
+    name: 'TestDefaultChild',
+    fullName: 'TestDefaultChild'
+  },
+  1: {
+    name: 'foo',
+    fieldType: goog.proto2.Message.FieldType.BOOL,
+    defaultValue: true,
+    type: Boolean
   }
 });

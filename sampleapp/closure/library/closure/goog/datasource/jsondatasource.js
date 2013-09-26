@@ -91,6 +91,7 @@ goog.ds.JsonDataSource['dataSources'] = {};
 /**
  * Load or reload the backing data for this node.
  * Fires the JsonDataSource
+ * @override
  */
 goog.ds.JsonDataSource.prototype.load = function() {
   if (this.uri_) {
@@ -98,7 +99,7 @@ goog.ds.JsonDataSource.prototype.load = function() {
     // renamed.  It should therefore be accessed via array notation here so
     // that it also doesn't get renamed and stops the compiler from complaining
     goog.ds.JsonDataSource['dataSources'][this.dataName_] = this;
-    goog.ds.logger.info('Sending JS request for DataSource ' +
+    goog.log.info(goog.ds.logger, 'Sending JS request for DataSource ' +
         this.getDataName() + ' to ' + this.uri_);
 
     this.loadState_ = goog.ds.LoadState.LOADING;
@@ -122,6 +123,7 @@ goog.ds.JsonDataSource.prototype.load = function() {
 /**
  * Gets the state of the backing data for this node
  * @return {goog.ds.LoadState} The state.
+ * @override
  */
 goog.ds.JsonDataSource.prototype.getLoadState = function() {
   return this.loadState_;

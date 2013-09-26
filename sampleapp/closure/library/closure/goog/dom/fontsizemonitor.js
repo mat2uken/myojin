@@ -26,7 +26,7 @@ goog.require('goog.events.EventType');
 goog.require('goog.userAgent');
 
 
-// TODO(user): Move this to goog.events instead.
+// TODO(arv): Move this to goog.events instead.
 
 
 
@@ -109,7 +109,7 @@ goog.inherits(goog.dom.FontSizeMonitor, goog.events.EventTarget);
  * @enum {string}
  */
 goog.dom.FontSizeMonitor.EventType = {
-  // TODO(user): Change value to 'change' after updating the callers.
+  // TODO(arv): Change value to 'change' after updating the callers.
   CHANGE: 'fontsizechange'
 };
 
@@ -123,7 +123,7 @@ goog.dom.FontSizeMonitor.CHANGE_EVENT =
     goog.dom.FontSizeMonitor.EventType.CHANGE;
 
 
-/** @inheritDoc */
+/** @override */
 goog.dom.FontSizeMonitor.prototype.disposeInternal = function() {
   goog.dom.FontSizeMonitor.superClass_.disposeInternal.call(this);
 
@@ -132,7 +132,8 @@ goog.dom.FontSizeMonitor.prototype.disposeInternal = function() {
   this.resizeTarget_ = null;
 
   // Firefox 2 crashes if the iframe is removed during the unload phase.
-  if (!goog.userAgent.GECKO || goog.userAgent.isVersion('1.9')) {
+  if (!goog.userAgent.GECKO ||
+      goog.userAgent.isVersionOrHigher('1.9')) {
     goog.dom.removeNode(this.sizeElement_);
   }
   delete this.sizeElement_;

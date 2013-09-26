@@ -15,6 +15,7 @@
 /**
  * @fileoverview Character counter widget implementation.
  *
+ * @author eae@google.com (Emil A Eklund)
  * @see ../demos/charcounter.html
  */
 
@@ -87,7 +88,7 @@ goog.ui.CharCounter = function(elInput, elCount, maxLength, opt_displayMode) {
   goog.events.listen(this.inputHandler_,
       goog.events.InputHandler.EventType.INPUT, this.onChange_, false, this);
 
-  this.checkLength_();
+  this.checkLength();
 };
 goog.inherits(goog.ui.CharCounter, goog.events.EventTarget);
 
@@ -112,7 +113,7 @@ goog.ui.CharCounter.Display = {
 goog.ui.CharCounter.prototype.setMaxLength = function(maxLength) {
   this.maxLength_ = maxLength;
   this.elInput_.maxLength = maxLength;
-  this.checkLength_();
+  this.checkLength();
 };
 
 
@@ -133,7 +134,7 @@ goog.ui.CharCounter.prototype.getMaxLength = function() {
  */
 goog.ui.CharCounter.prototype.setDisplayMode = function(displayMode) {
   this.display_ = displayMode;
-  this.checkLength_();
+  this.checkLength();
 };
 
 
@@ -154,17 +155,15 @@ goog.ui.CharCounter.prototype.getDisplayMode = function() {
  * @private
  */
 goog.ui.CharCounter.prototype.onChange_ = function(event) {
-  this.checkLength_();
+  this.checkLength();
 };
 
 
 /**
  * Checks length of text in input field and updates the counter. Truncates text
  * if the maximum lengths is exceeded.
- *
- * @private
  */
-goog.ui.CharCounter.prototype.checkLength_ = function() {
+goog.ui.CharCounter.prototype.checkLength = function() {
   var count = this.elInput_.value.length;
 
   // There's no maxlength property for textareas so instead we truncate the
@@ -186,12 +185,12 @@ goog.ui.CharCounter.prototype.checkLength_ = function() {
     var incremental = this.display_ == goog.ui.CharCounter.Display.INCREMENTAL;
     goog.dom.setTextContent(
         this.elCount_,
-        /** @type {string} */(incremental ? count : this.maxLength_ - count));
+        String(incremental ? count : this.maxLength_ - count));
   }
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.CharCounter.prototype.disposeInternal = function() {
   goog.ui.CharCounter.superClass_.disposeInternal.call(this);
   delete this.elInput_;

@@ -28,18 +28,17 @@ goog.provide('goog.editor.ClickToEditWrapper');
 
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
-goog.require('goog.debug.Logger');
 goog.require('goog.dom');
 goog.require('goog.dom.Range');
 goog.require('goog.dom.TagName');
 goog.require('goog.editor.BrowserFeature');
 goog.require('goog.editor.Command');
 goog.require('goog.editor.Field.EventType');
-goog.require('goog.editor.node');
 goog.require('goog.editor.range');
 goog.require('goog.events.BrowserEvent.MouseButton');
 goog.require('goog.events.EventHandler');
 goog.require('goog.events.EventType');
+goog.require('goog.log');
 
 
 
@@ -116,11 +115,11 @@ goog.inherits(goog.editor.ClickToEditWrapper, goog.Disposable);
 
 /**
  * The logger for this class.
- * @type {goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @private
  */
 goog.editor.ClickToEditWrapper.prototype.logger_ =
-    goog.debug.Logger.getLogger('goog.editor.ClickToEditWrapper');
+    goog.log.getLogger('goog.editor.ClickToEditWrapper');
 
 
 /** @return {goog.editor.Field} The field. */
@@ -135,7 +134,7 @@ goog.editor.ClickToEditWrapper.prototype.getOriginalDomHelper = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.editor.ClickToEditWrapper.prototype.disposeInternal = function() {
   goog.base(this, 'disposeInternal');
   this.exitDocument();
@@ -373,7 +372,7 @@ goog.editor.ClickToEditWrapper.prototype.makeFieldEditable = function(field) {
 
 /**
  * Gets a saved caret range for the given range.
- * @param {?goog.dom.AbstractRange} range A range wrapper.
+ * @param {goog.dom.AbstractRange} range A range wrapper.
  * @return {goog.dom.SavedCaretRange} The range, saved with carets, or null
  *    if the range wrapper was null.
  * @private
@@ -411,7 +410,7 @@ goog.editor.ClickToEditWrapper.prototype.insertCarets_ = function() {
     // document.activeElement. In FF, we have to be more hacky.
     var specialNodeClicked;
     if (goog.editor.BrowserFeature.HAS_ACTIVE_ELEMENT) {
-      specialNodeClicked = goog.editor.node.getActiveElementIE(
+      specialNodeClicked = goog.dom.getActiveElement(
           this.originalDomHelper_.getDocument());
     } else {
       specialNodeClicked = this.savedAnchorClicked_;

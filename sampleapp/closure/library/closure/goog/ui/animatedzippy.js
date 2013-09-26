@@ -15,6 +15,7 @@
 /**
  * @fileoverview Animated zippy widget implementation.
  *
+ * @author eae@google.com (Emil A Eklund)
  * @see ../demos/zippy.html
  */
 
@@ -23,8 +24,7 @@ goog.provide('goog.ui.AnimatedZippy');
 goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.fx.Animation');
-goog.require('goog.fx.Animation.EventType');
-goog.require('goog.fx.Transition.EventType');
+goog.require('goog.fx.Transition');
 goog.require('goog.fx.easing');
 goog.require('goog.ui.Zippy');
 goog.require('goog.ui.ZippyEvent');
@@ -41,18 +41,21 @@ goog.require('goog.ui.ZippyEvent');
  *     string id.
  * @param {boolean=} opt_expanded Initial expanded/visibility state. Defaults to
  *     false.
+ * @param {goog.dom.DomHelper=} opt_domHelper An optional DOM helper.
  * @constructor
  * @extends {goog.ui.Zippy}
  */
-goog.ui.AnimatedZippy = function(header, content, opt_expanded) {
+goog.ui.AnimatedZippy = function(header, content, opt_expanded, opt_domHelper) {
+  var domHelper = opt_domHelper || goog.dom.getDomHelper();
+
   // Create wrapper element and move content into it.
-  var elWrapper = goog.dom.createDom('div', {'style': 'overflow:hidden'});
-  var elContent = goog.dom.getElement(content);
+  var elWrapper = domHelper.createDom('div', {'style': 'overflow:hidden'});
+  var elContent = domHelper.getElement(content);
   elContent.parentNode.replaceChild(elWrapper, elContent);
   elWrapper.appendChild(elContent);
 
   /**
-   * Contant wrapper, used for animation.
+   * Content wrapper, used for animation.
    * @type {Element}
    * @private
    */
@@ -66,7 +69,8 @@ goog.ui.AnimatedZippy = function(header, content, opt_expanded) {
   this.anim_ = null;
 
   // Call constructor of super class.
-  goog.ui.Zippy.call(this, header, elContent, opt_expanded);
+  goog.ui.Zippy.call(this, header, elContent, opt_expanded,
+      undefined, domHelper);
 
   // Set initial state.
   // NOTE: Set the class names as well otherwise animated zippys
@@ -96,7 +100,7 @@ goog.ui.AnimatedZippy.prototype.animationAcceleration = goog.fx.easing.easeOut;
  * @return {boolean} Whether the zippy is in the process of being expanded or
  *     collapsed.
  */
-goog.ui.Zippy.prototype.isBusy = function() {
+goog.ui.AnimatedZippy.prototype.isBusy = function() {
   return this.anim_ != null;
 };
 
@@ -105,6 +109,7 @@ goog.ui.Zippy.prototype.isBusy = function() {
  * Sets expanded state.
  *
  * @param {boolean} expanded Expanded/visibility state.
+ * @override
  */
 goog.ui.AnimatedZippy.prototype.setExpanded = function(expanded) {
   if (this.isExpanded() == expanded && !this.anim_) {

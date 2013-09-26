@@ -21,13 +21,12 @@ goog.require('goog.dom.selection');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 goog.require('goog.events.InputHandler');
-goog.require('goog.string');
 goog.require('goog.style');
-goog.require('goog.ui.Component');
 goog.require('goog.ui.equation.ChangeEvent');
 goog.require('goog.ui.equation.EditorPane');
 goog.require('goog.ui.equation.ImageRenderer');
-goog.require('goog.ui.equation.PaletteManager');
+goog.require('goog.ui.equation.Palette');
+goog.require('goog.ui.equation.PaletteEvent');
 
 
 
@@ -162,7 +161,7 @@ goog.ui.equation.TexPane.prototype.lastRenderredText_ = '';
 goog.ui.equation.TexPane.prototype.changeSequence_ = 0;
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexPane.prototype.createDom = function() {
 
   /** @desc Title for TeX editor tab in the equation editor dialog. */
@@ -230,7 +229,7 @@ goog.ui.equation.TexPane.prototype.createDom = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexPane.prototype.enterDocument = function() {
   this.texInputHandler_ = new goog.events.InputHandler(this.texEdit_);
 
@@ -252,7 +251,7 @@ goog.ui.equation.TexPane.prototype.enterDocument = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexPane.prototype.setVisible = function(visible) {
   goog.base(this, 'setVisible', visible);
   if (visible) {
@@ -423,13 +422,13 @@ goog.ui.equation.TexPane.prototype.insert_ = function(text) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexPane.prototype.getEquation = function() {
   return this.texEdit_['value'];
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexPane.prototype.setEquation =
     function(equation) {
   this.texEdit_['value'] = equation;
@@ -437,7 +436,7 @@ goog.ui.equation.TexPane.prototype.setEquation =
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexPane.prototype.disposeInternal = function() {
   this.texInputHandler_.dispose();
   this.paletteManager_ = null;

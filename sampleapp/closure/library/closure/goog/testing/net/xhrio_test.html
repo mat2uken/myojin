@@ -107,10 +107,22 @@ function testGetLastUri() {
   assertEquals('message sent, URI saved', requestUrl, xhr.getLastUri());
 }
 
+function testGetLastMethod() {
+  var xhr = new goog.testing.net.XhrIo();
+  assertUndefined('nothing sent yet, empty method', xhr.getLastMethod());
+
+  var method = 'POKE';
+  xhr.send('http://www.example.com/', method);
+  assertEquals('message sent, method saved', method, xhr.getLastMethod());
+  xhr.simulateResponse(200, '');
+
+  xhr.send('http://www.example.com/');
+  assertEquals('message sent, method saved', 'GET', xhr.getLastMethod());
+}
+
 function testGetLastContent() {
   var xhr = new goog.testing.net.XhrIo();
-  assertEquals('nothing sent yet, empty content',
-               undefined, xhr.getLastContent());
+  assertUndefined('nothing sent yet, empty content', xhr.getLastContent());
 
   var postContent = 'var=value&var2=value2';
   xhr.send('http://www.example.com/', undefined, postContent);
@@ -119,8 +131,24 @@ function testGetLastContent() {
   xhr.simulateResponse(200, '');
 
   xhr.send('http://www.example.com/');
-  assertEquals('GET message sent, content cleaned',
-               undefined, xhr.getLastContent());
+  assertUndefined('GET message sent, content cleaned', xhr.getLastContent());
+}
+
+function testGetLastRequestHeaders() {
+  var xhr = new goog.testing.net.XhrIo();
+  assertUndefined('nothing sent yet, empty headers',
+                  xhr.getLastRequestHeaders());
+
+   xhr.send('http://www.example.com/', undefined, undefined,
+       {'From': 'page@google.com'});
+   assertObjectEquals('Request sent with extra headers, headers saved',
+                      {'From': 'page@google.com'},
+                      xhr.getLastRequestHeaders());
+   xhr.simulateResponse(200, '');
+
+   xhr.send('http://www.example.com');
+   assertUndefined('New request sent without extra headers',
+                   xhr.getLastRequestHeaders());
 }
 
 function testGetResponseText() {
@@ -347,6 +375,45 @@ function testEvents_Success() {
   xhr.send('dummyurl');
   xhr.simulateResponse(200, null);
 
+  mockControl.$verifyAll();
+  mockControl.$resetAll();
+}
+
+function testGetResponseHeaders() {
+  var xhr = new goog.testing.net.XhrIo();
+  var mockListener = mockControl.createFunctionMock();
+  mockListener(new goog.testing.mockmatchers.InstanceOf(goog.events.Event))
+      .$does(function(e) {
+    var headers = e.target.getResponseHeaders();
+    assertEquals(2, goog.object.getCount(headers));
+    assertEquals('foo', headers['test1']);
+    assertEquals('bar', headers['test2']);
+  });
+  mockControl.$replayAll();
+  goog.events.listen(xhr, goog.net.EventType.SUCCESS, mockListener);
+
+  // Simulate an XHR with 2 headers.
+  xhr.simulateResponse(200, '', {'test1': 'foo', 'test2': 'bar'});
+
+  mockControl.$verifyAll();
+  mockControl.$resetAll();
+}
+
+function testGetResponseHeadersWithColonInValue() {
+  var xhr = new goog.testing.net.XhrIo();
+  var mockListener = mockControl.createFunctionMock();
+  mockListener(new goog.testing.mockmatchers.InstanceOf(goog.events.Event))
+      .$does(function(e) {
+    var headers = e.target.getResponseHeaders();
+    assertEquals(1, goog.object.getCount(headers));
+    assertEquals('f:o:o', headers['test1']);
+  });
+  mockControl.$replayAll();
+  goog.events.listen(xhr, goog.net.EventType.SUCCESS, mockListener);
+
+  // Simulate an XHR with a colon in the http header value.
+  xhr.simulateResponse(200, '', {'test1': 'f:o:o'});
+  
   mockControl.$verifyAll();
   mockControl.$resetAll();
 }

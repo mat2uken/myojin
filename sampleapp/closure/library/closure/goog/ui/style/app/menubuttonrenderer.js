@@ -16,15 +16,16 @@
  * @fileoverview Renderer for {@link goog.ui.style.app.MenuButton}s and
  * subclasses.
  *
+ * @author attila@google.com (Attila Bodis)
+ * @author gveen@google.com (Greg Veen)
  */
 
 goog.provide('goog.ui.style.app.MenuButtonRenderer');
 
+goog.require('goog.a11y.aria.Role');
 goog.require('goog.array');
 goog.require('goog.dom');
-goog.require('goog.dom.a11y.Role');
 goog.require('goog.style');
-goog.require('goog.ui.ControlContent');
 goog.require('goog.ui.Menu');
 goog.require('goog.ui.MenuRenderer');
 goog.require('goog.ui.style.app.ButtonRenderer');
@@ -89,7 +90,7 @@ goog.ui.style.app.MenuButtonRenderer.IE6_CLASS_COMBINATIONS = [
 /**
  * Returns the ARIA role to be applied to menu buttons, which
  * have a menu attached to them.
- * @return {goog.dom.a11y.Role} ARIA role.
+ * @return {goog.a11y.aria.Role} ARIA role.
  * @override
  */
 goog.ui.style.app.MenuButtonRenderer.prototype.getAriaRole = function() {
@@ -97,7 +98,7 @@ goog.ui.style.app.MenuButtonRenderer.prototype.getAriaRole = function() {
   // screen reader keeps referring to menus as buttons, which
   // might be misleading for the users. Hence the ARIA role
   // 'menu' is assigned.
-  return goog.dom.a11y.Role.MENU;
+  return goog.a11y.aria.Role.MENU;
 };
 
 
@@ -108,6 +109,7 @@ goog.ui.style.app.MenuButtonRenderer.prototype.getAriaRole = function() {
  * @param {Element} element Root element of the button whose content element
  *     is to be returned.
  * @return {Element} The button's content element.
+ * @override
  */
 goog.ui.style.app.MenuButtonRenderer.prototype.getContentElement =
     function(element) {
@@ -121,19 +123,21 @@ goog.ui.style.app.MenuButtonRenderer.prototype.getContentElement =
  * the element.  Overrides {@link goog.ui.style.app.ButtonRenderer#decorate} by
  * looking for a child element that can be decorated by a menu, and if it
  * finds one, decorates it and attaches it to the menu button.
- * @param {goog.ui.MenuButton} button Menu button to decorate the element.
+ * @param {goog.ui.Control} control goog.ui.MenuButton to decorate the element.
  * @param {Element} element Element to decorate.
  * @return {Element} Decorated element.
+ * @override
  */
-goog.ui.style.app.MenuButtonRenderer.prototype.decorate = function(button,
-    element) {
-  // TODO(user):  Add more robust support for subclasses of goog.ui.Menu.
+goog.ui.style.app.MenuButtonRenderer.prototype.decorate =
+    function(control, element) {
+  var button = /** @type {goog.ui.MenuButton} */ (control);
+  // TODO(attila):  Add more robust support for subclasses of goog.ui.Menu.
   var menuElem = goog.dom.getElementsByTagNameAndClass(
       '*', goog.ui.MenuRenderer.CSS_CLASS, element)[0];
   if (menuElem) {
     // Move the menu element directly under the body (but hide it first to
     // prevent flicker; see bug 1089244).
-    goog.style.showElement(menuElem, false);
+    goog.style.setElementShown(menuElem, false);
     goog.dom.appendChild(goog.dom.getOwnerDocument(menuElem).body, menuElem);
 
     // Decorate the menu and attach it to the button.
@@ -167,6 +171,7 @@ goog.ui.style.app.MenuButtonRenderer.prototype.decorate = function(button,
  *     in a box.
  * @param {goog.dom.DomHelper} dom DOM helper, used for document interaction.
  * @return {Element} Pseudo-rounded-corner box containing the content.
+ * @override
  */
 goog.ui.style.app.MenuButtonRenderer.prototype.createButton = function(content,
     dom) {
@@ -176,7 +181,7 @@ goog.ui.style.app.MenuButtonRenderer.prototype.createButton = function(content,
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.style.app.MenuButtonRenderer.prototype.setContent = function(element,
     content) {
   var dom = goog.dom.getDomHelper(this.getContentElement(element));
@@ -214,13 +219,14 @@ goog.ui.style.app.MenuButtonRenderer.prototype.createDropdown = function(dom) {
  * Returns the CSS class to be applied to the root element of components
  * rendered using this renderer.
  * @return {string} Renderer-specific CSS class.
+ * @override
  */
 goog.ui.style.app.MenuButtonRenderer.prototype.getCssClass = function() {
   return goog.ui.style.app.MenuButtonRenderer.CSS_CLASS;
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.style.app.MenuButtonRenderer.prototype.getIe6ClassCombinations =
     function() {
   return goog.ui.style.app.MenuButtonRenderer.IE6_CLASS_COMBINATIONS;

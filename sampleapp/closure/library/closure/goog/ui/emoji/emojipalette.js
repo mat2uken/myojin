@@ -26,7 +26,6 @@
 
 goog.provide('goog.ui.emoji.EmojiPalette');
 
-goog.require('goog.events.Event');
 goog.require('goog.events.EventType');
 goog.require('goog.net.ImageLoader');
 goog.require('goog.ui.Palette');
@@ -226,7 +225,7 @@ goog.ui.emoji.EmojiPalette.prototype.getImageLoader = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.emoji.EmojiPalette.prototype.disposeInternal = function() {
   goog.ui.emoji.EmojiPalette.superClass_.disposeInternal.call(this);
 

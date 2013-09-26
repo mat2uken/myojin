@@ -3,7 +3,7 @@
 import os
 import json
 import tempfile
-from corp import app
+from flask import current_app
 
 from babel import Locale, localedata
 from babel.messages.catalog import Catalog
@@ -15,15 +15,15 @@ __all__ = ['init_catalog', 'update_catalog', 'extract_catalog', 'compile_catalog
            'dump_catalog_to_json', 'save_catalog_from_json']
 
 
-LOCALES_DIRNAME = app.config['LOCALES_DIRNAME']
-LOCALES_KEYWORDS = app.config['LOCALES_KEYWORDS']
-MSGID_CHARSET = app.config['MSGID_CHARSET']
-MSGID_BUGS_ADDRESS = app.config['MSGID_BUGS_ADDRESS']
-MSGID_COPYRIGHT_HOLDER = app.config['MSGID_COPYRIGHT_HOLDER']
+LOCALES_DIRNAME = current_app.config['LOCALES_DIRNAME']
+LOCALES_KEYWORDS = current_app.config['LOCALES_KEYWORDS']
+MSGID_CHARSET = current_app.config['MSGID_CHARSET']
+MSGID_BUGS_ADDRESS = current_app.config['MSGID_BUGS_ADDRESS']
+MSGID_COPYRIGHT_HOLDER = current_app.config['MSGID_COPYRIGHT_HOLDER']
 
-LOCALES_DIR = os.path.join(app.root_path, LOCALES_DIRNAME)
+LOCALES_DIR = os.path.join(current_app.root_path, LOCALES_DIRNAME)
 
-DEFAULT_DOMAIN = app.config["DEFAULT_DOMAIN"] if app.config.get("DEFAULT_DOMAIN") else "messages"
+DEFAULT_DOMAIN = current_app.config["DEFAULT_DOMAIN"] if current_app.config.get("DEFAULT_DOMAIN") else "messages"
 
 def _build_mo_filepath(locale, domain):
     locale_ = Locale.parse(locale)
@@ -67,16 +67,16 @@ def extract_catalog(width=76, no_location=False, omit_header=False, sort_output=
     from babel.messages.frontend import parse_keywords, parse_mapping
     keywords.update(parse_keywords(LOCALES_KEYWORDS))
 
-    config_filename = os.path.join(app.root_path, 'babel.cfg')
+    config_filename = os.path.join(current_app.root_path, 'babel.cfg')
     with open(config_filename) as f:
         method_map, options_map = parse_mapping(f)
-    app.logger.debug("config: %s" % config_filename)
+    current_app.logger.debug("config: %s" % config_filename)
 
     catalog = Catalog(project=domain,version=str(_get_latest_repo_revision()),
                       msgid_bugs_address=MSGID_BUGS_ADDRESS, copyright_holder=MSGID_COPYRIGHT_HOLDER,
                       charset=MSGID_CHARSET)
 
-    extract_path = os.path.join(app.root_path, '..')
+    extract_path = os.path.join(current_app.root_path, '..')
     def cb(filename, method, options):
         if method == 'ignore':
             return
@@ -85,7 +85,7 @@ def extract_catalog(width=76, no_location=False, omit_header=False, sort_output=
         if options:
             optstr = ' (%s)' % ', '.join(['%s="%s"' % (k, v) for
                                           k, v in options.items()])
-        app.logger.info('extracting messages from %s%s' % (filepath, optstr))
+        current_app.logger.info('extracting messages from %s%s' % (filepath, optstr))
 
     extracted = extract_from_dir(extract_path, method_map, options_map,
                                  keywords, comment_tags,
@@ -123,7 +123,7 @@ def dump_catalog_to_json(locale):
     domain = DEFAULT_DOMAIN
     locale_ = Locale.parse(locale)
     
-    app.logger.debug("getting catalog: (%s)" % locale_.language)
+    current_app.logger.debug("getting catalog: (%s)" % locale_.language)
     po_file = _build_po_filepath(locale_.language, domain)
     if not os.path.exists(po_file):
         raise Exception('Cannot find po_file: %s' % po_file)
@@ -132,7 +132,7 @@ def dump_catalog_to_json(locale):
 
     extract_catalog()
 
-    app.logger.debug("updating catalog: locale(%s)" % locale_.language)
+    current_app.logger.debug("updating catalog: locale(%s)" % locale_.language)
     with open(_build_pot_filepath(domain), 'r') as infile:
         template = read_po(infile)
     catalog.update(template, no_fuzzy_matching=True)
@@ -146,14 +146,14 @@ def save_catalog_from_json(msg_json, locale):
     domain = DEFAULT_DOMAIN
     locale_ = Locale.parse(locale)
 
-    app.logger.info("saving catalog: locale(%s)" % locale_.language)
+    current_app.logger.info("saving catalog: locale(%s)" % locale_.language)
     catalog = Catalog(project=domain,version=str(_get_latest_repo_revision()),
                       msgid_bugs_address=MSGID_BUGS_ADDRESS, copyright_holder=MSGID_COPYRIGHT_HOLDER,
                       charset=MSGID_CHARSET)
     for key, msg_string, comments, locations in json.loads(msg_json):
         catalog.add(key, msg_string, locations=[tuple(x) for x in locations], user_comments=comments)
 
-    app.logger.info("updateing catalog: locale(%s)" % locale_.language)
+    current_app.logger.info("updateing catalog: locale(%s)" % locale_.language)
     po_file = _build_po_filepath(locale_.language, domain)
     with open(_build_pot_filepath(domain), 'r') as infile:
         template = read_po(infile)
@@ -188,7 +188,7 @@ def update_catalog(locales=None, ignore_obsolete=True, no_fuzzy_matching=True):
         template = read_po(infile)
     
     for locale, filename in po_files:
-        app.logger.info("updating catalog: locale(%s)" % locale)
+        current_app.logger.info("updating catalog: locale(%s)" % locale)
         locale_ = Locale.parse(locale)
         with open(filename, 'U') as infile:
             catalog = read_po(infile, locale=locale_.language, domain=domain)
@@ -227,8 +227,8 @@ def compile_catalog(locales=None):
             catalog = read_po(infile, locale)
             for message, errors in catalog.check():
                 for error in errors:
-                    app.logger.error('error: %s:%d: %s' % (po_file, message.lineno, error))
+                    current_app.logger.error('error: %s:%d: %s' % (po_file, message.lineno, error))
 
-        app.logger.info('compiling catalog %r to %r' % (po_file, mo_file))
+        current_app.logger.info('compiling catalog %r to %r' % (po_file, mo_file))
         with open(mo_file, 'w') as outfile:
             write_mo(outfile, catalog, use_fuzzy=False)

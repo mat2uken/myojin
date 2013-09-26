@@ -107,10 +107,10 @@ goog.testing.mockmatchers.InstanceOf = function(ctor) {
   goog.testing.mockmatchers.ArgumentMatcher.call(this,
       function(obj) {
         return obj instanceof ctor;
-      // NOTE: Browser differences on ctor.toString() output
-      // make using that here problematic. So for now, just let
-      // people know the instanceOf() failed without providing
-      // browser specific details...
+        // NOTE: Browser differences on ctor.toString() output
+        // make using that here problematic. So for now, just let
+        // people know the instanceOf() failed without providing
+        // browser specific details...
       }, 'instanceOf()');
 };
 goog.inherits(goog.testing.mockmatchers.InstanceOf,
@@ -190,7 +190,7 @@ goog.inherits(goog.testing.mockmatchers.ObjectEquals,
     goog.testing.mockmatchers.ArgumentMatcher);
 
 
-/** @inheritDoc */
+/** @override */
 goog.testing.mockmatchers.ObjectEquals.prototype.matches =
     function(toVerify, opt_expectation) {
   // Override the default matches implementation to capture the exception thrown
@@ -240,7 +240,7 @@ goog.inherits(goog.testing.mockmatchers.SaveArgument,
     goog.testing.mockmatchers.ArgumentMatcher);
 
 
-/** @inheritDoc */
+/** @override */
 goog.testing.mockmatchers.SaveArgument.prototype.matches = function(
     toVerify, opt_expectation) {
   this.arg = toVerify;
@@ -248,7 +248,7 @@ goog.testing.mockmatchers.SaveArgument.prototype.matches = function(
     return this.delegateMatcher_.matches(toVerify, opt_expectation);
   }
   return goog.testing.mockmatchers.SaveArgument.superClass_.matches.call(
-          this, toVerify, opt_expectation);
+      this, toVerify, opt_expectation);
 };
 
 

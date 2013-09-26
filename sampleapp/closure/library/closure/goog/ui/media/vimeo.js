@@ -64,7 +64,6 @@ goog.require('goog.string');
 goog.require('goog.ui.media.FlashObject');
 goog.require('goog.ui.media.Media');
 goog.require('goog.ui.media.MediaModel');
-goog.require('goog.ui.media.MediaModel.Player');
 goog.require('goog.ui.media.MediaRenderer');
 
 
@@ -133,10 +132,12 @@ goog.ui.media.Vimeo.newControl = function(dataModel, opt_domHelper) {
  * Creates the initial DOM structure of the vimeo video, which is basically a
  * the flash object pointing to a vimeo video player.
  *
- * @param {goog.ui.media.Media} control The media control.
+ * @param {goog.ui.Control} c The media control.
  * @return {Element} The DOM structure that represents this control.
+ * @override
  */
-goog.ui.media.Vimeo.prototype.createDom = function(control) {
+goog.ui.media.Vimeo.prototype.createDom = function(c) {
+  var control = /** @type {goog.ui.media.Media} */ (c);
   var div = goog.ui.media.Vimeo.superClass_.createDom.call(this, control);
 
   var dataModel =
@@ -155,6 +156,7 @@ goog.ui.media.Vimeo.prototype.createDom = function(control) {
  * Returns the CSS class to be applied to the root element of components
  * rendered using this renderer.
  * @return {string} Renderer-specific CSS class.
+ * @override
  */
 goog.ui.media.Vimeo.prototype.getCssClass = function() {
   return goog.ui.media.Vimeo.CSS_CLASS;

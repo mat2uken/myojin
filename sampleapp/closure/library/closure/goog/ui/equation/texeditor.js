@@ -14,7 +14,6 @@
 
 goog.provide('goog.ui.equation.TexEditor');
 
-goog.require('goog.dom');
 goog.require('goog.ui.Component');
 goog.require('goog.ui.equation.ImageRenderer');
 goog.require('goog.ui.equation.TexPane');
@@ -57,7 +56,7 @@ goog.inherits(goog.ui.equation.TexEditor, goog.ui.Component);
 goog.ui.equation.TexEditor.prototype.texPane_ = null;
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexEditor.prototype.createDom = function() {
   goog.base(this, 'createDom');
   this.createDom_();
@@ -78,7 +77,7 @@ goog.ui.equation.TexEditor.prototype.createDom_ = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexEditor.prototype.decorateInternal = function(element) {
   this.setElementInternal(element);
   this.createDom_();
@@ -131,7 +130,7 @@ goog.ui.equation.TexEditor.prototype.setVisible = function(visible) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.TexEditor.prototype.disposeInternal = function() {
   if (this.texPane_) {
     this.texPane_.dispose();

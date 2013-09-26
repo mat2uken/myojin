@@ -22,7 +22,6 @@
  */
 goog.provide('goog.i18n.DateTimeParse');
 
-goog.require('goog.date.DateLike');
 goog.require('goog.i18n.DateTimeFormat');
 goog.require('goog.i18n.DateTimeSymbols');
 
@@ -239,8 +238,11 @@ goog.i18n.DateTimeParse.prototype.applyStandardPattern_ = function(formatType) {
   } else if (formatType < 8) {
     pattern = goog.i18n.DateTimeSymbols.TIMEFORMATS[formatType - 4];
   } else {
-    pattern = goog.i18n.DateTimeSymbols.DATEFORMATS[formatType - 8] +
-              ' ' + goog.i18n.DateTimeSymbols.TIMEFORMATS[formatType - 8];
+    pattern = goog.i18n.DateTimeSymbols.DATETIMEFORMATS[formatType - 8];
+    pattern = pattern.replace('{1}',
+        goog.i18n.DateTimeSymbols.DATEFORMATS[formatType - 8]);
+    pattern = pattern.replace('{0}',
+        goog.i18n.DateTimeSymbols.TIMEFORMATS[formatType - 8]);
   }
   this.applyPattern_(pattern);
 };
@@ -402,7 +404,7 @@ goog.i18n.DateTimeParse.prototype.getNextCharCount_ =
  * All acceptable pattern characters.
  * @private
  */
-goog.i18n.DateTimeParse.PATTERN_CHARS_ = 'GyMdkHmsSEDahKzZvQ';
+goog.i18n.DateTimeParse.PATTERN_CHARS_ = 'GyMdkHmsSEDahKzZvQL';
 
 
 /**
@@ -517,6 +519,7 @@ goog.i18n.DateTimeParse.prototype.subParse_ =
       cal.era = this.matchString_(text, pos, goog.i18n.DateTimeSymbols.ERAS);
       return true;
     case 'M': // MONTH
+    case 'L': // STANDALONEMONTH
       return this.subParseMonth_(text, pos, cal, value);
     case 'E':
       return this.subParseDayOfWeek_(text, pos, cal);
@@ -617,19 +620,21 @@ goog.i18n.DateTimeParse.prototype.subParseYear_ =
  */
 goog.i18n.DateTimeParse.prototype.subParseMonth_ =
     function(text, pos, cal, value) {
-  // when month is symbols, i.e., MMM or MMMM, value will be -1
+  // when month is symbols, i.e., MMM, MMMM, LLL or LLLL, value will be -1
   if (value < 0) {
     // Want to be able to parse both short and long forms.
-    // Try count == 4 first:
-    value = this.matchString_(text, pos, goog.i18n.DateTimeSymbols.MONTHS);
-    if (value < 0) { // count == 4 failed, now try count == 3
-      value = this.matchString_(text, pos,
-                                goog.i18n.DateTimeSymbols.SHORTMONTHS);
-    }
+    // Try count == 4 first
+    var months = goog.i18n.DateTimeSymbols.MONTHS.concat(
+        goog.i18n.DateTimeSymbols.STANDALONEMONTHS).concat(
+        goog.i18n.DateTimeSymbols.SHORTMONTHS).concat(
+        goog.i18n.DateTimeSymbols.STANDALONESHORTMONTHS);
+    value = this.matchString_(text, pos, months);
     if (value < 0) {
       return false;
     }
-    cal.month = value;
+    // The months variable is multiple of 12, so we have to get the actual
+    // month index by modulo 12.
+    cal.month = (value % 12);
     return true;
   } else {
     cal.month = value - 1;
@@ -828,7 +833,23 @@ goog.i18n.DateTimeParse.prototype.parseTimeZoneOffset_ =
  * @private
  */
 goog.i18n.DateTimeParse.prototype.parseInt_ = function(text, pos) {
-  var m = text.substring(pos[0]).match(/^\d+/);
+  // Delocalizes the string containing native digits specified by the locale,
+  // replaces the natvie digits with ASCII digits. Leaves other characters.
+  // This is the reverse operation of localizeNumbers_ in datetimeformat.js.
+  if (goog.i18n.DateTimeSymbols.ZERODIGIT) {
+    var parts = [];
+    for (var i = pos[0]; i < text.length; i++) {
+      var c = text.charCodeAt(i) - goog.i18n.DateTimeSymbols.ZERODIGIT;
+      parts.push((0 <= c && c <= 9) ?
+          String.fromCharCode(c + 0x30) :
+          text.charAt(i));
+    }
+    text = parts.join('');
+  } else {
+    text = text.substring(pos[0]);
+  }
+
+  var m = text.match(/^\d+/);
   if (!m) {
     return -1;
   }

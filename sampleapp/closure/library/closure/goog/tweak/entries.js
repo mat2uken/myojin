@@ -43,7 +43,7 @@ goog.provide('goog.tweak.StringSetting');
 
 goog.require('goog.array');
 goog.require('goog.asserts');
-goog.require('goog.debug.Logger');
+goog.require('goog.log');
 goog.require('goog.object');
 
 
@@ -87,11 +87,11 @@ goog.tweak.BaseEntry = function(id, description) {
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
  */
 goog.tweak.BaseEntry.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.BaseEntry');
+    goog.log.getLogger('goog.tweak.BaseEntry');
 
 
 /**
@@ -212,11 +212,12 @@ goog.tweak.BaseSetting.InitializeState_ = {
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.BaseSetting.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.BaseSetting');
+    goog.log.getLogger('goog.tweak.BaseSetting');
 
 
 /**
@@ -362,11 +363,12 @@ goog.inherits(goog.tweak.BasePrimitiveSetting, goog.tweak.BaseSetting);
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.BasePrimitiveSetting.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.BasePrimitiveSetting');
+    goog.log.getLogger('goog.tweak.BasePrimitiveSetting');
 
 
 /**
@@ -447,7 +449,7 @@ goog.tweak.BasePrimitiveSetting.prototype.setDefaultValue =
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.BasePrimitiveSetting.prototype.getNewValueEncoded = function() {
   this.ensureInitialized();
@@ -476,11 +478,12 @@ goog.inherits(goog.tweak.StringSetting, goog.tweak.BasePrimitiveSetting);
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.StringSetting.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.StringSetting');
+    goog.log.getLogger('goog.tweak.StringSetting');
 
 
 /**
@@ -519,9 +522,9 @@ goog.tweak.StringSetting.prototype.getDefaultValue;
 
 
 /**
- * @inheritDoc
+ * @override
  */
-goog.tweak.StringSetting.prototype.encodeNewValue = function(value) {
+goog.tweak.StringSetting.prototype.encodeNewValue = function() {
   return this.getNewValue();
 };
 
@@ -551,7 +554,7 @@ goog.tweak.StringSetting.prototype.getValidValues = function() {
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.StringSetting.prototype.initialize = function(value) {
   if (value == null) {
@@ -570,7 +573,7 @@ goog.tweak.StringSetting.prototype.initialize = function(value) {
         }
       }
       // Warn if the value is not in the list of allowed values.
-      this.logger.warning('Tweak ' + this.getId() +
+      goog.log.warning(this.logger, 'Tweak ' + this.getId() +
           ' has value outside of expected range:' + value);
     }
     this.setValue(value);
@@ -599,11 +602,12 @@ goog.inherits(goog.tweak.NumericSetting, goog.tweak.BasePrimitiveSetting);
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.NumericSetting.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.NumericSetting');
+    goog.log.getLogger('goog.tweak.NumericSetting');
 
 
 /**
@@ -642,7 +646,7 @@ goog.tweak.NumericSetting.prototype.getDefaultValue;
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.NumericSetting.prototype.encodeNewValue = function() {
   return '' + this.getNewValue();
@@ -675,7 +679,7 @@ goog.tweak.NumericSetting.prototype.getValidValues = function() {
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.NumericSetting.prototype.initialize = function(value) {
   if (value == null) {
@@ -685,12 +689,12 @@ goog.tweak.NumericSetting.prototype.initialize = function(value) {
     // Warn if the value is not in the list of allowed values.
     if (this.validValues_ &&
         !goog.array.contains(this.validValues_, coercedValue)) {
-      this.logger.warning('Tweak ' + this.getId() +
+      goog.log.warning(this.logger, 'Tweak ' + this.getId() +
           ' has value outside of expected range: ' + value);
     }
 
     if (isNaN(coercedValue)) {
-      this.logger.warning('Tweak ' + this.getId() +
+      goog.log.warning(this.logger, 'Tweak ' + this.getId() +
           ' has value of NaN, resetting to ' + this.getDefaultValue());
       this.setValue(this.getDefaultValue());
     } else {
@@ -716,11 +720,12 @@ goog.inherits(goog.tweak.BooleanSetting, goog.tweak.BasePrimitiveSetting);
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.BooleanSetting.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.BooleanSetting');
+    goog.log.getLogger('goog.tweak.BooleanSetting');
 
 
 /**
@@ -759,7 +764,7 @@ goog.tweak.BooleanSetting.prototype.getDefaultValue;
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.BooleanSetting.prototype.encodeNewValue = function() {
   return this.getNewValue() ? '1' : '0';
@@ -767,7 +772,7 @@ goog.tweak.BooleanSetting.prototype.encodeNewValue = function() {
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.BooleanSetting.prototype.initialize = function(value) {
   if (value == null) {
@@ -815,15 +820,16 @@ goog.inherits(goog.tweak.BooleanInGroupSetting, goog.tweak.BooleanSetting);
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.BooleanInGroupSetting.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.BooleanInGroupSetting');
+    goog.log.getLogger('goog.tweak.BooleanInGroupSetting');
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.BooleanInGroupSetting.prototype.setParamName = function(value) {
   goog.asserts.fail('Use setToken() for BooleanInGroupSetting.');
@@ -893,11 +899,12 @@ goog.inherits(goog.tweak.BooleanGroup, goog.tweak.BaseSetting);
 
 /**
  * The logger for this class.
- * @type {!goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
+ * @override
  */
 goog.tweak.BooleanGroup.prototype.logger =
-    goog.debug.Logger.getLogger('goog.tweak.BooleanGroup');
+    goog.log.getLogger('goog.tweak.BooleanGroup');
 
 
 /**
@@ -932,7 +939,7 @@ goog.tweak.BooleanGroup.prototype.addChild = function(boolEntry) {
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.BooleanGroup.prototype.initialize = function(value) {
   var queryParamValues = {};
@@ -953,7 +960,7 @@ goog.tweak.BooleanGroup.prototype.initialize = function(value) {
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.tweak.BooleanGroup.prototype.getNewValueEncoded = function() {
   this.ensureInitialized();

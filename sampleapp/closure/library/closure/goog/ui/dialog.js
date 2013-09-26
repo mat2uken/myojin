@@ -30,12 +30,15 @@ goog.provide('goog.ui.Dialog.DefaultButtonKeys');
 goog.provide('goog.ui.Dialog.Event');
 goog.provide('goog.ui.Dialog.EventType');
 
+goog.require('goog.a11y.aria');
+goog.require('goog.a11y.aria.Role');
+goog.require('goog.a11y.aria.State');
 goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.dom.NodeType');
 goog.require('goog.dom.TagName');
-goog.require('goog.dom.a11y');
 goog.require('goog.dom.classes');
+goog.require('goog.events');
 goog.require('goog.events.Event');
 goog.require('goog.events.EventType');
 goog.require('goog.events.KeyCodes');
@@ -161,7 +164,7 @@ goog.ui.Dialog.prototype.content_ = '';
 
 /**
  * Dragger.
- * @type {?goog.fx.Dragger}
+ * @type {goog.fx.Dragger}
  * @private
  */
 goog.ui.Dialog.prototype.dragger_ = null;
@@ -223,7 +226,15 @@ goog.ui.Dialog.prototype.contentEl_ = null;
 goog.ui.Dialog.prototype.buttonEl_ = null;
 
 
-/** @inheritDoc */
+/**
+ * The dialog's preferred ARIA role.
+ * @type {goog.a11y.aria.Role}
+ * @private
+ */
+goog.ui.Dialog.prototype.preferredAriaRole_ = goog.a11y.aria.Role.DIALOG;
+
+
+/** @override */
 goog.ui.Dialog.prototype.getCssClass = function() {
   return this.class_;
 };
@@ -272,12 +283,34 @@ goog.ui.Dialog.prototype.getContent = function() {
 
 
 /**
+ * Returns the dialog's preferred ARIA role. This can be used to override the
+ * default dialog role, e.g. with an ARIA role of ALERTDIALOG for a simple
+ * warning or confirmation dialog.
+ * @return {goog.a11y.aria.Role} This dialog's preferred ARIA role.
+ */
+goog.ui.Dialog.prototype.getPreferredAriaRole = function() {
+  return this.preferredAriaRole_;
+};
+
+
+/**
+ * Sets the dialog's preferred ARIA role. This can be used to override the
+ * default dialog role, e.g. with an ARIA role of ALERTDIALOG for a simple
+ * warning or confirmation dialog.
+ * @param {goog.a11y.aria.Role} role This dialog's preferred ARIA role.
+ */
+goog.ui.Dialog.prototype.setPreferredAriaRole = function(role) {
+  this.preferredAriaRole_ = role;
+};
+
+
+/**
  * Renders if the DOM is not created.
  * @private
  */
 goog.ui.Dialog.prototype.renderIfNoDom_ = function() {
   if (!this.getElement()) {
-    // TODO(user): Ideally we'd only create the DOM, but many applications
+    // TODO(gboyer): Ideally we'd only create the DOM, but many applications
     // are requiring this behavior.  Eventually, it would be best if the
     // element getters could return null if the elements have not been
     // created.
@@ -291,6 +324,7 @@ goog.ui.Dialog.prototype.renderIfNoDom_ = function() {
  * the content area.  Renders if the DOM is not yet created.  Overrides
  * {@link goog.ui.Component#getContentElement}.
  * @return {Element} The content element.
+ * @override
  */
 goog.ui.Dialog.prototype.getContentElement = function() {
   this.renderIfNoDom_();
@@ -357,6 +391,7 @@ goog.ui.Dialog.prototype.getDialogElement = function() {
  * Returns the background mask element so that more complicated things can be
  * done with the background region.  Renders if the DOM is not yet created.
  * @return {Element} The background mask element.
+ * @override
  */
 goog.ui.Dialog.prototype.getBackgroundElement = function() {
   this.renderIfNoDom_();
@@ -451,21 +486,7 @@ goog.ui.Dialog.prototype.getClass = function() {
  */
 goog.ui.Dialog.prototype.setDraggable = function(draggable) {
   this.draggable_ = draggable;
-
-  // this will add the dragger if we've already rendered, and gone through
-  // the enterDocument routine, but now want to dynamically add draggability
-  if (this.draggable_ && !this.dragger_ && this.getElement()) {
-    this.dragger_ = this.createDragger();
-
-  } else if (!this.draggable_ && this.dragger_) {
-    // removes draggable classname post-render
-    if (this.getElement()) {
-      goog.dom.classes.remove(this.titleEl_,
-          goog.getCssName(this.class_, 'title-draggable'));
-    }
-    this.dragger_.dispose();
-    this.dragger_ = null;
-  }
+  this.setDraggingEnabled_(draggable && this.isInDocument());
 };
 
 
@@ -477,8 +498,6 @@ goog.ui.Dialog.prototype.setDraggable = function(draggable) {
  * @protected
  */
 goog.ui.Dialog.prototype.createDragger = function() {
-  goog.dom.classes.add(this.titleEl_,
-      goog.getCssName(this.class_, 'title-draggable'));
   return new goog.fx.Dragger(this.getElement(), this.titleEl_);
 };
 
@@ -491,7 +510,31 @@ goog.ui.Dialog.prototype.getDraggable = function() {
 };
 
 
-/** @inheritDoc */
+/**
+ * Enables or disables dragging.
+ * @param {boolean} enabled Whether to enable it.
+ * @private.
+ */
+goog.ui.Dialog.prototype.setDraggingEnabled_ = function(enabled) {
+  if (this.getElement()) {
+    goog.dom.classes.enable(this.titleEl_,
+        goog.getCssName(this.class_, 'title-draggable'), enabled);
+  }
+
+  if (enabled && !this.dragger_) {
+    this.dragger_ = this.createDragger();
+    goog.dom.classes.add(this.titleEl_,
+        goog.getCssName(this.class_, 'title-draggable'));
+    goog.events.listen(this.dragger_, goog.fx.Dragger.EventType.START,
+        this.setDraggerLimits_, false, this);
+  } else if (!enabled && this.dragger_) {
+    this.dragger_.dispose();
+    this.dragger_ = null;
+  }
+};
+
+
+/** @override */
 goog.ui.Dialog.prototype.createDom = function() {
   goog.base(this, 'createDom');
   var element = this.getElement();
@@ -511,32 +554,35 @@ goog.ui.Dialog.prototype.createDom = function() {
           goog.getCssName(this.class_, 'buttons')));
 
   this.titleId_ = this.titleEl_.id;
-  goog.dom.a11y.setRole(element, 'dialog');
-  goog.dom.a11y.setState(element, 'labelledby', this.titleId_ || '');
+  goog.a11y.aria.setRole(element, this.getPreferredAriaRole());
+  goog.a11y.aria.setState(element, goog.a11y.aria.State.LABELLEDBY,
+      this.titleId_ || '');
   // If setContent() was called before createDom(), make sure the inner HTML of
   // the content element is initialized.
   if (this.content_) {
     this.contentEl_.innerHTML = this.content_;
   }
-  goog.style.showElement(this.titleCloseEl_, this.hasTitleCloseButton_);
+  goog.style.setElementShown(this.titleCloseEl_, this.hasTitleCloseButton_);
 
   // Render the buttons.
   if (this.buttons_) {
     this.buttons_.attachToElement(this.buttonEl_);
   }
-  goog.style.showElement(this.buttonEl_, !!this.buttons_);
+  goog.style.setElementShown(this.buttonEl_, !!this.buttons_);
   this.setBackgroundElementOpacity(this.backgroundElementOpacity_);
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.Dialog.prototype.decorateInternal = function(element) {
   goog.base(this, 'decorateInternal', element);
-
+  var dialogElement = this.getElement();
+  goog.asserts.assert(dialogElement,
+      'The DOM element for dialog cannot be null.');
   // Decorate or create the content element.
   var contentClass = goog.getCssName(this.class_, 'content');
   this.contentEl_ = goog.dom.getElementsByTagNameAndClass(
-      null, contentClass, this.getElement())[0];
+      null, contentClass, dialogElement)[0];
   if (this.contentEl_) {
     this.content_ = this.contentEl_.innerHTML;
   } else {
@@ -544,7 +590,7 @@ goog.ui.Dialog.prototype.decorateInternal = function(element) {
     if (this.content_) {
       this.contentEl_.innerHTML = this.content_;
     }
-    this.getElement().appendChild(this.contentEl_);
+    dialogElement.appendChild(this.contentEl_);
   }
 
   // Decorate or create the title bar element.
@@ -552,7 +598,7 @@ goog.ui.Dialog.prototype.decorateInternal = function(element) {
   var titleTextClass = goog.getCssName(this.class_, 'title-text');
   var titleCloseClass = goog.getCssName(this.class_, 'title-close');
   this.titleEl_ = goog.dom.getElementsByTagNameAndClass(
-      null, titleClass, this.getElement())[0];
+      null, titleClass, dialogElement)[0];
   if (this.titleEl_) {
     // Only look for title text & title close elements if a title bar element
     // was found.  Otherwise assume that the entire title bar has to be
@@ -561,12 +607,18 @@ goog.ui.Dialog.prototype.decorateInternal = function(element) {
         null, titleTextClass, this.titleEl_)[0];
     this.titleCloseEl_ = goog.dom.getElementsByTagNameAndClass(
         null, titleCloseClass, this.titleEl_)[0];
+    // Give the title an id if it doesn't already have one.
+    if (!this.titleEl_.id) {
+      this.titleEl_.id = this.getId();
+    }
   } else {
     // Create the title bar element and insert it before the content area.
     // This is useful if the element to decorate only includes a content area.
-    this.titleEl_ = this.getDomHelper().createDom('div', titleClass);
-    this.getElement().insertBefore(this.titleEl_, this.contentEl_);
+    this.titleEl_ = this.getDomHelper().createDom('div',
+        {'className': titleClass, 'id': this.getId()});
+    dialogElement.insertBefore(this.titleEl_, this.contentEl_);
   }
+  this.titleId_ = this.titleEl_.id;
 
   // Decorate or create the title text element.
   if (this.titleTextEl_) {
@@ -576,18 +628,19 @@ goog.ui.Dialog.prototype.decorateInternal = function(element) {
         this.title_);
     this.titleEl_.appendChild(this.titleTextEl_);
   }
-  goog.dom.a11y.setState(this.getElement(), 'labelledby', this.titleId_ || '');
+  goog.a11y.aria.setState(dialogElement, goog.a11y.aria.State.LABELLEDBY,
+      this.titleId_ || '');
   // Decorate or create the title close element.
   if (!this.titleCloseEl_) {
     this.titleCloseEl_ = this.getDomHelper().createDom('span', titleCloseClass);
     this.titleEl_.appendChild(this.titleCloseEl_);
   }
-  goog.style.showElement(this.titleCloseEl_, this.hasTitleCloseButton_);
+  goog.style.setElementShown(this.titleCloseEl_, this.hasTitleCloseButton_);
 
   // Decorate or create the button container element.
   var buttonsClass = goog.getCssName(this.class_, 'buttons');
   this.buttonEl_ = goog.dom.getElementsByTagNameAndClass(
-      null, buttonsClass, this.getElement())[0];
+      null, buttonsClass, dialogElement)[0];
   if (this.buttonEl_) {
     // Button container element found.  Create empty button set and use it to
     // decorate the button container.
@@ -596,38 +649,50 @@ goog.ui.Dialog.prototype.decorateInternal = function(element) {
   } else {
     // Create new button container element, and render a button set into it.
     this.buttonEl_ = this.getDomHelper().createDom('div', buttonsClass);
-    this.getElement().appendChild(this.buttonEl_);
+    dialogElement.appendChild(this.buttonEl_);
     if (this.buttons_) {
       this.buttons_.attachToElement(this.buttonEl_);
     }
-    goog.style.showElement(this.buttonEl_, !!this.buttons_);
+    goog.style.setElementShown(this.buttonEl_, !!this.buttons_);
   }
   this.setBackgroundElementOpacity(this.backgroundElementOpacity_);
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.Dialog.prototype.enterDocument = function() {
   goog.base(this, 'enterDocument');
 
-  this.getHandler().listen(this,
-      [goog.ui.PopupBase.EventType.SHOW, goog.ui.PopupBase.EventType.HIDE],
-      this.setVisibleInternal_);
+  // Listen for keyboard events while the dialog is visible.
+  this.getHandler().
+      listen(this.getElement(), goog.events.EventType.KEYDOWN, this.onKey_).
+      listen(this.getElement(), goog.events.EventType.KEYPRESS, this.onKey_);
+
+  // NOTE: see bug 1163154 for an example of an edge case where making the
+  // dialog visible in response to a KEYDOWN will result in a CLICK event
+  // firing on the default button (immediately closing the dialog) if the key
+  // that fired the KEYDOWN is also normally used to activate controls
+  // (i.e. SPACE/ENTER).
+  //
+  // This could be worked around by attaching the onButtonClick_ handler in a
+  // setTimeout, but that was deemed undesirable.
+  this.getHandler().listen(this.buttonEl_, goog.events.EventType.CLICK,
+      this.onButtonClick_);
 
   // Add drag support.
-  if (this.draggable_ && !this.dragger_) {
-    this.dragger_ = this.createDragger();
-  }
+  this.setDraggingEnabled_(this.draggable_);
 
   // Add event listeners to the close box and the button container.
   this.getHandler().listen(
       this.titleCloseEl_, goog.events.EventType.CLICK,
       this.onTitleCloseClick_);
 
-  goog.dom.a11y.setRole(this.getElement(), 'dialog');
+  var element = this.getElement();
+  goog.asserts.assert(element, 'The DOM element for dialog cannot be null');
+  goog.a11y.aria.setRole(element, this.getPreferredAriaRole());
   if (this.titleTextEl_.id !== '') {
-    goog.dom.a11y.setState(
-        this.getElement(), 'labelledby', this.titleTextEl_.id);
+    goog.a11y.aria.setState(element, goog.a11y.aria.State.LABELLEDBY,
+        this.titleTextEl_.id);
   }
 
   if (!this.modal_) {
@@ -636,26 +701,26 @@ goog.ui.Dialog.prototype.enterDocument = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.Dialog.prototype.exitDocument = function() {
   if (this.isVisible()) {
     this.setVisible(false);
   }
 
   // Remove drag support.
-  if (this.dragger_) {
-    this.dragger_.dispose();
-    this.dragger_ = null;
-  }
+  this.setDraggingEnabled_(false);
 
   goog.base(this, 'exitDocument');
 };
 
 
 /**
- * Sets the visibility of the dialog box and moves focus to the default button.
- * Lazily renders the component if needed.
+ * Sets the visibility of the dialog box and moves focus to the
+ * default button. Lazily renders the component if needed. After this
+ * method returns, isVisible() will always return the new state, even
+ * if there is a transition.
  * @param {boolean} visible Whether the dialog should be visible.
+ * @override
  */
 goog.ui.Dialog.prototype.setVisible = function(visible) {
   if (visible == this.isVisible()) {
@@ -671,62 +736,26 @@ goog.ui.Dialog.prototype.setVisible = function(visible) {
 };
 
 
-/**
- * Sets visibility after super class setVisible is completed.
- * @param {goog.events.Event} e The event object.
- * @private
- */
-goog.ui.Dialog.prototype.setVisibleInternal_ = function(e) {
-  if (e.target != this) {
-    return;
-  }
+/** @override */
+goog.ui.Dialog.prototype.onShow = function() {
+  goog.base(this, 'onShow');
+  this.dispatchEvent(goog.ui.Dialog.EventType.AFTER_SHOW);
+};
 
-  var visible = this.isVisible();
 
-  if (visible) {
-    // Listen for keyboard and resize events while the dialog is visible.
-    this.getHandler().
-        listen(this.getElement(), goog.events.EventType.KEYDOWN, this.onKey_).
-        listen(this.getElement(), goog.events.EventType.KEYPRESS, this.onKey_);
-
-    this.dispatchEvent(goog.ui.Dialog.EventType.AFTER_SHOW);
-    this.setDraggerLimits_();
-    // NOTE: see bug 1163154 for an example of an edge case where making the
-    // dialog visible in response to a KEYDOWN will result in a CLICK event
-    // firing on the default button (immediately closing the dialog) if the key
-    // that fired the KEYDOWN is also normally used to activate controls
-    // (i.e. SPACE/ENTER).
-    //
-    // This could be worked around by attaching the onButtonClick_ handler in a
-    // setTimeout, but that was deemed undesirable.
-    this.getHandler().
-        listen(this.buttonEl_, goog.events.EventType.CLICK,
-            this.onButtonClick_).
-        listen(
-            this.getDomHelper().getWindow(), goog.events.EventType.RESIZE,
-            this.setDraggerLimits_);
-  } else {
-    // Stop listening for keyboard and resize events while the dialog is hidden.
-    this.getHandler().
-        unlisten(this.getElement(), goog.events.EventType.KEYDOWN, this.onKey_).
-        unlisten(this.getElement(), goog.events.EventType.KEYPRESS,
-            this.onKey_).
-        unlisten(this.buttonEl_, goog.events.EventType.CLICK,
-            this.onButtonClick_).
-        unlisten(
-            this.getDomHelper().getWindow(), goog.events.EventType.RESIZE,
-            this.setDraggerLimits_);
-
-    this.dispatchEvent(goog.ui.Dialog.EventType.AFTER_HIDE);
-    if (this.disposeOnHide_) {
-      this.dispose();
-    }
+/** @override */
+goog.ui.Dialog.prototype.onHide = function() {
+  goog.base(this, 'onHide');
+  this.dispatchEvent(goog.ui.Dialog.EventType.AFTER_HIDE);
+  if (this.disposeOnHide_) {
+    this.dispose();
   }
 };
 
 
 /**
  * Focuses the dialog contents and the default dialog button if there is one.
+ * @override
  */
 goog.ui.Dialog.prototype.focus = function() {
   goog.base(this, 'focus');
@@ -738,7 +767,7 @@ goog.ui.Dialog.prototype.focus = function() {
       var doc = this.getDomHelper().getDocument();
       var buttons = this.buttonEl_.getElementsByTagName('button');
       for (var i = 0, button; button = buttons[i]; i++) {
-        if (button.name == defaultButton) {
+        if (button.name == defaultButton && !button.disabled) {
           try {
             // Reopening a dialog can cause focusing the button to fail in
             // WebKit and Opera. Shift the focus to a temporary <input>
@@ -765,31 +794,29 @@ goog.ui.Dialog.prototype.focus = function() {
 
 
 /**
- * Sets dragger limits on resize.
+ * Sets dragger limits when dragging is started.
+ * @param {!goog.events.Event} e goog.fx.Dragger.EventType.START event.
  * @private
  */
-goog.ui.Dialog.prototype.setDraggerLimits_ = function() {
-  if (this.draggable_) {
-    var doc = this.getDomHelper().getDocument();
-    var win = goog.dom.getWindow(doc) || window;
+goog.ui.Dialog.prototype.setDraggerLimits_ = function(e) {
+  var doc = this.getDomHelper().getDocument();
+  var win = goog.dom.getWindow(doc) || window;
 
-    // Take the max of scroll height and view height for cases in which document
-    // does not fill screen.
-    var viewSize = goog.dom.getViewportSize(win);
-    var w = Math.max(doc.body.scrollWidth, viewSize.width);
-    var h = Math.max(doc.body.scrollHeight, viewSize.height);
+  // Take the max of scroll height and view height for cases in which document
+  // does not fill screen.
+  var viewSize = goog.dom.getViewportSize(win);
+  var w = Math.max(doc.body.scrollWidth, viewSize.width);
+  var h = Math.max(doc.body.scrollHeight, viewSize.height);
 
-    var dialogSize = goog.style.getSize(this.getElement());
-    if (goog.style.getComputedPosition(this.getElement()) == 'fixed') {
-      // Ensure position:fixed dialogs can't be dragged beyond the viewport.
-      this.dragger_.limits = new goog.math.Rect(0, 0,
-          Math.max(0, viewSize.width - dialogSize.width),
-          Math.max(0, viewSize.height - dialogSize.height));
-    } else {
-      this.dragger_.limits = new goog.math.Rect(0, 0,
-          w - dialogSize.width,
-          h - dialogSize.height);
-    }
+  var dialogSize = goog.style.getSize(this.getElement());
+  if (goog.style.getComputedPosition(this.getElement()) == 'fixed') {
+    // Ensure position:fixed dialogs can't be dragged beyond the viewport.
+    this.dragger_.setLimits(new goog.math.Rect(0, 0,
+        Math.max(0, viewSize.width - dialogSize.width),
+        Math.max(0, viewSize.height - dialogSize.height)));
+  } else {
+    this.dragger_.setLimits(new goog.math.Rect(0, 0,
+        w - dialogSize.width, h - dialogSize.height));
   }
 };
 
@@ -835,7 +862,7 @@ goog.ui.Dialog.prototype.getHasTitleCloseButton = function() {
 goog.ui.Dialog.prototype.setHasTitleCloseButton = function(b) {
   this.hasTitleCloseButton_ = b;
   if (this.titleCloseEl_) {
-    goog.style.showElement(this.titleCloseEl_, this.hasTitleCloseButton_);
+    goog.style.setElementShown(this.titleCloseEl_, this.hasTitleCloseButton_);
   }
 };
 
@@ -875,7 +902,7 @@ goog.ui.Dialog.prototype.getDisposeOnHide = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.Dialog.prototype.disposeInternal = function() {
   this.titleCloseEl_ = null;
   this.buttonEl_ = null;
@@ -896,7 +923,7 @@ goog.ui.Dialog.prototype.setButtonSet = function(buttons) {
     } else {
       this.buttonEl_.innerHTML = '';
     }
-    goog.style.showElement(this.buttonEl_, !!this.buttons_);
+    goog.style.setElementShown(this.buttonEl_, !!this.buttons_);
   }
 };
 
@@ -983,17 +1010,16 @@ goog.ui.Dialog.prototype.onKey_ = function(e) {
     } else if (e.keyCode == goog.events.KeyCodes.TAB && e.shiftKey &&
         target == this.getElement()) {
       // Prevent the user from shift-tabbing backwards out of the dialog box.
-      // TODO(user): Instead, we should move the focus to the last tabbable
-      // element inside the dialog.
-      hasHandler = true;
+      // Instead, set up a wrap in focus backward to the end of the dialog.
+      this.setupBackwardTabWrap();
     }
   } else if (e.keyCode == goog.events.KeyCodes.ENTER) {
     // Only handle ENTER in keypress events, in case the action opens a
     // popup window.
     var key;
-    if (target.tagName == 'BUTTON') {
-      // If focus was on a button, it must have been enabled, so we can fire
-      // that button's handler.
+    if (target.tagName == 'BUTTON' && !target.disabled) {
+      // If the target is a button and it's enabled, we can fire that button's
+      // handler.
       key = target.name;
     } else if (buttonSet) {
       // Try to fire the default button's handler (if one exists), but only if
@@ -1001,16 +1027,16 @@ goog.ui.Dialog.prototype.onKey_ = function(e) {
       var defaultKey = buttonSet.getDefault();
       var defaultButton = defaultKey && buttonSet.getButton(defaultKey);
 
-      // Users may expect to hit enter on a TEXTAREA or a SELECT element.
+      // Users may expect to hit enter on a TEXTAREA, SELECT or an A element.
       var isSpecialFormElement =
-          (target.tagName == 'TEXTAREA' || target.tagName == 'SELECT') &&
-          !target.disabled;
+          (target.tagName == 'TEXTAREA' || target.tagName == 'SELECT' ||
+           target.tagName == 'A') && !target.disabled;
 
       if (defaultButton && !defaultButton.disabled && !isSpecialFormElement) {
         key = defaultKey;
       }
     }
-    if (key) {
+    if (key && buttonSet) {
       hasHandler = true;
       close = this.dispatchEvent(
           new goog.ui.Dialog.Event(key, String(buttonSet.get(key))));
@@ -1046,7 +1072,7 @@ goog.inherits(goog.ui.Dialog.Event, goog.events.Event);
 
 /**
  * Event type constant for dialog events.
- * TODO(user): Change this to goog.ui.Dialog.EventType.SELECT.
+ * TODO(attila): Change this to goog.ui.Dialog.EventType.SELECT.
  * @type {string}
  * @deprecated Use goog.ui.Dialog.EventType.SELECT.
  */
@@ -1089,7 +1115,7 @@ goog.ui.Dialog.EventType = {
  * @extends {goog.structs.Map}
  */
 goog.ui.Dialog.ButtonSet = function(opt_domHelper) {
-  // TODO(user):  Refactor ButtonSet to extend goog.ui.Component?
+  // TODO(attila):  Refactor ButtonSet to extend goog.ui.Component?
   this.dom_ = opt_domHelper || goog.dom.getDomHelper();
   goog.structs.Map.call(this);
 };
@@ -1133,8 +1159,8 @@ goog.ui.Dialog.ButtonSet.prototype.cancelButton_ = null;
  * Adds a button to the button set.  Buttons will be displayed in the order they
  * are added.
  *
- * @param {string} key Key used to identify the button in events.
- * @param {string|Element} caption A string caption or a DOM node that can be
+ * @param {*} key Key used to identify the button in events.
+ * @param {*} caption A string caption or a DOM node that can be
  *     appended to a button element.
  * @param {boolean=} opt_isDefault Whether this button is the default button,
  *     Dialog will dispatch for this button if enter is pressed.
@@ -1142,16 +1168,17 @@ goog.ui.Dialog.ButtonSet.prototype.cancelButton_ = null;
  *    cancel.  If escape is pressed this button will fire.
  * @return {!goog.ui.Dialog.ButtonSet} The button set, to make it easy to chain
  *    "set" calls and build new ButtonSets.
+ * @override
  */
 goog.ui.Dialog.ButtonSet.prototype.set = function(key, caption,
     opt_isDefault, opt_isCancel) {
   goog.structs.Map.prototype.set.call(this, key, caption);
 
   if (opt_isDefault) {
-    this.defaultButton_ = key;
+    this.defaultButton_ = /** @type {?string} */ (key);
   }
   if (opt_isCancel) {
-    this.cancelButton_ = key;
+    this.cancelButton_ = /** @type {?string} */ (key);
   }
 
   return this;
@@ -1210,7 +1237,7 @@ goog.ui.Dialog.ButtonSet.prototype.render = function() {
  * to be the default and will receive focus when the button set is rendered.
  * If a button with a name of {@link goog.ui.Dialog.DefaultButtonKeys.CANCEL}
  * is found, it is assumed to have "Cancel" semantics.
- * TODO(user):  ButtonSet should be a goog.ui.Component.  Really.
+ * TODO(attila):  ButtonSet should be a goog.ui.Component.  Really.
  * @param {Element} element The element to decorate; should contain buttons.
  */
 goog.ui.Dialog.ButtonSet.prototype.decorate = function(element) {

@@ -14,12 +14,9 @@
 
 goog.provide('goog.ui.equation.EquationEditor');
 
-goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.ui.Component');
-goog.require('goog.ui.Tab');
 goog.require('goog.ui.TabBar');
-goog.require('goog.ui.equation.EditorPane');
 goog.require('goog.ui.equation.ImageRenderer');
 goog.require('goog.ui.equation.TexPane');
 
@@ -75,7 +72,7 @@ goog.ui.equation.EquationEditor.EventType = {
 goog.ui.equation.EquationEditor.prototype.activeTabIndex_ = 0;
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.EquationEditor.prototype.createDom = function() {
   goog.base(this, 'createDom');
   this.createDom_();
@@ -154,7 +151,7 @@ goog.ui.equation.EquationEditor.prototype.setVisibleTab_ = function(tabIndex) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.EquationEditor.prototype.decorateInternal = function(element) {
   this.setElementInternal(element);
   this.createDom_();
@@ -216,7 +213,7 @@ goog.ui.equation.EquationEditor.prototype.setEquation = function(equation) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.equation.EquationEditor.prototype.disposeInternal = function() {
   this.context_ = null;
   goog.base(this, 'disposeInternal');

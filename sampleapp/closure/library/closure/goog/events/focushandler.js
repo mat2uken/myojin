@@ -18,6 +18,7 @@
  * propagate consistently, and therefore must be added to the element that is
  * focused, this allows you to attach one listener to an ancester and you will
  * be notified when the focus state changes of ony of its descendants.
+ * @author arv@google.com (Erik Arvidsson)
  * @see ../demos/focushandler.html
  */
 
@@ -56,18 +57,18 @@ goog.events.FocusHandler = function(element) {
   /**
    * Store the listen key so it easier to unlisten in dispose.
    * @private
-   * @type {number}
+   * @type {goog.events.Key}
    */
-  this.listenKeyIn_ = (/** @type {number} */
-      goog.events.listen(this.element_, typeIn, this, !goog.userAgent.IE));
+  this.listenKeyIn_ =
+      goog.events.listen(this.element_, typeIn, this, !goog.userAgent.IE);
 
   /**
    * Store the listen key so it easier to unlisten in dispose.
    * @private
-   * @type {number}
+   * @type {goog.events.Key}
    */
-  this.listenKeyOut_ = (/** @type {number} */
-      goog.events.listen(this.element_, typeOut, this, !goog.userAgent.IE));
+  this.listenKeyOut_ =
+      goog.events.listen(this.element_, typeOut, this, !goog.userAgent.IE);
 };
 goog.inherits(goog.events.FocusHandler, goog.events.EventTarget);
 
@@ -92,15 +93,11 @@ goog.events.FocusHandler.prototype.handleEvent = function(e) {
   event.type = e.type == 'focusin' || e.type == 'focus' ?
       goog.events.FocusHandler.EventType.FOCUSIN :
       goog.events.FocusHandler.EventType.FOCUSOUT;
-  try {
-    this.dispatchEvent(event);
-  } finally {
-    event.dispose();
-  }
+  this.dispatchEvent(event);
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.events.FocusHandler.prototype.disposeInternal = function() {
   goog.events.FocusHandler.superClass_.disposeInternal.call(this);
   goog.events.unlistenByKey(this.listenKeyIn_);

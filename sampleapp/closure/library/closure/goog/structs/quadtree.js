@@ -40,23 +40,19 @@ goog.require('goog.math.Coordinate');
  * @constructor
  */
 goog.structs.QuadTree = function(minX, minY, maxX, maxY) {
+  /**
+   * Count of the number of items in the tree.
+   * @private {number}
+   */
+  this.count_ = 0;
 
   /**
    * The root node for the quad tree.
-   * @type {goog.structs.QuadTree.Node}
-   * @private
+   * @private {goog.structs.QuadTree.Node}
    */
   this.root_ = new goog.structs.QuadTree.Node(
       minX, minY, maxX - minX, maxY - minY);
 };
-
-
-/**
- * Count of the number of items in the tree.
- * @type {number}
- * @private
- */
-goog.structs.QuadTree.prototype.count_ = 0;
 
 
 /**
@@ -211,7 +207,7 @@ goog.structs.QuadTree.prototype.clone = function() {
 
 /**
  * Traverses the tree and calls a function on each node.
- * @param {function(Object, goog.math.Coordinate, goog.structs.QuadTree)} fn
+ * @param {function(?, goog.math.Coordinate, goog.structs.QuadTree)} fn
  *     The function to call for every value. This function takes 3 arguments
  *     (the value, the coordinate, and the tree itself) and the return value is
  *     irrelevant.

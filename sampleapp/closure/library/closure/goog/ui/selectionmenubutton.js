@@ -27,10 +27,11 @@ goog.provide('goog.ui.SelectionMenuButton');
 goog.provide('goog.ui.SelectionMenuButton.SelectionState');
 
 goog.require('goog.events.EventType');
-goog.require('goog.ui.Component.EventType');
-goog.require('goog.ui.Menu');
+goog.require('goog.style');
+goog.require('goog.ui.Component');
 goog.require('goog.ui.MenuButton');
 goog.require('goog.ui.MenuItem');
+goog.require('goog.ui.registry');
 
 
 
@@ -113,7 +114,7 @@ goog.ui.SelectionMenuButton.prototype.setCheckboxEnabled = function(enable) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.SelectionMenuButton.prototype.handleMouseDown = function(e) {
   if (!this.getDomHelper().contains(this.getCheckboxElement(),
       /** @type {Element} */ (e.target))) {
@@ -243,7 +244,7 @@ goog.ui.SelectionMenuButton.prototype.createCheckbox = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.SelectionMenuButton.prototype.decorateInternal = function(element) {
   goog.ui.SelectionMenuButton.superClass_.decorateInternal.call(this, element);
   this.addCheckboxEvent();
@@ -251,7 +252,7 @@ goog.ui.SelectionMenuButton.prototype.decorateInternal = function(element) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.SelectionMenuButton.prototype.setMenu = function(menu) {
   goog.ui.SelectionMenuButton.superClass_.setMenu.call(this, menu);
   this.addMenuEvent_();

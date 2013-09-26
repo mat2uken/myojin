@@ -15,6 +15,7 @@
 /**
  * @fileoverview Additional asserts for testing ControlRenderers.
  *
+ * @author mkretzschmar@google.com (Martin Kretzschmar)
  */
 
 goog.provide('goog.testing.ui.rendererasserts');
@@ -41,6 +42,7 @@ goog.testing.ui.rendererasserts.assertNoGetCssClassCallsInConstructor =
   }
   goog.inherits(TestControlRenderer, rendererClassUnderTest);
 
+  /** @override */
   TestControlRenderer.prototype.getCssClass = function() {
     getCssClassCalls++;
     return TestControlRenderer.superClass_.getCssClass.call(this);

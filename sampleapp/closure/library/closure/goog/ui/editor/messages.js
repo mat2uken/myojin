@@ -64,9 +64,9 @@ goog.ui.editor.messages.MSG_TR_LINK_EXPLANATION = goog.getMsg(
     "the box in your browser's address bar, and paste it into " +
     'the box above.',
     {'startBold': '<b>',
-     'endBold': '</b>',
-     'searchEngineLink': "<a href='http://www.google.com/' target='_new'>",
-     'endLink': '</a>'});
+      'endBold': '</b>',
+      'searchEngineLink': "<a href='http://www.google.com/' target='_new'>",
+      'endLink': '</a>'});
 
 
 /** @desc Prompt for the URL of a link that the user is creating. */
@@ -109,6 +109,14 @@ goog.ui.editor.messages.MSG_EMAIL_EXPLANATION = goog.getMsg(
     '{$preb}Be careful.{$postb} ' +
     'Remember that any time you include an email address on a web page, ' +
     'nasty spammers can find it too.', {'preb': '<b>', 'postb': '</b>'});
+
+
+/**
+ * @desc Label for the checkbox that allows the user to specify what when this
+ *     link is clicked, it should be opened in a new window.
+ */
+goog.ui.editor.messages.MSG_OPEN_IN_NEW_WINDOW = goog.getMsg(
+    'Open this link in a new window');
 
 
 /** @desc Image bubble caption. */

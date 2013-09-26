@@ -25,8 +25,8 @@ goog.provide('goog.messaging.AbstractChannel');
 
 goog.require('goog.Disposable');
 goog.require('goog.debug');
-goog.require('goog.debug.Logger');
 goog.require('goog.json');
+goog.require('goog.log');
 goog.require('goog.messaging.MessageChannel'); // interface
 
 
@@ -63,18 +63,18 @@ goog.messaging.AbstractChannel.prototype.defaultService_;
 
 /**
  * Logger for this class.
- * @type {goog.debug.Logger}
+ * @type {goog.log.Logger}
  * @protected
  */
 goog.messaging.AbstractChannel.prototype.logger =
-    goog.debug.Logger.getLogger('goog.messaging.AbstractChannel');
+    goog.log.getLogger('goog.messaging.AbstractChannel');
 
 
 /**
  * Immediately calls opt_connectCb if given, and is otherwise a no-op. If
  * subclasses have configuration that needs to happen before the channel is
  * connected, they should override this and {@link #isConnected}.
- * @inheritDoc
+ * @override
  */
 goog.messaging.AbstractChannel.prototype.connect = function(opt_connectCb) {
   if (opt_connectCb) {
@@ -87,14 +87,14 @@ goog.messaging.AbstractChannel.prototype.connect = function(opt_connectCb) {
  * Always returns true. If subclasses have configuration that needs to happen
  * before the channel is connected, they should override this and
  * {@link #connect}.
- * @inheritDoc
+ * @override
  */
 goog.messaging.AbstractChannel.prototype.isConnected = function() {
   return true;
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.messaging.AbstractChannel.prototype.registerService =
     function(serviceName, callback, opt_objectPayload) {
   this.services_[serviceName] = {
@@ -104,14 +104,14 @@ goog.messaging.AbstractChannel.prototype.registerService =
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.messaging.AbstractChannel.prototype.registerDefaultService =
     function(callback) {
   this.defaultService_ = callback;
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.messaging.AbstractChannel.prototype.send = goog.abstractMethod;
 
 
@@ -166,7 +166,7 @@ goog.messaging.AbstractChannel.prototype.getService = function(
     return {callback: callback, objectPayload: objectPayload};
   }
 
-  this.logger.warning('Unknown service name "' + serviceName + '"');
+  goog.log.warning(this.logger, 'Unknown service name "' + serviceName + '"');
   return null;
 };
 
@@ -189,8 +189,9 @@ goog.messaging.AbstractChannel.prototype.decodePayload = function(
     try {
       return goog.json.parse(payload);
     } catch (err) {
-      this.logger.warning('Expected JSON payload for ' + serviceName +
-                          ', was "' + payload + '"');
+      goog.log.warning(this.logger,
+          'Expected JSON payload for ' + serviceName +
+          ', was "' + payload + '"');
       return null;
     }
   } else if (!objectPayload && !goog.isString(payload)) {
@@ -200,10 +201,9 @@ goog.messaging.AbstractChannel.prototype.decodePayload = function(
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.messaging.AbstractChannel.prototype.disposeInternal = function() {
   goog.base(this, 'disposeInternal');
-  goog.dispose(this.logger);
   delete this.logger;
   delete this.services_;
   delete this.defaultService_;

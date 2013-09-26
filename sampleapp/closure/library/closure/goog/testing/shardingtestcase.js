@@ -37,6 +37,8 @@ goog.provide('goog.testing.ShardingTestCase');
 goog.require('goog.asserts');
 goog.require('goog.testing.TestCase');
 
+
+
 /**
  * A test case that runs tests in per-file shards.
  * @param {number} shardIndex Shard index for this page,
@@ -80,6 +82,7 @@ goog.testing.ShardingTestCase.prototype.sharded_ = false;
 /**
  * Installs a runTests global function that goog.testing.JsUnit will use to
  * run tests, which will run a single shard of the tests present on the page.
+ * @override
  */
 goog.testing.ShardingTestCase.prototype.runTests = function() {
   if (!this.sharded_) {

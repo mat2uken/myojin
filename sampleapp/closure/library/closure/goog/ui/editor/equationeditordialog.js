@@ -15,9 +15,9 @@
 goog.provide('goog.ui.editor.EquationEditorDialog');
 
 goog.require('goog.editor.Command');
+goog.require('goog.ui.Dialog');
 goog.require('goog.ui.editor.AbstractDialog');
 goog.require('goog.ui.editor.EquationEditorOkEvent');
-goog.require('goog.ui.equation.ChangeEvent');
 goog.require('goog.ui.equation.TexEditor');
 
 
@@ -36,7 +36,7 @@ goog.ui.editor.EquationEditorDialog = function(context, domHelper,
     equation, helpUrl) {
   goog.ui.editor.AbstractDialog.call(this, domHelper);
   this.equationEditor_ =
-      new goog.ui.equation.TexEditor(context, helpUrl);
+      new goog.ui.equation.TexEditor(context, helpUrl, domHelper);
   this.equationEditor_.render();
   this.equationEditor_.setEquation(equation);
   this.equationEditor_.addEventListener(goog.editor.Command.EQUATION,
@@ -62,7 +62,7 @@ goog.ui.editor.EquationEditorDialog.prototype.equationEditor_;
 goog.ui.editor.EquationEditorDialog.prototype.okButton_;
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.editor.EquationEditorDialog.prototype.createDialogControl =
     function() {
   var builder = new goog.ui.editor.AbstractDialog.Builder(this);
@@ -97,7 +97,7 @@ goog.ui.editor.EquationEditorDialog.prototype.createDialogControl =
 
 
 /**
- * @inheritDoc
+ * @override
  */
 goog.ui.editor.EquationEditorDialog.prototype.createOkEvent = function(e) {
   if (this.equationEditor_.isValid()) {

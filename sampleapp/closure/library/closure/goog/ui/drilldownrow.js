@@ -62,7 +62,6 @@ goog.provide('goog.ui.DrilldownRow');
 
 goog.require('goog.dom');
 goog.require('goog.dom.classes');
-goog.require('goog.events');
 goog.require('goog.ui.Component');
 
 
@@ -81,11 +80,12 @@ goog.require('goog.ui.Component');
  *   decorator: Function that accepts one DrilldownRow argument, and
  *     should customize and style the row.  The default is to call
  *     goog.ui.DrilldownRow.decorator.
+ * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper.
  * @constructor
  * @extends {goog.ui.Component}
  */
-goog.ui.DrilldownRow = function(opt_properties) {
-  goog.ui.Component.call(this);
+goog.ui.DrilldownRow = function(opt_properties, opt_domHelper) {
+  goog.ui.Component.call(this, opt_domHelper);
   var properties = opt_properties || {};
 
   // Initialize instance variables.
@@ -166,6 +166,7 @@ goog.ui.DrilldownRow.sampleProperties = {
 /**
  * The base class method calls its superclass method and this
  * drilldown's 'decorator' method as defined in the constructor.
+ * @override
  */
 goog.ui.DrilldownRow.prototype.enterDocument = function() {
   goog.ui.DrilldownRow.superClass_.enterDocument.call(this);
@@ -173,7 +174,7 @@ goog.ui.DrilldownRow.prototype.enterDocument = function() {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.DrilldownRow.prototype.createDom = function() {
   this.setElementInternal(goog.ui.DrilldownRow.createRowNode_(
       this.html_, this.getDomHelper().getDocument()));
@@ -185,6 +186,7 @@ goog.ui.DrilldownRow.prototype.createDom = function() {
  *
  * @param {Element} node The element to test for decorability.
  * @return {boolean} true iff the node is a TR.
+ * @override
  */
 goog.ui.DrilldownRow.prototype.canDecorate = function(node) {
   return node.tagName == 'TR';
@@ -194,9 +196,10 @@ goog.ui.DrilldownRow.prototype.canDecorate = function(node) {
 /**
  * Child drilldowns are rendered when needed.
  *
- * @param {goog.ui.DrilldownRow} child New child to be added.
+ * @param {goog.ui.Component} child New DrilldownRow child to be added.
  * @param {number} index position to be occupied by the child.
  * @param {boolean=} opt_render true to force immediate rendering.
+ * @override
  */
 goog.ui.DrilldownRow.prototype.addChildAt = function(child, index, opt_render) {
   goog.ui.DrilldownRow.superClass_.addChildAt.call(this, child, index, false);
@@ -207,18 +210,10 @@ goog.ui.DrilldownRow.prototype.addChildAt = function(child, index, opt_render) {
 };
 
 
-/** @inheritDoc */
+/** @override */
 goog.ui.DrilldownRow.prototype.removeChild = function(child) {
   goog.dom.removeNode(child.getElement());
   return goog.ui.DrilldownRow.superClass_.removeChild.call(this, child);
-};
-
-
-/** @inheritDoc */
-goog.ui.DrilldownRow.prototype.disposeInternal = function() {
-  delete this.html_;
-  this.children_ = null;
-  goog.ui.DrilldownRow.superClass_.disposeInternal.call(this);
 };
 
 
@@ -231,6 +226,7 @@ goog.ui.DrilldownRow.prototype.disposeInternal = function() {
  * way so this method does not use any arguments.  This does not call
  * the base class method and does not modify any of this
  * DrilldownRow's children.
+ * @override
  */
 goog.ui.DrilldownRow.prototype.render = function() {
   if (arguments.length) {

@@ -3,12 +3,13 @@ from myojin.modelutil import BaseModel
 from myojin.modelutil import QueryProperty, CustomQuery
 from myojin.funcutils import keyword_only, caching
 from myojin.mailutils import sendmail
-from models import UserModelBase
+from models import UserModelBase, AnonymousUser
 
 from flask import current_app as app
+from flaskext import babel
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 class InvalidActivationCode(Exception):
     pass
@@ -27,11 +28,11 @@ class ActivableUserBase(UserModelBase):
 
     @property
     def url_expire_date(self):
-        return expire_date().strftime("%Y%m%d%H%M%S")
+        return self.expire_date.strftime("%Y%m%d%H%M%S")
 
     @property
     def display_expire_date(self):
-        return expire_date().strftime('%Y/%m/%d %H:%M')
+        return self.expire_date.strftime('%Y/%m/%d %H:%M')
 
     def check_expire_date(self, expire_date):
         try:
@@ -39,8 +40,7 @@ class ActivableUserBase(UserModelBase):
         except ValueError as e:
             return False
 
-    @property
-    def get_email_template_path(filename):
+    def get_email_template_path(self, filename):
         locale = babel.get_locale()
         language = locale.language
         return 'main/top/%s/%s' % (language[:2], filename)
@@ -71,7 +71,7 @@ class ActivableUserBase(UserModelBase):
         try:
             sendmail(
                 self.email,
-                get_email_template_path('activation_mail.txt'),
+                self.get_email_template_path('activation_mail.txt'),
                 dict(
                     email=self.email,
                     token=self.activation_code,

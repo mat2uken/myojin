@@ -51,7 +51,7 @@ class UserModelBase(object):
     @classmethod
     def get_current_user(cls):
         User = cls
-        if hasattr(session,'_user' ):
+        if hasattr(session, '_user'):
             return session._user
         
         user_id = cls.get_user_id()
@@ -72,11 +72,15 @@ class UserModelBase(object):
         
         assert self.password_check_result
         user = self
-        from flask import session
+        session = request.session
         user.last_login = datetime.datetime.now()
         user.save()
 
-        if self.USER_ID_KEY in session:
+        from flask.session import NullSession
+        if session == NullSession():
+            return
+
+        if hasattr(session, self.USER_ID_KEY):
             if session[self.USER_ID_KEY] != user.id:
                 # To avoid reusing another user's session, create a new, empty
                 # session if the existing session corresponds to a different
@@ -87,6 +91,7 @@ class UserModelBase(object):
         if hasattr(session, "_user"):
             delattr(session,"_user")
         session[self.USER_ID_KEY] = user.id
+
 
     def change_password(self, old_raw_password, new_raw_password):
         if self.check_password(old_raw_password):

@@ -4,7 +4,7 @@ from flask import url_for
 from flask import redirect as flask_redirect
 from functools import wraps
 
-from flask import request, session, jsonify
+from flask import request, session, jsonify, make_response
 from json import loads
 from pprint import pprint
 from werkzeug.exceptions import HTTPException
@@ -67,6 +67,19 @@ def receive_json():
             return f(*args,**kws)
         return decorated
     return decorator
+
+def make_cors_response(*args, **kws):
+    resp = make_response(*args)
+    resp.headers["Access-Control-Max-Age"] = kws.pop("age", 21600)
+    resp.headers["Access-Control-Allow-Origin"] = kws.pop("origin", "*")
+    resp.headers["Access-Control-Allow-Methods"] = kws.pop("methods", "*")
+    credentials = kws.pop("credentials", None)
+    if credentials is not None:
+        resp.headers["Access-Control-Allow-Credentials"] = credentials
+    headers = kws.pop("headers", None)
+    if headers is not None:
+        resp.headers["Access-Control-Allow-Headers"] = headers
+    return resp
 
 CC = 31
 from struct import pack,unpack

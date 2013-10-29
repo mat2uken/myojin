@@ -108,7 +108,7 @@ def sendmail(recipients, template, ctx, sender_from=None, sender_from_name=None)
     ##assert 'shared_guests_client' in ctx
     subject, body = render(template, ctx=ctx,to_unicode=True).split(u"\n",1)
     if not current_app.config.get("MAIL_SERVER", None):
-        current_app.logger.debug(DEBUG_MAIL % (subject, body))
+        #current_app.logger.debug(DEBUG_MAIL % (subject, body))
         #print "mail send:", subject,body.split(u"\n",1)[0]
         return
     mailer = Mailer(current_app)

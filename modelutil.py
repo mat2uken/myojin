@@ -187,6 +187,7 @@ class BaseModel(object):
     encode_salt = 47
     @property
     def encoded_id(self):
+        assert self.id
         return encode_id(self.id, self.encode_salt)
     @classmethod
     def decode_id(cls, s):

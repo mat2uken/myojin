@@ -78,6 +78,7 @@ class UserModelBase(object):
 
         from flask.session import NullSession
         if session == NullSession():
+            current_app.logger.debug("login failed. reason: NullSession")
             return
 
         if hasattr(session, self.USER_ID_KEY):
@@ -91,6 +92,7 @@ class UserModelBase(object):
         if hasattr(session, "_user"):
             delattr(session,"_user")
         session[self.USER_ID_KEY] = user.id
+        current_app.logger.debug("login user id: %s" % user.id)
 
 
     def change_password(self, old_raw_password, new_raw_password):

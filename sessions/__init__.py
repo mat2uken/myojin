@@ -70,9 +70,6 @@ class CustomBeakerSession(beaker.session.Session):
 # beaker の backends はsetuptoolsのentry_pointsを見て分岐しているので、
 # パッケージとしてインストールしなければそのしくみを直接使えない。
 # CustomBeakerSession をつくる際に独自のNameSpaceManagerを指定する。
-#
-# TODO beaker_extensions.dynomite というのがdynamodb互換っぽいが、
-# pypiにそんなライブラリはないので作りなおさないとダメそう
 try:
     import json
 except ImportError:

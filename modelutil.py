@@ -4,7 +4,7 @@ from myojin.funcutils import getattrs, setattrs
 from sqlalchemy import UniqueConstraint, Table
 from flask import current_app
 from functools import wraps
-from sqlalchemy.sql import Join
+from sqlalchemy.sql import Join, desc
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import exc as orm_exc
 
@@ -281,6 +281,7 @@ class BaseModel(object):
         for k, v in kwargs.items():
             q = q.filter(getattr(cls, k)==v)
         return q
+
     @classmethod
     def recently(cls):
         return cls.get_recently(timedelta(hours=48), filters=())
@@ -289,6 +290,7 @@ class BaseModel(object):
         to_datetime = datetime.now()
         from_datetime = to_datetime - delta
         q = cls.query
+        q = q.order_by(desc(cls.create_dt))
         q = q.filter(cls.create_dt>=from_datetime)
         q = q.filter(cls.create_dt<=to_datetime)
         for filter in filters:

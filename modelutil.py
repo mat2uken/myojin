@@ -281,6 +281,19 @@ class BaseModel(object):
         for k, v in kwargs.items():
             q = q.filter(getattr(cls, k)==v)
         return q
+    @classmethod
+    def recently(cls):
+        return cls.get_recently(timedelta(hours=48), filters=())
+    @classmethod
+    def get_recently(cls, delta, filters=()):
+        to_datetime = datetime.now()
+        from_datetime = to_datetime - delta
+        q = cls.query
+        q = q.filter(cls.create_dt>=from_datetime)
+        q = q.filter(cls.create_dt<=to_datetime)
+        for filter in filters:
+            q = q.filter(filter)
+        return q.all()
 
     def cached_getter(self, prop):
         cachekey = '_' + prop

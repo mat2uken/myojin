@@ -13,7 +13,9 @@ from werkzeug.local import LocalProxy
 
 from sqlalchemy.orm import class_mapper, object_session
 
-from datetime import timedelta
+import time
+from datetime import timedelta, date, datetime
+from functools import partial
 
 
 class BaseModelType(type):
@@ -112,12 +114,12 @@ class QueryProperty(object):
         return self.query_cls(mapper, self.db.session.registry(), **self.kws).default_filter()
 
 
-from datetime import date, datetime
-from functools import partial
 class BaseModel(object):
     classlist = []
     __metaclass__ = BaseModelType
     __repratts__  = ()
+    __dumpatts__ = ()
+    __reldumpatts__ = ()
     child_args = ()
     expiry_child_args = ()
     models = ()
@@ -241,6 +243,23 @@ class BaseModel(object):
         args = ", ".join(_to_str("%s=%s" % (k,getattrs(self, k, None))) for k in ks[:5])
         return "<%s(%s) %s>"%(type(self).__name__ , self.id, args)
 
+    def dumps(self, atts=None):
+        if atts is None:
+            atts = self.__dumpatts__
+        d = {}
+        for key in atts:
+            value = getattr(self, key)
+            if isinstance(value, BaseModel):
+                relatts = value.__reldumpatts__
+                if relatts:
+                    value = value.dumps(atts=relatts)
+                else:
+                    value = value.dumps()
+            if type(value) == datetime:
+                value = int(time.mktime(value.timetuple()))
+            d[key] = value
+        return d
+
     def delete(self):
         for arg in getattr(self,'child_args',()):
             for x in getattr(self, arg):
@@ -248,8 +267,6 @@ class BaseModel(object):
         self.deleted = True
 
     def set_expiry_date(self, dt=None):
-        from datetime import date
-        from sqlalchemy.orm import class_mapper
         assert dt is None or hasattr(type(self), 'expiry_date')
         if hasattr(type(self), 'expiry_date'):
             old = self.expiry_date
@@ -286,7 +303,7 @@ class BaseModel(object):
     def recently(cls):
         return cls.get_recently(timedelta(hours=48), filters=())
     @classmethod
-    def get_recently(cls, delta, filters=()):
+    def get_recently(cls, delta=None, filters=()):
         q = cls.query
         q = q.order_by(desc(cls.create_dt))
         if delta:

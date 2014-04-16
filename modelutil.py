@@ -300,10 +300,7 @@ class BaseModel(object):
         return q
 
     @classmethod
-    def recently(cls):
-        return cls.get_recently(timedelta(hours=48), filters=())
-    @classmethod
-    def get_recently(cls, delta=None, filters=()):
+    def get_recent_query(cls, delta=None, filters=()):
         q = cls.query
         q = q.order_by(desc(cls.create_dt))
         if delta:
@@ -313,7 +310,14 @@ class BaseModel(object):
             q = q.filter(cls.create_dt<=to_datetime)
         for filter in filters:
             q = q.filter(filter)
+        return q
+    @classmethod
+    def get_recently(cls, **kwargs):
+        q = cls.get_recent_query(**kwargs)
         return q.all()
+    @classmethod
+    def recently(cls):
+        return cls.get_recently(timedelta(hours=48), filters=())
 
     def cached_getter(self, prop):
         cachekey = '_' + prop

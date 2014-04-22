@@ -14,7 +14,8 @@ from werkzeug.local import LocalProxy
 from sqlalchemy.orm import class_mapper, object_session
 
 import time
-from datetime import timedelta, date, datetime
+import datetime
+from datetime import timedelta, date
 from functools import partial
 
 
@@ -255,8 +256,10 @@ class BaseModel(object):
                     value = value.dumps(atts=relatts)
                 else:
                     value = value.dumps()
-            if type(value) == datetime:
+            if type(value) is datetime.datetime:
                 value = int(time.mktime(value.timetuple()))
+            if type(value) is datetime.time:
+                value = value.strftime('%H:%M')
             d[key] = value
         return d
 
@@ -304,7 +307,7 @@ class BaseModel(object):
         q = cls.query
         q = q.order_by(desc(cls.create_dt))
         if delta:
-            to_datetime = datetime.now()
+            to_datetime = datetime.datetime.now()
             from_datetime = to_datetime - delta
             q = q.filter(cls.create_dt>=from_datetime)
             q = q.filter(cls.create_dt<=to_datetime)

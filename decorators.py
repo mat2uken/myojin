@@ -3,7 +3,7 @@ from functools import wraps
 
 from flask import _request_ctx_stack, request
 from IPy import IP
-from functools import wraps
+
 def commit_on_success(*methods):
     methods = tuple(x.lower() for x in methods)
     for x in methods:

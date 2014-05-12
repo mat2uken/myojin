@@ -19,7 +19,6 @@ def validate(method, schema):
         @wraps(f)
         def decorated_func(*args, **kws):
             ctype = request.headers.get("Content-Type")
-            print ctype
             method_ = request.headers.get("X-HTTP-Method-Override", request.method)
             if method_.lower() == method.lower() and "json" in ctype:
                 data = json.loads(request.data)

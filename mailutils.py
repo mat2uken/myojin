@@ -48,6 +48,7 @@ class Mailer(object):
             msg['From'] = str(Header('%s' % sender_from_name, encoding)) + ' <%s>' % sender_from
         else:
             msg['From'] = sender_from
+        msg['Reply-To'] = msg['From']
 
         if isinstance(recipients, list) or isinstance(recipients, tuple):
             msg['To'] = ','.join(recipients)
@@ -101,14 +102,14 @@ body:
 """
 
 def sendmail(recipients, template, ctx, sender_from=None, sender_from_name=None):
+    subject, body = render(template, ctx=ctx,to_unicode=True).split(u"\n",1)
+    return sendmail_raw(recipients, subject, body, sender_from=sender_from, sender_from_name=sender_from_name)
 
+def sendmail_raw(recipients, subject, body, sender_from=None, sender_from_name=None):
     if isinstance(recipients, basestring):
         recipients = [recipients]
-
-    ##assert 'shared_guests_client' in ctx
-    subject, body = render(template, ctx=ctx,to_unicode=True).split(u"\n",1)
     if not current_app.config.get("MAIL_SERVER", None):
-        #current_app.logger.debug(DEBUG_MAIL % (subject, body))
+        current_app.logger.debug(DEBUG_MAIL % (subject, body))
         #print "mail send:", subject,body.split(u"\n",1)[0]
         return
     mailer = Mailer(current_app)

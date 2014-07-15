@@ -251,8 +251,11 @@ class BaseModel(object):
         for key in atts:
             value = getattr(self, key)
             if isinstance(value, list):
-                if isinstance(value[0], BaseModel):
-                    value = map(lambda v: v.dumps(), value)
+                if len(value)>0:
+                    if isinstance(value[0], BaseModel):
+                        value = map(lambda v: v.dumps(), value)
+                else:
+                    value = []
             if isinstance(value, BaseModel):
                 relatts = value.__reldumpatts__
                 if relatts:

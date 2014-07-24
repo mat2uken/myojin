@@ -23,6 +23,7 @@ def commit_on_success(*methods):
                 except:
                     session.rollback()
                     raise
+            session.remove()
             return result
         return decorated_func
     return decorator

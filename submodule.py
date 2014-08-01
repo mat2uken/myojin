@@ -221,6 +221,7 @@ class SubModule(object):
                     ctx = f(*args, **kws)
                 except:
                     from flask import current_app as app
+                    app.logger.debug("args: %s, kws: %s" % (str(args), str(kws)))
                     app.logger.debug(traceback.format_exc())
                     raise #flask.abort(500) から変更 hokari TODO: hknumanoidに確認 session/__init__.py のdef init_middlewareにlog処理移動？
                 if isinstance(ctx,dict) and ctx.get("template"):

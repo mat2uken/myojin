@@ -19,9 +19,8 @@ def commit_on_success(*methods):
                 raise
             else:
                 try:
-#                    if hasattr(session, 'is_not_commit') is not True:
-#                        session.commit()
-                    session.commit()
+                    if hasattr(app, 'is_not_commit') is not True:
+                        session.commit()
                 except:
                     session.rollback()
                     raise

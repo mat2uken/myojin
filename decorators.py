@@ -19,7 +19,7 @@ def commit_on_success(*methods):
                 raise
             else:
                 try:
-                   if True or hasattr(app, 'is_not_commit') is not True:
+                   if type(result) != dict or 'is_not_commit' not in result:
                        session.commit()
                 except:
                     session.rollback()

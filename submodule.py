@@ -125,7 +125,10 @@ class SubModule(object):
                     else:
                         ret_dict, result = ret, True
                     ret_dict['result'] = 'ok' if result else 'ng'
-                    return jsonify(**ret_dict)
+                    resp = jsonify(**ret_dict)
+                    if 'is_not_commit' in ret_dict:
+                        setattr(resp, 'is_not_commit', True)
+                    return resp
             return decorated
         return decorator
 

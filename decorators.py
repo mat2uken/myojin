@@ -16,6 +16,7 @@ def commit_on_success(*methods):
                 result = f(*args, **kws)
             except:
                 session.rollback()
+                session.remove()
                 raise
             else:
                 try:
@@ -25,6 +26,7 @@ def commit_on_success(*methods):
                         session.commit()
                 except:
                     session.rollback()
+                    session.remove()
                     raise
             session.remove()
             return result

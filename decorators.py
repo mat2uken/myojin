@@ -28,8 +28,21 @@ def commit_on_success(*methods):
                     else:
                         app.logger.debug('+' * 100)
                         app.logger.debug('commit_on_sucess: commit start')
+
                         session.commit()
+
+                        app.logger.debug('+' * 100)
                         app.logger.debug('commit_on_success: commit done')
+
+                        app.logger.debug('+' * 100)
+                        if app.config.get('SQLALCHEMY_RECORD_QUERIES', False):
+                            from flaskext.sqlalchemy import get_debug_queries
+                            for query in get_debug_queries():
+                                if query.duration >= 3:
+                                    app.logger.debug(
+                                        'Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n'
+                                        % (query.statement, query.parameters, query.duration, query.context))
+
                         app.logger.debug('+' * 100)
                 except:
                     app.logger.debug('=' * 100)

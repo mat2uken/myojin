@@ -15,6 +15,9 @@ def commit_on_success(*methods):
             try:
                 result = f(*args, **kws)
             except:
+                app.logger.debug('!' * 100)
+                app.logger.debug('commit_on_success: exception occured, path=%s' % (request.path))
+                app.logger.debug('!' * 100)
                 session.rollback()
                 session.remove()
                 raise
@@ -23,10 +26,18 @@ def commit_on_success(*methods):
                     if result is not None and hasattr(result, 'is_not_commit') is True:
                         pass
                     else:
+                        app.logger.debug('+' * 100)
+                        app.logger.debug('commit_on_sucess: commit start')
                         session.commit()
+                        app.logger.debug('commit_on_success: commit done')
+                        app.logger.debug('+' * 100)
                 except:
+                    app.logger.debug('=' * 100)
+                    app.logger.debug('commit_on_success: commit failed')
                     session.rollback()
                     session.remove()
+                    app.logger.debug('commit_on_success: session removed on commit failed')
+                    app.logger.debug('=' * 100)
                     raise
             session.remove()
             return result

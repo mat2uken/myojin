@@ -27,7 +27,7 @@ def commit_on_success(*methods):
                         pass
                     else:
                         app.logger.debug('+' * 100)
-                        app.logger.debug('commit_on_sucess: commit start')
+                        app.logger.debug('commit_on_success: commit start')
 
                         session.commit()
 

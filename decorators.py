@@ -15,6 +15,8 @@ def commit_on_success(*methods):
             try:
                 result = f(*args, **kws)
             except:
+                import traceback
+                app.logger.debug(traceback.format_exc())
                 app.logger.debug('!' * 100)
                 app.logger.debug('commit_on_success: exception occured, path=%s' % (request.path))
                 app.logger.debug('!' * 100)

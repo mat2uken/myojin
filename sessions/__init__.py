@@ -109,7 +109,6 @@ class CustomBeakerSession(beaker.session.Session):
                 elif isinstance(self.cookie_expires, timedelta):
 ##                     expires = datetime.today() + self.cookie_expires
                     expires = datetime.now() + self.cookie_expires
-                    print expires
                 elif isinstance(self.cookie_expires, datetime):
                     expires = self.cookie_expires
                 else:
@@ -279,10 +278,7 @@ class CustomFlask(Flask):
             from flask import Module, abort, redirect
             environ = request.environ
             if not app.is_ssl_request() and app.in_ssl_required_endpoint(request.endpoint):
-                server_name = (
-                    app.config.get('SSL_HOST', None) or app.config['SERVER_NAME'] or environ.get('HTTP_HOST') or environ.get('SERVER_NAME')
-                    ).split(":")[0]
-
+                server_name = self.get_ssl_server_name()
                 query_string = environ.get('QUERY_STRING', '')
                 query_splitter = "?" if query_string else ""
                 path_info = request.environ['PATH_INFO']
@@ -294,6 +290,12 @@ class CustomFlask(Flask):
             splited_endpoint = endpoint.split('.')
             if not len(splited_endpoint) < 3:
                 return '.'.join(splited_endpoint[:2]) + '___' + splited_endpoint[2]
+
+    def get_ssl_server_name(self):
+        server_name = (
+            self.config.get('SSL_HOST', None) or self.config['SERVER_NAME'] or request.environ.get('HTTP_HOST') or request.environ.get('SERVER_NAME')
+        ).split(":")[0]
+        return server_name
 
     def in_ssl_required_endpoint(self, endpoint):
         return self.make_endpoint_for_ssl_redirection(endpoint) in self.ssl_required_endpoints
